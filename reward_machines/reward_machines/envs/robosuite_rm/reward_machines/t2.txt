@@ -1,0 +1,10 @@
+0   # initial state
+[4]  # terminal state
+(0,0,'!g',RewardControl())   # Stay in state 0 until block is grasped
+(0,1,'g',RewardControl())    # Move to state 1 when block is grasped
+(1,1,'!p',RewardControl())   # Stay in state 1 until block is placed
+(1,2,'p',RewardControl())    # Move to state 2 when block is placed
+(2,2,'!s',RewardControl())   # Stay in state 2 until block is stacked
+(2,3,'s',RewardControl())    # Move to state 3 when block is stacked
+(3,3,'!s',RewardControl())   # Stay in state 3 for final stacking
+(3,4,'s',ConstantRewardFunction(1000))   # Final reward and terminate

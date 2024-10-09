@@ -1,0 +1,1 @@
+python run.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=ddpg
