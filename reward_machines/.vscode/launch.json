@@ -1,0 +1,30 @@
+// {
+//     // Use IntelliSense to learn about possible attributes.
+//     // Hover to view descriptions of existing attributes.
+//     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "Python Debugger: Current File",
+//             "type": "debugpy",
+//             "request": "launch",
+//             "program": "${file}",
+//             "console": "integratedTerminal"
+//         }
+//     ]
+// }
+
+
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: run.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",  // Make sure this path points to your 'run.py'
+            "args": ["--env=Office-v0", "--num_timesteps=1e5", "--gamma=0.9", "--alg=qlearning"],
+            "console": "integratedTerminal"  // This ensures the output is shown in the VSCode terminal
+        }
+    ]
+}

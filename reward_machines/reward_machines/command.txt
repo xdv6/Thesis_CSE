@@ -1,0 +1,4 @@
+python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=ddpg
+
+
+python run.py --env=Office-v0 --num_timesteps=1e5 --gamma=0.9 --alg=qlearning 

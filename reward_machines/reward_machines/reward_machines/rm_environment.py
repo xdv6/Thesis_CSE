@@ -1,21 +1,18 @@
-"""
-These are simple wrappers that will include RMs to any given environment.
-It also keeps track of the RM state as the agent interacts with the envirionment.
-
-However, each environment must implement the following function:
-    - *get_events(...)*: Returns the propositions that currently hold on the environment.
-
-Notes:
-    - The episode ends if the RM reaches a terminal state or the environment reaches a terminal state.
-    - The agent only gets the reward given by the RM.
-    - Rewards coming from the environment are ignored.
-"""
-
+from collections import OrderedDict
 import gym
 from gym import spaces
 import numpy as np
 from reward_machines.reward_machine import RewardMachine
 
+# Helper function to flatten an OrderedDict
+def flatten_ordered_dict(ordered_dict):
+    flat_values = []
+    for key, value in ordered_dict.items():
+        if isinstance(value, np.ndarray):
+            flat_values.append(value.flatten())
+        else:
+            flat_values.append(np.array(value).flatten())
+    return np.concatenate(flat_values)
 
 class RewardMachineEnv(gym.Wrapper):
     def __init__(self, env, rm_files):
@@ -95,9 +92,19 @@ class RewardMachineEnv(gym.Wrapper):
         return rm_obs, rm_rew, done, info
 
     def get_observation(self, next_obs, rm_id, u_id, done):
+        """
+        Modifying the get_observation method to handle OrderedDict in 'features' field.
+        """
         rm_feat = self.rm_done_feat if done else self.rm_state_features[(rm_id,u_id)]
-        rm_obs = {'features': next_obs,'rm-state': rm_feat}
-        return gym.spaces.flatten(self.observation_dict, rm_obs)           
+        rm_obs = {'features': next_obs, 'rm-state': rm_feat}
+        
+        # If 'features' is an OrderedDict, flatten it
+        if isinstance(rm_obs['features'], OrderedDict):
+            rm_obs['features'] = flatten_ordered_dict(rm_obs['features'])
+
+        # Now flatten the entire observation
+        import ipdb; ipdb.set_trace()
+        return gym.spaces.flatten(self.observation_dict, rm_obs)
 
 
 class RewardMachineWrapper(gym.Wrapper):
@@ -174,7 +181,6 @@ class RewardMachineWrapper(gym.Wrapper):
 
         self.valid_states = reachable_states
         return experiences
-
 
 class HierarchicalRMWrapper(gym.Wrapper):
     """
@@ -265,6 +271,11 @@ class HierarchicalRMWrapper(gym.Wrapper):
             env_obs = self.env.obs # using the current environment observation
         opt_feat = self.option_features[self.options[option_id]]
         opt_obs = {'features': env_obs,'option': opt_feat}
+        
+        # Flatten OrderedDict in 'features'
+        if isinstance(opt_obs['features'], OrderedDict):
+            opt_obs['features'] = flatten_ordered_dict(opt_obs['features'])
+        
         return gym.spaces.flatten(self.option_observation_dict, opt_obs)    
 
     def reset(self):
@@ -334,4 +345,4 @@ class HierarchicalRMWrapper(gym.Wrapper):
                 experiences.append(exp)
 
         self.valid_states = reachable_states
-        return experiences                
+        return experiences

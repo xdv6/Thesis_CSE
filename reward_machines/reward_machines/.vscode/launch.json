@@ -1,0 +1,28 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        // {
+        //     "name": "Python: run.py",
+        //     "type": "python",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder}/run.py",  // Updated path for run.py
+        //     "args": ["--env=Office-v0", "--num_timesteps=1e5", "--gamma=0.9", "--alg=qlearning"],
+        //     "console": "integratedTerminal"
+        // },
+        {
+            "name": "Python: run_robosuite.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run_robosuite.py",  // Updated path for run_robosuite.py
+            "args": ["--env=MyBlockStackingEnvRM1", "--num_timesteps=100000", "--alg=ddpg"],
+            "console": "integratedTerminal"
+        }
+    ]
+}
