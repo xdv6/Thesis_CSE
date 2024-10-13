@@ -23,7 +23,20 @@ class MyBlockStackingEnv(GymWrapper):
         # Execute the action and return the next observation, reward, done status, and info
         next_obs, original_reward, env_done, info = self.env.step(action)
         self.info = info                   # Store info for event tracking
+
+        # Flatten the observation before returning it
+        next_obs = self.flatten_observation(next_obs)
+
         return next_obs, original_reward, env_done, info
+
+    def flatten_observation(self, obs):
+        """
+        Flatten the observation space. If observation is a dictionary, we flatten it into a single array.
+        """
+        if isinstance(obs, dict):
+            return np.concatenate([v.flatten() if isinstance(v, np.ndarray) else np.array(v).flatten() for v in obs.values()])
+        else:
+            return obs.flatten() if isinstance(obs, np.ndarray) else np.array(obs).flatten()
 
     def get_events(self):
         # Define events for the reward machine based on block states (grasped, stacked)
@@ -44,7 +57,8 @@ class MyBlockStackingEnv(GymWrapper):
 
     def reset(self):
         # Reset the environment to its initial state and return the first observation
-        return self.env.reset()
+        obs = self.env.reset()
+        return self.flatten_observation(obs)
 
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the first reward machine (t1.txt)
@@ -62,7 +76,6 @@ class MyBlockStackingEnvRM1(RewardMachineEnv):
             high = env.observation_space.high
             shape = env.observation_space.shape
             dtype = env.observation_space.dtype
-
 
             # Convert to gym.spaces.Box
             converted_observation_space = gym.spaces.Box(low=low, high=high, dtype=dtype)
