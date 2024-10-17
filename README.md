@@ -4,6 +4,10 @@
 
 ## Installation
 
+
+
+First create conda environment with python 3.7
+
 ### TF and baselines
 
 https://github.com/openai/baselines
@@ -61,7 +65,7 @@ https://robosuite.ai/docs/installation.html
 
 
 
-probleem met EG oplossen : 
+probleem met ELG oplossen : 
 
 https://robosuite.ai/docs/installation.html
 
