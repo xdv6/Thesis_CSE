@@ -8,14 +8,14 @@
             "program": "${file}",
             "console": "integratedTerminal"
         },
-        // {
-        //     "name": "Python: run.py",
-        //     "type": "python",
-        //     "request": "launch",
-        //     "program": "${workspaceFolder}/run.py",  // Updated path for run.py
-        //     "args": ["--env=Office-v0", "--num_timesteps=1e5", "--gamma=0.9", "--alg=qlearning"],
-        //     "console": "integratedTerminal"
-        // },
+        {
+            "name": "Python: run.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/run.py",  // Updated path for run.py
+            "args": ["--env=Office-v0", "--num_timesteps=1e5", "--gamma=0.9", "--alg=qlearning"],
+            "console": "integratedTerminal"
+        },
         {
             "name": "Python: run_robosuite.py",
             "type": "python",

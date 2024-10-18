@@ -63,9 +63,13 @@ https://gist.github.com/saratrajput/60b1310fe9d9df664f9983b38b50d5da
 
 https://robosuite.ai/docs/installation.html
 
+if there is a problem with module not found, use the ```pip install robosuite``` instead of that from the requirements.txt file
+
 
 
 probleem met ELG oplossen : 
 
 https://robosuite.ai/docs/installation.html
+
+
 
