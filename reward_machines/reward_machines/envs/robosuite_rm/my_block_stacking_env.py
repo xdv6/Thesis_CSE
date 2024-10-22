@@ -9,6 +9,8 @@ import numpy as np
 class MyBlockStackingEnv(GymWrapper):
     def __init__(self):
         # Initialize the robosuite environment and wrap it with GymWrapper
+
+        # 
         env = suite.make(
             "PickPlace",
             robots="Panda",               # Using Panda robot
@@ -19,9 +21,14 @@ class MyBlockStackingEnv(GymWrapper):
         )
         super().__init__(env)              # Wrap the environment with GymWrapper
 
+        # observation space aanpassen
+
     def step(self, action):
         # Execute the action and return the next observation, reward, done status, and info
         next_obs, original_reward, env_done, info = self.env.step(action)
+
+        # observatie samenstellen dat dingen die we willen weten bevat
+
         self.info = info                   # Store info for event tracking
 
         # Flatten the observation before returning it
@@ -58,6 +65,7 @@ class MyBlockStackingEnv(GymWrapper):
     def reset(self):
         # Reset the environment to its initial state and return the first observation
         obs = self.env.reset()
+        #observation aanpassen 
         return self.flatten_observation(obs)
 
 
