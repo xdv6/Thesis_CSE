@@ -30,15 +30,17 @@ env.viewer.add_keypress_callback(device.on_press)
 # Set target height threshold for checking height
 target_height_threshold = 0.85  # Adjust based on your environment setup
 
-# Define gripper geometry names and cubeA geometry name
+# Define gripper geometry names and cube geometry names
 gripper_geom_names = ["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"]
-cube_geom_name = ["cubeA_g0"]
+cubeA_geom_name = ["cubeA_g0"]
+cubeB_geom_name = ["cubeB_g0"]
 
 # Main control loop
 while True:
     # Reset the environment
     obs = env.reset()
     device.start_control()  # Start listening for keyboard input
+
 
     while True:
         # Get the newest action from the keyboard device
@@ -60,22 +62,34 @@ while True:
         eef_position = obs["robot0_eef_pos"]  # End-effector position from observation
         eef_height = eef_position[2]  # Extracting the z-coordinate (height)
 
-        # Get the current block position for reference
+        # Get the current block positions for reference
         block_A = obs["cubeA_pos"]  # Get cubeA position
+        block_B = obs["cubeB_pos"]  # Get cubeB position
 
         # Check if there's contact between the gripper and cubeA
-        is_contact = env.check_contact(geoms_1=gripper_geom_names, geoms_2=cube_geom_name)
+        is_contact = env.check_contact(geoms_1=gripper_geom_names, geoms_2=cubeA_geom_name)
 
         # Condition: Check if the robot's end-effector is above the target height and in contact with cubeA
         is_above_target_height = eef_height > target_height_threshold
 
-        # Print message if conditions are met: robot is holding the block and is above the target height
+        # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
+        is_above_cubeB = (
+            block_B[0] - 0.025 <= eef_position[0] <= block_B[0] + 0.025 and
+            block_B[1] - 0.025 <= eef_position[1] <= block_B[1] + 0.0
+        )
+
+        # Print message if conditions for second event are met: robot is holding the block and is above the target height
         if is_contact and is_above_target_height:
             print("The robot is holding the block and is above the target height.")
+
+        # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
+        if is_contact and is_above_cubeB:
+            print("The robot is holding block A and is positioned above block B.")
 
         # Debug prints to show the current state of contact and position
         # print("Is the gripper in contact with the cube?", is_contact)
         # print(f"End-effector height: {eef_height}, Is above target height: {is_above_target_height}")
+        # print(f"Is above cube B: {is_above_cubeB}")
 
         # Render the environment to visualize the robot's action
         env.render()
