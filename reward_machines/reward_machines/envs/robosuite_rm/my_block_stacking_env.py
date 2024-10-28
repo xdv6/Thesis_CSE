@@ -52,7 +52,9 @@ class MyBlockStackingEnv(GymWrapper):
         if self.block_grasped():
             events += 'g'  # 'g' event for block grasped
         if self.above_block_b_and_grasped():
-            events += 'h'  # 'h' event for above blockB while still holding cubeA
+            events += 'h'  # 'h' event for above cubeB in height while still holding cubeA
+        if self.above_block_b_in_xy_and_grasped():
+            events += 'p'  # 'p' event for above cubeB in x, y coordinates while still holding cubeA
         if self.block_stacked():
             events += 's'  # 's' event for block stacked
         return events
@@ -72,6 +74,21 @@ class MyBlockStackingEnv(GymWrapper):
         cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
         is_above_cube_b = eef_height > cube_b_height
         return is_above_cube_b and self.block_grasped()
+
+    def above_block_b_in_xy_and_grasped(self):
+        # Check if the end-effector is above cubeB in the x and y plane while still grasping cubeA
+        obs = self.env._get_observation()
+        eef_position = obs["robot0_eef_pos"][:2]  # x, y coordinates of end-effector position
+        cube_b_position = obs["cubeB_pos"][:2]  # x, y coordinates of cubeB
+
+        # Define an allowable margin to be considered "above" in the x, y plane
+        margin = 0.05  # 5 cm margin
+        is_above_cube_b_xy = (
+            cube_b_position[0] - margin <= eef_position[0] <= cube_b_position[0] + margin and
+            cube_b_position[1] - margin <= eef_position[1] <= cube_b_position[1] + margin
+        )
+
+        return is_above_cube_b_xy and self.block_grasped()
 
     def block_stacked(self):
         # Placeholder for actual stacking logic, which could check relative positions
