@@ -22,7 +22,10 @@ from baselines.common.cmd_util import arg_parser
 
 from reward_machines.rm_environment import RewardMachineWrapper, HierarchicalRMWrapper
 
-def make_vec_env(env_id, env_type, num_env, seed, args, 
+from envs.robosuite_rm.my_block_stacking_env import MyBlockStackingEnvRM2, MyBlockStackingEnvRM1
+
+
+def make_vec_env(env_id, env_type, num_env, seed, args,
                  wrapper_kwargs=None,
                  env_kwargs=None,
                  start_index=0,
@@ -74,7 +77,11 @@ def make_env(env_id, env_type, args, mpi_rank=0, subrank=0, seed=None, reward_sc
         module_name = re.sub(':.*','',env_id)
         env_id = re.sub('.*:', '', env_id)
         importlib.import_module(module_name)
-    env = gym.make(env_id, **env_kwargs)
+
+    if env_type == "robosuite":
+        env = MyBlockStackingEnvRM1()
+    else:
+        env = gym.make(env_id, **env_kwargs)
 
     # Adding RM wrappers if needed
     if args.alg.endswith("hrm") or args.alg.endswith("dhrm"):

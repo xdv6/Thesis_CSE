@@ -4,6 +4,7 @@ from reward_machines.rm_environment import RewardMachineEnv
 import gym
 import gymnasium as gymnasium
 import numpy as np
+from gym import spaces
 
 
 
@@ -32,21 +33,20 @@ class MyBlockStackingEnv(GymWrapper):
         )
         super().__init__(env)  # Wrap the environment with GymWrapper
 
-        # flatten_obserevation_space
+        # Flatten observation space
         flattened_observation = flatten_observation(env.reset())
 
-        env.obs = flattened_observation
-        print("shape", env.obs.shape)
-
-
+        # Define the observation space based on the flattened observation
+        self.obs_dim = flattened_observation.size
+        high = np.inf * np.ones(self.obs_dim)
+        low = -high
+        self.observation_space = gym.spaces.Box(low, high, dtype=np.float32)
 
 
     def step(self, action):
-        # Execute the action and return the next observation, reward, done status, and info
-        next_obs, original_reward, env_done, info = self.env.step(action)
-        self.info = info  # Store info for event tracking
-
-        return next_obs, original_reward, env_done, info
+        # Step the environment and return the flattened observation, reward, done, and info
+        next_obs, reward, done, info = self.env.step(action)
+        return flatten_observation(next_obs), reward, done, info
 
 
     def get_events(self):
@@ -67,9 +67,9 @@ class MyBlockStackingEnv(GymWrapper):
         return self.info.get('stacked_block', False)
 
     def reset(self):
-        # Reset the environment to its initial state and return the first observation
+        # Reset the environment and return the flattened observation
         obs = self.env.reset()
-        return obs
+        return flatten_observation(obs)
 
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the first reward machine (t1.txt)
@@ -121,19 +121,6 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
 
         # Reward machine configuration file
         rm_files = ["./envs/robosuite_rm/reward_machines/t2.txt"]
-
-        # Ensure compatibility by converting gymnasium Box space to gym Box space
-        if isinstance(env.observation_space, gymnasium.spaces.Box):
-            low = env.observation_space.low
-            high = env.observation_space.high
-            shape = env.observation_space.shape
-            dtype = env.observation_space.dtype
-
-            # Convert to gym.spaces.Box
-            converted_observation_space = gym.spaces.Box(low=low, high=high, dtype=dtype)
-
-            # Update the observation space
-            env.observation_space = converted_observation_space
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
