@@ -4,6 +4,7 @@ from robosuite import load_controller_config
 from robosuite.devices import Keyboard
 from robosuite.utils.input_utils import input2action
 from robosuite.wrappers import VisualizationWrapper
+import time
 
 # Load controller configuration
 controller_config = load_controller_config(default_controller="OSC_POSE")
@@ -35,11 +36,17 @@ gripper_geom_names = ["gripper0_finger1_pad_collision", "gripper0_finger2_pad_co
 cubeA_geom_name = ["cubeA_g0"]
 cubeB_geom_name = ["cubeB_g0"]
 
+# Timer to track how long cubeA is above cubeB and in contact
+stack_timer = 0.0
+stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked" on cubeB
+
 # Main control loop
 while True:
     # Reset the environment
     obs = env.reset()
     device.start_control()  # Start listening for keyboard input
+    stack_timer = 0.0  # Reset the timer
+    start_time = time.time()
 
     while True:
         # Get the newest action from the keyboard device
@@ -56,6 +63,11 @@ while True:
 
         # Step the environment with the provided action
         obs, reward, done, info = env.step(action)
+
+        # If the environment is done, break and reset
+        if done:
+            print("Episode finished, resetting environment.")
+            break
 
         # Get the current end-effector position (z-coordinate)
         eef_position = obs["robot0_eef_pos"]  # End-effector position from observation
@@ -85,6 +97,14 @@ while True:
         )
         are_blocks_in_contact = env.check_contact(geoms_1=cubeA_geom_name, geoms_2=cubeB_geom_name)
 
+        # Condition for fifth event: Check if cubeA is above cubeB, in contact for more than 5 seconds, and the robot is not in contact with cubeA
+        is_robot_not_in_contact_with_cubeA = not is_contact
+        if is_cubeA_above_cubeB and are_blocks_in_contact:
+            stack_timer += time.time() - start_time
+        else:
+            stack_timer = 0.0
+        start_time = time.time()
+
         # Print message if conditions for second event are met: robot is holding the block and is above the target height
         if is_contact and is_above_target_height:
             print("The robot is holding the block and is above the target height.")
@@ -96,6 +116,10 @@ while True:
         # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
         if is_cubeA_above_cubeB and are_blocks_in_contact:
             print("Cube A is above Cube B and they are in contact.")
+
+        # Print message if conditions for fifth event are met: cubeA is stacked on cubeB for more than 5 seconds and the robot is not in contact with cubeA
+        if stack_timer > stack_threshold and is_robot_not_in_contact_with_cubeA:
+            print("Cube A is stacked on Cube B for more than 5 seconds and the robot is not in contact with Cube A.")
 
         # Render the environment to visualize the robot's action
         env.render()
