@@ -22,7 +22,7 @@ class MyBlockStackingEnv(GymWrapper):
     def __init__(self):
         # Initialize the robosuite environment and wrap it with GymWrapper
         env = suite.make(
-            "PickPlace",
+            "Stack",
             robots="Panda",  # Using Panda robot
             use_object_obs=True,  # Include object observations
             has_renderer=True,  # Enable rendering for visualization

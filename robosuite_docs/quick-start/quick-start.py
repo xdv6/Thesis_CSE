@@ -3,11 +3,13 @@ import robosuite as suite
 
 # create environment instance
 env = suite.make(
-    env_name="Stack", # try with other tasks like "Stack" and "Door"
-    robots="Panda",  # try with other robots like "Sawyer" and "Jaco"
-    has_renderer=True,
-    has_offscreen_renderer=False,
-    use_camera_obs=False,
+    "Stack",
+    robots="Panda",  # Using Panda robot
+    use_object_obs=True,  # Include object observations
+    has_renderer=True,  # Enable rendering for visualization
+    reward_shaping=True,  # Use dense rewards for easier learning
+    control_freq=20,  # Set control frequency for smooth simulation
+    use_camera_obs=False,  # Disable camera observations
 )
 
 # reset the environment
