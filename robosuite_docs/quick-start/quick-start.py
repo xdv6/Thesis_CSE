@@ -22,7 +22,6 @@ cube_geom_name = "cubeA"  # Adjust this to the correct name for your object
 print("Available Geometries in Environment:")
 print(env.sim.model.geom_names)
 
-
 while True:
     # sample random action (8 joint positions for the Panda)
     action = np.random.randn(env.robots[0].dof)

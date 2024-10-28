@@ -41,12 +41,10 @@ class MyBlockStackingEnv(GymWrapper):
         low = -high
         self.observation_space = gym.spaces.Box(low, high, dtype=np.float32)
 
-
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
         next_obs, reward, done, info = self.env.step(action)
         return flatten_observation(next_obs), reward, done, info
-
 
     def get_events(self):
         # Define events for the reward machine based on block states (grasped, stacked)
@@ -58,12 +56,21 @@ class MyBlockStackingEnv(GymWrapper):
         return events
 
     def block_grasped(self):
-        # Check if the block is grasped using robosuite's info keys
-        return self.info.get('grasped_block', False)
+        # Check if the block (cubeA or cubeB) is grasped by the gripper
+        is_contact_with_cubeA = self.env.check_contact(
+            geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
+            geoms_2=["cubeA_g0"]
+        )
+        is_contact_with_cubeB = self.env.check_contact(
+            geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
+            geoms_2=["cubeB_g0"]
+        )
+        return is_contact_with_cubeA or is_contact_with_cubeB
 
     def block_stacked(self):
-        # Check if the block is stacked using robosuite's info keys
-        return self.info.get('stacked_block', False)
+        # Placeholder for actual stacking logic, which could check relative positions
+        # between cubeA and cubeB to verify stacking conditions.
+        return False  # Update this logic as needed for actual stacking conditions.
 
     def reset(self):
         # Reset the environment and return the flattened observation
@@ -74,8 +81,6 @@ class MyBlockStackingEnv(GymWrapper):
         # Set the random seed for reproducibility
         np.random.seed(seed)
         random.seed(seed)
-        # Optionally, set any additional seeds needed by robosuite or Mujoco here
-
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the first reward machine (t1.txt)
 class MyBlockStackingEnvRM1(RewardMachineEnv):
@@ -88,7 +93,6 @@ class MyBlockStackingEnvRM1(RewardMachineEnv):
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
-
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the second reward machine (t2.txt)
 class MyBlockStackingEnvRM2(RewardMachineEnv):
