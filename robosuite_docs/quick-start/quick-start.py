@@ -41,7 +41,6 @@ while True:
     obs = env.reset()
     device.start_control()  # Start listening for keyboard input
 
-
     while True:
         # Get the newest action from the keyboard device
         action, grasp = input2action(
@@ -75,8 +74,16 @@ while True:
         # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
         is_above_cubeB = (
             block_B[0] - 0.025 <= eef_position[0] <= block_B[0] + 0.025 and
-            block_B[1] - 0.025 <= eef_position[1] <= block_B[1] + 0.0
+            block_B[1] - 0.025 <= eef_position[1] <= block_B[1] + 0.025
         )
+
+        # Condition for fourth event: Check if cubeA is positioned above cubeB and they are in contact
+        is_cubeA_above_cubeB = (
+            block_B[0] - 0.025 <= block_A[0] <= block_B[0] + 0.025 and
+            block_B[1] - 0.025 <= block_A[1] <= block_B[1] + 0.025 and
+            block_A[2] > block_B[2]
+        )
+        are_blocks_in_contact = env.check_contact(geoms_1=cubeA_geom_name, geoms_2=cubeB_geom_name)
 
         # Print message if conditions for second event are met: robot is holding the block and is above the target height
         if is_contact and is_above_target_height:
@@ -86,10 +93,9 @@ while True:
         if is_contact and is_above_cubeB:
             print("The robot is holding block A and is positioned above block B.")
 
-        # Debug prints to show the current state of contact and position
-        # print("Is the gripper in contact with the cube?", is_contact)
-        # print(f"End-effector height: {eef_height}, Is above target height: {is_above_target_height}")
-        # print(f"Is above cube B: {is_above_cubeB}")
+        # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
+        if is_cubeA_above_cubeB and are_blocks_in_contact:
+            print("Cube A is above Cube B and they are in contact.")
 
         # Render the environment to visualize the robot's action
         env.render()

@@ -55,6 +55,8 @@ class MyBlockStackingEnv(GymWrapper):
             events += 'h'  # 'h' event for above cubeB in height while still holding cubeA
         if self.above_block_b_in_xy_and_grasped():
             events += 'p'  # 'p' event for above cubeB in x, y coordinates while still holding cubeA
+        if self.cube_a_above_cube_b_and_in_contact():
+            events += 'b'  # 'b' event for cubeA above cubeB and in contact
         if self.block_stacked():
             events += 's'  # 's' event for block stacked
         return events
@@ -82,7 +84,7 @@ class MyBlockStackingEnv(GymWrapper):
         cube_b_position = obs["cubeB_pos"][:2]  # x, y coordinates of cubeB
 
         # Define an allowable margin to be considered "above" in the x, y plane
-        margin = 0.05  # 5 cm margin
+        margin = 0.025  # 5 cm margin
         is_above_cube_b_xy = (
             cube_b_position[0] - margin <= eef_position[0] <= cube_b_position[0] + margin and
             cube_b_position[1] - margin <= eef_position[1] <= cube_b_position[1] + margin
@@ -90,10 +92,34 @@ class MyBlockStackingEnv(GymWrapper):
 
         return is_above_cube_b_xy and self.block_grasped()
 
+    def cube_a_above_cube_b_and_in_contact(self):
+        # Check if cubeA is directly above cubeB and if they are in contact
+        obs = self.env._get_observation()
+        cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
+        cube_b_pos = obs["cubeB_pos"]  # Position of cubeB
+
+        # Check z position - cubeA should be above cubeB
+        is_above_cube_b_in_height = cube_a_pos[2] > cube_b_pos[2]
+
+        # Check x, y alignment
+        margin = 0.025  # Allowable margin for x, y alignment
+        is_aligned_in_xy = (
+            cube_b_pos[0] - margin <= cube_a_pos[0] <= cube_b_pos[0] + margin and
+            cube_b_pos[1] - margin <= cube_a_pos[1] <= cube_b_pos[1] + margin
+        )
+
+        # Check contact between cubeA and cubeB
+        is_contact_between_blocks = self.env.check_contact(
+            geoms_1=["cubeA_g0"], geoms_2=["cubeB_g0"]
+        )
+
+        # Condition for cubeA being above cubeB and in contact
+        return is_above_cube_b_in_height and is_aligned_in_xy and is_contact_between_blocks
+
     def block_stacked(self):
         # Placeholder for actual stacking logic, which could check relative positions
         # between cubeA and cubeB to verify stacking conditions.
-        return False  # Update this logic as needed for actual stacking conditions.
+        return self.cube_a_above_cube_b_and_in_contact()
 
     def reset(self):
         # Reset the environment and return the flattened observation
