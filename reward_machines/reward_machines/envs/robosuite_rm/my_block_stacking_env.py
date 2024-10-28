@@ -47,25 +47,31 @@ class MyBlockStackingEnv(GymWrapper):
         return flatten_observation(next_obs), reward, done, info
 
     def get_events(self):
-        # Define events for the reward machine based on block states (grasped, stacked)
+        # Define events for the reward machine based on block states (grasped, stacked, above blockB)
         events = ''
         if self.block_grasped():
             events += 'g'  # 'g' event for block grasped
+        if self.above_block_b_and_grasped():
+            events += 'h'  # 'h' event for above blockB while still holding cubeA
         if self.block_stacked():
             events += 's'  # 's' event for block stacked
         return events
 
     def block_grasped(self):
-        # Check if the block (cubeA or cubeB) is grasped by the gripper
+        # Check if the block cubeA is grasped by the gripper
         is_contact_with_cubeA = self.env.check_contact(
             geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
             geoms_2=["cubeA_g0"]
         )
-        is_contact_with_cubeB = self.env.check_contact(
-            geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
-            geoms_2=["cubeB_g0"]
-        )
-        return is_contact_with_cubeA or is_contact_with_cubeB
+        return is_contact_with_cubeA 
+
+    def above_block_b_and_grasped(self):
+        # Check if the end-effector is above the height of cubeB while still grasping cubeA
+        obs = self.env._get_observation()
+        eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
+        cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
+        is_above_cube_b = eef_height > cube_b_height
+        return is_above_cube_b and self.block_grasped()
 
     def block_stacked(self):
         # Placeholder for actual stacking logic, which could check relative positions
