@@ -4,8 +4,7 @@ from reward_machines.rm_environment import RewardMachineEnv
 import gym
 import gymnasium as gymnasium
 import numpy as np
-from gym import spaces
-
+import random
 
 
 def flatten_observation(obs):
@@ -71,6 +70,12 @@ class MyBlockStackingEnv(GymWrapper):
         obs = self.env.reset()
         return flatten_observation(obs)
 
+    def seed(self, seed):
+        # Set the random seed for reproducibility
+        np.random.seed(seed)
+        random.seed(seed)
+        # Optionally, set any additional seeds needed by robosuite or Mujoco here
+
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the first reward machine (t1.txt)
 class MyBlockStackingEnvRM1(RewardMachineEnv):
@@ -80,34 +85,6 @@ class MyBlockStackingEnvRM1(RewardMachineEnv):
 
         # Reward machine configuration file
         rm_files = ["./envs/robosuite_rm/reward_machines/t1.txt"]
-
-        # print("observation space before conversion: ", env.observation_space)
-        #
-        # # Ensure compatibility by converting gymnasium Box space to gym Box space
-        # if isinstance(env.observation_space, gymnasium.spaces.Box):
-        #     low = env.observation_space.low
-        #     high = env.observation_space.high
-        #     shape = env.observation_space.shape
-        #     dtype = env.observation_space.dtype
-        #
-        #     # Convert to gym.spaces.Box
-        #     converted_observation_space = gym.spaces.Box(low=low, high=high, dtype=dtype)
-        #
-        #     # Update the observation space
-        #     env.observation_space = converted_observation_space
-        #
-        # print("observation space after conversion: ", env.observation_space)
-        # print("observation", env.reset())
-        # print("shape", env.observation_space.shape)
-        # print("number of values in ordereddict", len(env.reset()))
-        #
-        # obs = env.reset()  # or the observation dictionary you provided above
-        #
-        # num_values = 0
-        # for key, value in obs.items():
-        #     print(f"Key: {key}, Number of values: {len(value)}")
-        #     num_values += len(value)
-        # print(f"Total number of values: {num_values}")
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
