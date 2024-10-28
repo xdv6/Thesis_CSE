@@ -1,14 +1,16 @@
 import robosuite as suite
+import numpy as np
 import time
 import pickle
 from robosuite.utils.transform_utils import *
 from robosuite.controllers import load_controller_config
-from transform import *
 from matplotlib import pyplot as plt
 
+# Load controller config
 controller_config = load_controller_config(default_controller="OSC_POSE")
 controller_config["control_delta"] = True
 
+# Initialize environment
 env = suite.make(
     env_name="Lift",                
     robots="Panda",                 
@@ -30,29 +32,27 @@ env.placement_initializer.y_range = [init_block_pos[1], init_block_pos[1]]
 env.placement_initializer.rotation = 0.0
 
 obs = env.reset()
+print(obs)
 
 init_block_pos.append(obs['cube_pos'][-1])
 goal_block_pos.append(obs['cube_pos'][-1])
 init_eef_pos = obs['robot0_eef_pos']
 
-# Define action parameters
+# Define gripper actions
 gripper_action_close = np.array([1])   # Close gripper
 gripper_action_open = np.array([-1])   # Open gripper
 
-# Set initial position above the block
+# Move to initial position above the block
 target_pos = obs["cube_pos"] + np.array([0, 0, 0.1])  # Move above block
-
 env.render()
 time.sleep(1)
 
+# Move end-effector to initial target position above the cube
 for i in range(100):
     curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
+    delta_pos = target_pos - curr_pos
 
-    print(f'eef: {curr_pos}, target: {target_pos}, delta:{np.linalg.norm(delta_pos)}')
-    
-    # Move the end-effector to the target position (above the block)
-    action = np.concatenate([5*delta_pos, [0, 0, 0], gripper_action_open])
+    action = np.concatenate([5 * delta_pos, [0, 0, 0], gripper_action_open])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
@@ -60,40 +60,43 @@ for i in range(100):
     if np.linalg.norm(delta_pos) < 0.01:
         break
 
-# update target
+# Move down to the block for grasping
 target_pos = obs["cube_pos"]
 target_pos[-1] -= 0.01
-
 for i in range(100):
     curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
-         
-    # print(f'eef: {curr_ori}, target: {target_ori}, delta:{delta_ori[-1]}')
-    print(f'eef: {curr_pos}, target: {target_pos}, delta:{np.linalg.norm(delta_pos)}')
+    delta_pos = target_pos - curr_pos
     
-    # Move the end-effector to the target position (above the block)
-    action = np.concatenate([4*delta_pos, [0, 0, 0], gripper_action_open])
+    action = np.concatenate([4 * delta_pos, [0, 0, 0], gripper_action_open])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
     
     if np.linalg.norm(delta_pos) < 0.01:
         break
-    
-# Close the gripper to grasp the block
+
+# Close the gripper to grasp the block, checking for contact
 for i in range(25):
     action = np.concatenate([[0, 0, 0], [0, 0, 0], gripper_action_close])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
+    
+    # Check for contact between gripper fingers and cube
+    is_contact = env.check_contact(
+        geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"], 
+        geoms_2=["cube_g0"]
+    )
+    print("Contact with cube:", is_contact)
+
     env.render()
     
-# Lift the block slightly
-target_pos = obs["cube_pos"] + np.array([0, 0, 0.1])  # Lift the block up
+# Lift the block up with the gripper closed
+target_pos = obs["cube_pos"] + np.array([0, 0, 0.1])  # Lift block up
 for i in range(100):
     curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
+    delta_pos = target_pos - curr_pos
     
-    action = np.concatenate([4*delta_pos, [0, 0, 0], gripper_action_close])
+    action = np.concatenate([4 * delta_pos, [0, 0, 0], gripper_action_close])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
@@ -101,38 +104,28 @@ for i in range(100):
     if np.linalg.norm(delta_pos) < 0.01:
         break
 
-# udpate target
-target_pos = goal_block_pos + np.array([0, 0, 0.1])
-
-# move above goal pos
+# Move to goal position
+target_pos = np.array(goal_block_pos) + np.array([0, 0, 0.1])
 for i in range(100):
     curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
+    delta_pos = target_pos - curr_pos
 
-    print(f'eef: {curr_pos}, target: {target_pos}, delta:{np.linalg.norm(delta_pos)}')
-    
-    # Move the end-effector to the target position (above the block)
-    action = np.concatenate([5*delta_pos, [0, 0, 0], gripper_action_close])
+    action = np.concatenate([5 * delta_pos, [0, 0, 0], gripper_action_close])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
     
     if np.linalg.norm(delta_pos) < 0.01:
         break
-    
-# udpate target
-target_pos = goal_block_pos
+
+# Place the block by lowering the gripper
+target_pos = np.array(goal_block_pos)
 target_pos[-1] -= 0.01
-
-# move above goal pos
 for i in range(100):
     curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
+    delta_pos = target_pos - curr_pos
 
-    print(f'eef: {curr_pos}, target: {target_pos}, delta:{np.linalg.norm(delta_pos)}')
-    
-    # Move the end-effector to the target position (above the block)
-    action = np.concatenate([5*delta_pos, [0, 0, 0], gripper_action_close])
+    action = np.concatenate([5 * delta_pos, [0, 0, 0], gripper_action_close])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
@@ -140,41 +133,20 @@ for i in range(100):
     if np.linalg.norm(delta_pos) < 0.01:
         break
 
-# Open the gripper
+# Open the gripper to release the block
 for i in range(25):
     action = np.concatenate([[0, 0, 0], [0, 0, 0], gripper_action_open])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
-    
-# udpate target
+
+# Move the end-effector up
 target_pos = obs['robot0_eef_pos'] + [0, 0, 0.1]
-
-# move eef up
 for i in range(100):
     curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
+    delta_pos = target_pos - curr_pos
 
-    print(f'eef: {curr_pos}, target: {target_pos}, delta:{np.linalg.norm(delta_pos)}')
-    
-    # Move the end-effector to the target position (above the block)
-    action = np.concatenate([5*delta_pos, [0, 0, 0], gripper_action_open])
-    obs, reward, done, info = env.step(action)
-    demonstration.append(obs['cube_pos'])
-    env.render()
-    
-    if np.linalg.norm(delta_pos) < 0.01:
-        break
-    
-# move eef to initial position
-for i in range(100):
-    curr_pos = obs['robot0_eef_pos']
-    delta_pos = target_pos-curr_pos
-
-    print(f'eef: {curr_pos}, target: {target_pos}, delta:{np.linalg.norm(delta_pos)}')
-    
-    # Move the end-effector to the target position (above the block)
-    action = np.concatenate([5*delta_pos, [0, 0, 0], gripper_action_open])
+    action = np.concatenate([5 * delta_pos, [0, 0, 0], gripper_action_open])
     obs, reward, done, info = env.step(action)
     demonstration.append(obs['cube_pos'])
     env.render()
@@ -182,10 +154,26 @@ for i in range(100):
     if np.linalg.norm(delta_pos) < 0.01:
         break
 
+# Move end-effector back to initial position
+target_pos = init_eef_pos
+for i in range(100):
+    curr_pos = obs['robot0_eef_pos']
+    delta_pos = target_pos - curr_pos
+
+    action = np.concatenate([5 * delta_pos, [0, 0, 0], gripper_action_open])
+    obs, reward, done, info = env.step(action)
+    demonstration.append(obs['cube_pos'])
+    env.render()
+    
+    if np.linalg.norm(delta_pos) < 0.01:
+        break
+
+# Plot demonstration trajectory
 demonstration = np.array(demonstration)
-plt.scatter(demonstration[:,1], demonstration[:,0])
+plt.scatter(demonstration[:, 1], demonstration[:, 0])
 plt.gca().invert_yaxis()
 plt.show()
 
+# Save demonstration trajectory
 with open('demos.pkl', 'wb') as f:
     pickle.dump(demonstration, f)
