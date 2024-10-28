@@ -5,6 +5,7 @@ import gym
 import gymnasium as gymnasium
 import numpy as np
 import random
+import time
 
 
 def flatten_observation(obs):
@@ -41,6 +42,11 @@ class MyBlockStackingEnv(GymWrapper):
         low = -high
         self.observation_space = gym.spaces.Box(low, high, dtype=np.float32)
 
+        # Timer to track how long cubeA is above cubeB and in contact
+        self.stack_timer = 0.0
+        self.stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked" on cubeB
+        self.start_time = time.time()
+
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
         next_obs, reward, done, info = self.env.step(action)
@@ -50,15 +56,15 @@ class MyBlockStackingEnv(GymWrapper):
         # Define events for the reward machine based on block states (grasped, stacked, above blockB)
         events = ''
         if self.block_grasped():
-            events += 'g'  # 'g' event for block grasped
+            events += 'g'  # 'g' event for block grasped, robot in contact with cubeA
         if self.above_block_b_and_grasped():
             events += 'h'  # 'h' event for above cubeB in height while still holding cubeA
         if self.above_block_b_in_xy_and_grasped():
             events += 'p'  # 'p' event for above cubeB in x, y coordinates while still holding cubeA
         if self.cube_a_above_cube_b_and_in_contact():
             events += 'b'  # 'b' event for cubeA above cubeB and in contact
-        if self.block_stacked():
-            events += 's'  # 's' event for block stacked
+        if self.cube_a_above_cube_b_long_contact():
+            events += 'l'  # 'l' event for cubeA above cubeB, in contact for more than 5 seconds, and robot not in contact with cubeA
         return events
 
     def block_grasped(self):
@@ -116,14 +122,30 @@ class MyBlockStackingEnv(GymWrapper):
         # Condition for cubeA being above cubeB and in contact
         return is_above_cube_b_in_height and is_aligned_in_xy and is_contact_between_blocks
 
-    def block_stacked(self):
-        # Placeholder for actual stacking logic, which could check relative positions
-        # between cubeA and cubeB to verify stacking conditions.
-        return self.cube_a_above_cube_b_and_in_contact()
+    def cube_a_above_cube_b_long_contact(self):
+        # Check if cubeA is above cubeB, in contact for more than the threshold time, and the robot is not in contact
+        obs = self.env._get_observation()
+        cube_a_pos = obs["cubeA_pos"]
+        cube_b_pos = obs["cubeB_pos"]
+        is_robot_not_in_contact = not self.block_grasped()
+
+        # Check the conditions: cubeA above cubeB and in contact
+        if self.cube_a_above_cube_b_and_in_contact():
+            # Update the timer if the conditions hold
+            self.stack_timer += time.time() - self.start_time
+        else:
+            # Reset the timer if conditions are not met
+            self.stack_timer = 0.0
+        self.start_time = time.time()
+
+        # Condition for long contact
+        return self.stack_timer > self.stack_threshold and is_robot_not_in_contact
 
     def reset(self):
         # Reset the environment and return the flattened observation
         obs = self.env.reset()
+        self.stack_timer = 0.0  # Reset timer on environment reset
+        self.start_time = time.time()  # Reset start time on reset
         return flatten_observation(obs)
 
     def seed(self, seed):
