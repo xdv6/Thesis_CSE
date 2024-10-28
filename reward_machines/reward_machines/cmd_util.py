@@ -9,7 +9,7 @@ except ImportError:
     MPI = None
 
 import gym
-from gym.wrappers import FlattenObservation, FilterObservation
+from gym.wrappers import FlattenObservation, FilterObservation, TimeLimit
 from baselines import logger
 from baselines.bench import Monitor
 from baselines.common import set_global_seeds
@@ -80,8 +80,10 @@ def make_env(env_id, env_type, args, mpi_rank=0, subrank=0, seed=None, reward_sc
 
     if env_type == "robosuite":
         env = MyBlockStackingEnvRM1()
+        env = TimeLimit(env, max_episode_steps=1000)
     else:
         env = gym.make(env_id, **env_kwargs)
+        max_steps = env.spec.max_episode_steps
 
     # Adding RM wrappers if needed
     if args.alg.endswith("hrm") or args.alg.endswith("dhrm"):
