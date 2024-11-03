@@ -18,6 +18,7 @@ env = suite.make(
     has_renderer=True,  # Enable rendering for visualization
     reward_shaping=True,  # Use dense rewards for easier learning
     control_freq=20,  # Set control frequency for smooth simulation
+    horizon=1000,
     use_camera_obs=False,  # Disable camera observations
 )
 
