@@ -90,7 +90,9 @@ class MyBlockStackingEnv(GymWrapper):
         super().__init__(env)  # Wrap the environment with GymWrapper
 
         # Flatten observation space
-        flattened_observation = flatten_observation(env.reset())
+        reset_env = env.reset()
+        self.obs_dict = reset_env
+        flattened_observation = flatten_observation(reset_env)
 
         # Define the observation space based on the flattened observation
         self.obs_dim = flattened_observation.size
@@ -106,7 +108,9 @@ class MyBlockStackingEnv(GymWrapper):
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
         next_obs, reward, done, info = self.env.step(action)
-        return flatten_observation(next_obs), reward, done, info
+        self.obs_dict = next_obs
+        flattened_observation = flatten_observation(next_obs)
+        return flattened_observation, reward, done, info
 
     def get_events(self):
         # Define events for the reward machine based on block states (grasped, stacked, above blockB)
@@ -135,7 +139,7 @@ class MyBlockStackingEnv(GymWrapper):
 
     def above_block_b_and_grasped(self):
         # Check if the end-effector is above the height of cubeB while still grasping cubeA
-        obs = self.env._get_observation()
+        obs = self.obs_dict
         eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
         cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
         is_above_cube_b = eef_height > cube_b_height    
@@ -143,7 +147,7 @@ class MyBlockStackingEnv(GymWrapper):
 
     def above_block_b_in_xy_and_grasped(self):
         # Check if the end-effector is above cubeB in the x and y plane while still grasping cubeA
-        obs = self.env._get_observation()
+        obs = self.obs_dict
         eef_position = obs["robot0_eef_pos"][:2]  # x, y coordinates of end-effector position
         cube_b_position = obs["cubeB_pos"][:2]  # x, y coordinates of cubeB
 
@@ -158,7 +162,7 @@ class MyBlockStackingEnv(GymWrapper):
     
     def cube_a_above_cube_b_and_in_contact(self):
         # Check if cubeA is directly above cubeB and if they are in contact
-        obs = self.env._get_observation()
+        obs = self.obs_dict
         cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
         cube_b_pos = obs["cubeB_pos"]  # Position of cubeB
 
@@ -182,7 +186,7 @@ class MyBlockStackingEnv(GymWrapper):
 
     def cube_a_above_cube_b_long_contact(self):
         # Check if cubeA is above cubeB, in contact for more than the threshold time, and the robot is not in contact
-        obs = self.env._get_observation()
+        obs = self.obs_dict
         cube_a_pos = obs["cubeA_pos"]
         cube_b_pos = obs["cubeB_pos"]
         is_robot_not_in_contact = not self.block_grasped()
@@ -208,8 +212,10 @@ class MyBlockStackingEnv(GymWrapper):
         obs = self.env.reset()
         self.stack_timer = 0.0  # Reset timer on environment reset
         self.start_time = time.time()  # Reset start time on reset
-        return flatten_observation(obs)
-
+        self.obs_dict = obs
+        flattened_observation = flatten_observation(obs)
+        return flattened_observation
+    
     def seed(self, seed):
         # Set the random seed for reproducibility
         # needed for gym compatibility
