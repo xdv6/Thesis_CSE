@@ -93,6 +93,7 @@ while True:
     # print location of cubeA and cubeB
     print("Cube A position: ", obs["cubeA_pos"])
     print("Cube B position: ", obs["cubeB_pos"])
+    print("End-effector position: ", obs["robot0_eef_pos"])
     
     device.start_control()  # Start listening for keyboard input
     stack_timer = 0.0  # Reset the timer
