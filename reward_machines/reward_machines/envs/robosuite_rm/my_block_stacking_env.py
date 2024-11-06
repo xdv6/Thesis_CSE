@@ -110,6 +110,8 @@ class MyBlockStackingEnv(GymWrapper):
             events += 'b'  # 'b' event for cubeA above cubeB and in contact
         if self.cube_a_above_cube_b_long_contact():
             events += 'l'  # 'l' event for cubeA above cubeB, in contact for more than 5 seconds, and robot not in contact with cubeA
+        if self.block_dropped():
+            events += 'd'  # 'd' event for when the robot drops the block (not in contact with cubeA anymore)
         return events
 
     def block_grasped(self):
@@ -186,6 +188,10 @@ class MyBlockStackingEnv(GymWrapper):
         # Condition for long contact
         return self.stack_timer > self.stack_threshold and is_robot_not_in_contact
 
+    def block_dropped(self):
+        # Check if the robot has dropped the block (i.e., no longer in contact with cubeA)
+        return not self.block_grasped()
+
     def reset(self):
         # Reset the environment and return the flattened observation
         obs = self.env.reset()
@@ -195,6 +201,7 @@ class MyBlockStackingEnv(GymWrapper):
 
     def seed(self, seed):
         # Set the random seed for reproducibility
+        # needed for gym compatibility
         pass
 
 
