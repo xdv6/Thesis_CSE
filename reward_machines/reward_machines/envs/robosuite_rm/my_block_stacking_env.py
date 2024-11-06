@@ -6,6 +6,8 @@ import gymnasium as gymnasium
 import numpy as np
 import random
 import time
+from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
+from robosuite import load_controller_config
 
 
 def flatten_observation(obs):
@@ -22,15 +24,58 @@ def flatten_observation(obs):
 class MyBlockStackingEnv(GymWrapper):
     def __init__(self):
         # Initialize the robosuite environment and wrap it with GymWrapper
+        # Load controller configuration
+        controller_config = load_controller_config(default_controller="OSC_POSE")
+
+        # Create environment instance with the given configuration
         env = suite.make(
             "Stack",
             robots="Panda",  # Using Panda robot
+            controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
             has_renderer=True,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
             control_freq=20,  # Set control frequency for smooth simulation
+            horizon=1000,
             use_camera_obs=False,  # Disable camera observations
         )
+
+        # put line 358 en 359 from stack environment in comments 
+        placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
+
+        placement_initializer.append_sampler(
+            # Create a placement initializer with a y_range and dynamically updated x_range
+            sampler = UniformRandomSampler(
+                name="ObjectSamplerCubeA",
+                x_range=[0.0, 0.0],
+                y_range=[0.0, 0.0],
+                rotation=0.0,
+                ensure_object_boundary_in_range=False,
+                ensure_valid_placement=True,
+                reference_pos=(0, 0, 0.8),
+                z_offset=0.01,
+            )
+        )
+
+        placement_initializer.append_sampler(
+            # Create a placement initializer with a y_range and dynamically updated x_range
+            sampler = UniformRandomSampler(
+                name="ObjectSamplerCubeB",
+                x_range=[0.1, 0.1],
+                y_range=[0.1, 0.1],
+                rotation=0.0,
+                ensure_object_boundary_in_range=False,
+                ensure_valid_placement=True,
+                reference_pos=(0, 0, 0.8),
+                z_offset=0.01,
+            )
+        )
+
+        placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeA", mujoco_objects=env.cubeA)
+        placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeB", mujoco_objects=env.cubeB)
+
+        # Update the environment to use the new placement initializer
+        env.placement_initializer = placement_initializer
         super().__init__(env)  # Wrap the environment with GymWrapper
 
         # Flatten observation space
