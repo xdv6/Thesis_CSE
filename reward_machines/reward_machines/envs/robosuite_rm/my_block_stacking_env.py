@@ -11,13 +11,24 @@ from robosuite import load_controller_config
 
 
 def flatten_observation(obs):
-    # Flatten the observation dictionary into a single array
+    # Flatten the observation dictionary into a single array while removing unneeded values
     flat_obs = []
-    for key, value in obs.items():
-        if isinstance(value, np.ndarray):
-            flat_obs.extend(value.flatten())
-        else:
-            flat_obs.append(value)
+    keys_to_keep = [
+        "robot0_eef_pos",  # End-effector position
+        "robot0_gripper_qpos",  # Gripper position
+        "cubeA_pos",  # Position of cubeA
+        "cubeB_pos",  # Position of cubeB
+        "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
+        "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
+        "cubeA_to_cubeB"  # Relative position vector between cubeA and cubeB
+    ]
+    for key in keys_to_keep:
+        if key in obs:
+            value = obs[key]
+            if isinstance(value, np.ndarray):
+                flat_obs.extend(value.flatten())
+            else:
+                flat_obs.append(value)
     return np.array(flat_obs)
 
 # Custom environment wrapper for block stacking using GymWrapper
