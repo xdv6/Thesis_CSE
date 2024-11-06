@@ -80,7 +80,7 @@ class MyBlockStackingEnv(GymWrapper):
         obs = self.env._get_observation()
         eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
         cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
-        is_above_cube_b = eef_height > cube_b_height
+        is_above_cube_b = eef_height > cube_b_height    
         return is_above_cube_b and self.block_grasped()
 
     def above_block_b_in_xy_and_grasped(self):
@@ -150,8 +150,8 @@ class MyBlockStackingEnv(GymWrapper):
 
     def seed(self, seed):
         # Set the random seed for reproducibility
-        np.random.seed(seed)
-        random.seed(seed)
+        pass
+
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the first reward machine (t1.txt)
 class MyBlockStackingEnvRM1(RewardMachineEnv):
