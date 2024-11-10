@@ -303,6 +303,7 @@ from baselines import logger
 from importlib import import_module
 
 
+
 # Importing our environments and auxiliary functions
 import envs
 from envs.water.water_world import Ball, BallAgent
@@ -353,8 +354,11 @@ def train(args, extra_args):
     seed = args.seed
 
     learn = get_learn_function(args.alg)
-    alg_kwargs = get_learn_function_defaults(args.alg, env_type)
-    alg_kwargs.update(extra_args)
+    if env_type == "robosuite":
+        alg_kwargs = get_learn_function_defaults(args.alg, 'half_cheetah_environment')
+    else:
+        alg_kwargs = get_learn_function_defaults(args.alg, env_type)
+        alg_kwargs.update(extra_args)
 
     env = build_env(args)
     if args.save_video_interval != 0:
