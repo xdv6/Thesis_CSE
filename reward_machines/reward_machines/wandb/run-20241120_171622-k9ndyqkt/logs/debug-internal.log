@@ -1,0 +1,18 @@
+{"time":"2024-11-20T17:16:22.675485853+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-20T17:16:22.675492959+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241120_171622-k9ndyqkt/logs/debug-core.log"}
+{"time":"2024-11-20T17:16:22.792473257+01:00","level":"INFO","msg":"created new stream","id":"k9ndyqkt"}
+{"time":"2024-11-20T17:16:22.792497616+01:00","level":"INFO","msg":"stream: started","id":"k9ndyqkt"}
+{"time":"2024-11-20T17:16:22.792545835+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"k9ndyqkt"}
+{"time":"2024-11-20T17:16:22.79256853+01:00","level":"INFO","msg":"sender: started","stream_id":"k9ndyqkt"}
+{"time":"2024-11-20T17:16:22.792648187+01:00","level":"INFO","msg":"handler: started","stream_id":"k9ndyqkt"}
+{"time":"2024-11-20T17:16:23.154072063+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-20T17:16:23.154424196+01:00","level":"ERROR","msg":"git repo not found","error":"repository does not exist"}
+{"time":"2024-11-20T17:16:34.891912814+01:00","level":"INFO","msg":"tensorboard: no root directory after 10 seconds, using working directory"}
+{"time":"2024-11-20T17:17:32.663393882+01:00","level":"INFO","msg":"stream: closing","id":"k9ndyqkt"}
+{"time":"2024-11-20T17:17:32.663414511+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-20T17:17:32.663842201+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-20T17:17:35.433946853+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-20T17:17:35.906074173+01:00","level":"INFO","msg":"handler: closed","stream_id":"k9ndyqkt"}
+{"time":"2024-11-20T17:17:35.906114532+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"k9ndyqkt"}
+{"time":"2024-11-20T17:17:35.906158669+01:00","level":"INFO","msg":"sender: closed","stream_id":"k9ndyqkt"}
+{"time":"2024-11-20T17:17:35.906216581+01:00","level":"INFO","msg":"stream: closed","id":"k9ndyqkt"}

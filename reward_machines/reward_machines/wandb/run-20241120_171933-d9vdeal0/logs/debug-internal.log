@@ -1,0 +1,18 @@
+{"time":"2024-11-20T17:19:33.632706952+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-20T17:19:33.632714583+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241120_171933-d9vdeal0/logs/debug-core.log"}
+{"time":"2024-11-20T17:19:33.749006889+01:00","level":"INFO","msg":"created new stream","id":"d9vdeal0"}
+{"time":"2024-11-20T17:19:33.749030114+01:00","level":"INFO","msg":"stream: started","id":"d9vdeal0"}
+{"time":"2024-11-20T17:19:33.749053862+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"d9vdeal0"}
+{"time":"2024-11-20T17:19:33.749103582+01:00","level":"INFO","msg":"handler: started","stream_id":"d9vdeal0"}
+{"time":"2024-11-20T17:19:33.749129455+01:00","level":"INFO","msg":"sender: started","stream_id":"d9vdeal0"}
+{"time":"2024-11-20T17:19:34.093105856+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-20T17:19:34.093480215+01:00","level":"ERROR","msg":"git repo not found","error":"repository does not exist"}
+{"time":"2024-11-20T17:19:45.806201707+01:00","level":"INFO","msg":"tensorboard: no root directory after 10 seconds, using working directory"}
+{"time":"2024-11-20T17:40:53.36593873+01:00","level":"INFO","msg":"stream: closing","id":"d9vdeal0"}
+{"time":"2024-11-20T17:40:53.365964458+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-20T17:40:53.366400194+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-20T17:40:54.637446916+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-20T17:40:54.938296869+01:00","level":"INFO","msg":"handler: closed","stream_id":"d9vdeal0"}
+{"time":"2024-11-20T17:40:54.938317721+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"d9vdeal0"}
+{"time":"2024-11-20T17:40:54.938330176+01:00","level":"INFO","msg":"sender: closed","stream_id":"d9vdeal0"}
+{"time":"2024-11-20T17:40:54.938378729+01:00","level":"INFO","msg":"stream: closed","id":"d9vdeal0"}
