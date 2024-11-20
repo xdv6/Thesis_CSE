@@ -150,7 +150,7 @@ class RewardMachineWrapper(gym.Wrapper):
             _, rs_rm_rew, _ = rm.step(u_id, rs_true_props, rs_info, self.add_rs, rs_env_done)
             info["rs-reward"] = rs_rm_rew
 
-        return rm_obs, rm_rew, done, info
+        return rm_obs, rm_rew, done, False, info
 
     def _get_rm_experience(self, rm_id, rm, u_id, obs, action, next_obs, env_done, true_props, info):
         rm_obs = self.env.get_observation(obs, rm_id, u_id, False)
