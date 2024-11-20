@@ -290,6 +290,10 @@ import sys
 import re
 import multiprocessing
 import os.path as osp
+
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"  # Disable GPU and run on CPU
+
 import gym
 from collections import defaultdict
 import tensorflow as tf
