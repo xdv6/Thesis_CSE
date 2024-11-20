@@ -44,8 +44,9 @@ class MyBlockStackingEnv(GymWrapper):
             robots="Panda",  # Using Panda robot
             controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
-            has_renderer=True,  # Enable rendering for visualization
+            has_renderer=False,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
+            has_offscreen_renderer=False,
             control_freq=20,  # Set control frequency for smooth simulation
             horizon=1000,
             use_camera_obs=False,  # Disable camera observations

@@ -90,7 +90,6 @@ while True:
     # Reset the environment
     obs = env.reset()
 
-    print(obs)
     device.start_control()  # Start listening for keyboard input
     stack_timer = 0.0  # Reset the timer
     start_time = time.time()
