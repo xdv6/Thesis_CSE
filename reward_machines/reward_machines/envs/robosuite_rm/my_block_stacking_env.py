@@ -208,7 +208,7 @@ class MyBlockStackingEnv(GymWrapper):
         # Check if the robot has dropped the block (i.e., no longer in contact with cubeA)
         return not self.block_grasped()
 
-    def reset(self):
+    def reset(self, seed=None, **kwargs):
         # Reset the environment and return the flattened observation
         obs = self.env.reset()
         self.stack_timer = 0.0  # Reset timer on environment reset
@@ -216,7 +216,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = obs
         flattened_observation = flatten_observation(obs)
         return flattened_observation
-    
+
     def seed(self, seed):
         # Set the random seed for reproducibility
         # needed for gym compatibility

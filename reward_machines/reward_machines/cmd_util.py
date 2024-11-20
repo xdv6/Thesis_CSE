@@ -10,20 +10,70 @@ except ImportError:
 
 import gym
 from gym.wrappers import FlattenObservation, FilterObservation, TimeLimit
-from baselines import logger
-from baselines.bench import Monitor
+# from baselines import logger
+# from baselines.bench import Monitor
 from baselines.common import set_global_seeds
 from baselines.common.atari_wrappers import make_atari, wrap_deepmind
-from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
-from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
-from baselines.common import retro_wrappers
+# from baselines.common.vec_env.subproc_vec_env import SubprocVecEnv
+# from baselines.common.vec_env.dummy_vec_env import DummyVecEnv
+# from baselines.common import retro_wrappers
 from baselines.common.wrappers import ClipActionsWrapper
 from baselines.common.cmd_util import arg_parser
+
+
+from stable_baselines3.common.vec_env import SubprocVecEnv, DummyVecEnv
+from stable_baselines3.common.logger import configure as logger_configure
+from stable_baselines3.common.monitor import Monitor
+
 
 from reward_machines.rm_environment import RewardMachineWrapper, HierarchicalRMWrapper
 
 from envs.robosuite_rm.my_block_stacking_env import MyBlockStackingEnvRM2, MyBlockStackingEnvRM1
 
+
+# def make_vec_env(env_id, env_type, num_env, seed, args,
+#                  wrapper_kwargs=None,
+#                  env_kwargs=None,
+#                  start_index=0,
+#                  reward_scale=1.0,
+#                  flatten_dict_observations=True,
+#                  gamestate=None,
+#                  initializer=None,
+#                  force_dummy=False):
+#     """
+#     Create a wrapped, monitored SubprocVecEnv for Atari and MuJoCo.
+#     """
+#     wrapper_kwargs = wrapper_kwargs or {}
+#     env_kwargs = env_kwargs or {}
+#     mpi_rank = MPI.COMM_WORLD.Get_rank() if MPI else 0
+#     seed = seed + 10000 * mpi_rank if seed is not None else None
+#     logger_dir = logger.get_dir()
+#     def make_thunk(rank, initializer=None):
+#         return lambda: make_env(
+#             env_id=env_id,
+#             env_type=env_type,
+#             args=args,
+#             mpi_rank=mpi_rank,
+#             subrank=rank,
+#             seed=seed,
+#             reward_scale=reward_scale,
+#             gamestate=gamestate,
+#             flatten_dict_observations=flatten_dict_observations,
+#             wrapper_kwargs=wrapper_kwargs,
+#             env_kwargs=env_kwargs,
+#             logger_dir=logger_dir,
+#             initializer=initializer
+#         )
+#
+#     set_global_seeds(seed)
+#     if not force_dummy and num_env > 1:
+#         return SubprocVecEnv([make_thunk(i + start_index, initializer=initializer) for i in range(num_env)])
+#     else:
+#         return DummyVecEnv([make_thunk(i + start_index, initializer=None) for i in range(num_env)])
+
+
+
+from stable_baselines3.common.utils import set_random_seed
 
 def make_vec_env(env_id, env_type, num_env, seed, args,
                  wrapper_kwargs=None,
@@ -35,13 +85,14 @@ def make_vec_env(env_id, env_type, num_env, seed, args,
                  initializer=None,
                  force_dummy=False):
     """
-    Create a wrapped, monitored SubprocVecEnv for Atari and MuJoCo.
+    Create a wrapped, monitored SubprocVecEnv or DummyVecEnv for Atari, MuJoCo, and other environments.
     """
     wrapper_kwargs = wrapper_kwargs or {}
     env_kwargs = env_kwargs or {}
     mpi_rank = MPI.COMM_WORLD.Get_rank() if MPI else 0
     seed = seed + 10000 * mpi_rank if seed is not None else None
-    logger_dir = logger.get_dir()
+    logger_dir = logger_configure().get_dir()
+
     def make_thunk(rank, initializer=None):
         return lambda: make_env(
             env_id=env_id,
@@ -59,11 +110,13 @@ def make_vec_env(env_id, env_type, num_env, seed, args,
             initializer=initializer
         )
 
-    set_global_seeds(seed)
+    seed = 42
+    set_random_seed(seed)
     if not force_dummy and num_env > 1:
         return SubprocVecEnv([make_thunk(i + start_index, initializer=initializer) for i in range(num_env)])
     else:
         return DummyVecEnv([make_thunk(i + start_index, initializer=None) for i in range(num_env)])
+
 
 def make_env(env_id, env_type, args, mpi_rank=0, subrank=0, seed=None, reward_scale=1.0, gamestate=None, flatten_dict_observations=True, wrapper_kwargs=None, env_kwargs=None, logger_dir=None, initializer=None):
     if initializer is not None:
@@ -103,8 +156,8 @@ def make_env(env_id, env_type, args, mpi_rank=0, subrank=0, seed=None, reward_sc
     if isinstance(env.action_space, gym.spaces.Box):
         env = ClipActionsWrapper(env)
 
-    if reward_scale != 1:
-        env = retro_wrappers.RewardScaler(env, reward_scale)
+    # if reward_scale != 1:
+    #     env = retro_wrappers.RewardScaler(env, reward_scale)
 
     return env
 

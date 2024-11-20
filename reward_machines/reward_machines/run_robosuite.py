@@ -291,13 +291,24 @@ import re
 import multiprocessing
 import os.path as osp
 import gym
+import gymnasium
 from collections import defaultdict
-import tensorflow as tf
+# import tensorflow as tf
 import numpy as np
 
-from baselines.common.vec_env import VecFrameStack, VecNormalize, VecEnv
-from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
+# from baselines.common.vec_env import VecFrameStack, VecNormalize, VecEnv
+# from baselines.common.vec_env.vec_video_recorder import VecVideoRecorder
+
+from stable_baselines3.common.vec_env import VecNormalize, DummyVecEnv
+from stable_baselines3.common.vec_env import VecVideoRecorder
+
+
+
+
 from baselines.common.cmd_util import parse_unknown_args
+from stable_baselines3.common.utils import set_random_seed
+
+
 from baselines.common.tf_util import get_session
 from baselines import logger
 from importlib import import_module
@@ -399,17 +410,24 @@ def build_env(args):
     if alg in ['deepq', 'qlearning', 'hrm', 'dhrm']:
         env = make_env(env_id, env_type, args, seed=seed, logger_dir=logger.get_dir())
     else:
-        config = tf.ConfigProto(allow_soft_placement=True,
-                               intra_op_parallelism_threads=1,
-                               inter_op_parallelism_threads=1)
-        config.gpu_options.allow_growth = True
-        get_session(config=config)
+        # config = tf.ConfigProto(allow_soft_placement=True,
+        #                        intra_op_parallelism_threads=1,
+        #                        inter_op_parallelism_threads=1)
+        # config.gpu_options.allow_growth = True
+        # get_session(config=config)
 
         flatten_dict_observations = alg not in {'her'}
         env = make_vec_env(env_id, env_type, args.num_env or 1, seed, args, reward_scale=args.reward_scale, flatten_dict_observations=flatten_dict_observations)
 
+        obs_dim = env.observation_space.shape[0]
+        high = np.inf * np.ones(obs_dim)
+        low = -high
+        observation_space = gymnasium.spaces.Box(low=low, high=high, dtype=np.float32)
+        env.observation_space = observation_space
+
+
         if env_type == 'mujoco' or env_type == 'robosuite':
-            env = VecNormalize(env, use_tf=True)
+            env = VecNormalize(env)
 
     return env
 
@@ -516,35 +534,35 @@ def main(args):
 
     model, env = train(args, extra_args)
 
-    if args.save_path is not None and rank == 0:
-        save_path = osp.expanduser(args.save_path)
-        model.save(save_path)
-
-    if args.play:
-        logger.log("Running trained model")
-        obs = env.reset()
-
-        state = model.initial_state if hasattr(model, 'initial_state') else None
-        dones = np.zeros((1,))
-
-        episode_rew = np.zeros(env.num_envs) if isinstance(env, VecEnv) else np.zeros(1)
-        while True:
-            if state is not None:
-                print("obs: ", obs)
-                actions, _, state, _ = model.step(obs,S=state, M=dones)
-            else:
-                actions, _, _, _ = model.step(obs)
-
-            obs, rew, done, _ = env.step(actions)
-            episode_rew += rew
-            env.render()
-            done_any = done.any() if isinstance(done, np.ndarray) else done
-            if done_any:
-                for i in np.nonzero(done)[0]:
-                    print('episode_rew={}'.format(episode_rew[i]))
-                    episode_rew[i] = 0
-
-    env.close()
+    # if args.save_path is not None and rank == 0:
+    #     save_path = osp.expanduser(args.save_path)
+    #     model.save(save_path)
+    #
+    # if args.play:
+    #     logger.log("Running trained model")
+    #     obs = env.reset()
+    #
+    #     state = model.initial_state if hasattr(model, 'initial_state') else None
+    #     dones = np.zeros((1,))
+    #
+    #     episode_rew = np.zeros(env.num_envs) if isinstance(env, VecEnv) else np.zeros(1)
+    #     while True:
+    #         if state is not None:
+    #             print("obs: ", obs)
+    #             actions, _, state, _ = model.step(obs,S=state, M=dones)
+    #         else:
+    #             actions, _, _, _ = model.step(obs)
+    #
+    #         obs, rew, done, _ = env.step(actions)
+    #         episode_rew += rew
+    #         env.render()
+    #         done_any = done.any() if isinstance(done, np.ndarray) else done
+    #         if done_any:
+    #             for i in np.nonzero(done)[0]:
+    #                 print('episode_rew={}'.format(episode_rew[i]))
+    #                 episode_rew[i] = 0
+    #
+    # env.close()
 
     return model
 
