@@ -1,0 +1,18 @@
+{"time":"2024-11-20T16:13:26.630382134+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-20T16:13:26.630392336+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241120_161326-hkezd9ys/logs/debug-core.log"}
+{"time":"2024-11-20T16:13:26.747213344+01:00","level":"INFO","msg":"created new stream","id":"hkezd9ys"}
+{"time":"2024-11-20T16:13:26.747238043+01:00","level":"INFO","msg":"stream: started","id":"hkezd9ys"}
+{"time":"2024-11-20T16:13:26.747274361+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"hkezd9ys"}
+{"time":"2024-11-20T16:13:26.74728955+01:00","level":"INFO","msg":"handler: started","stream_id":"hkezd9ys"}
+{"time":"2024-11-20T16:13:26.747322657+01:00","level":"INFO","msg":"sender: started","stream_id":"hkezd9ys"}
+{"time":"2024-11-20T16:13:27.051592198+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-20T16:13:27.051863261+01:00","level":"ERROR","msg":"git repo not found","error":"repository does not exist"}
+{"time":"2024-11-20T16:13:38.475241409+01:00","level":"INFO","msg":"tensorboard: no root directory after 10 seconds, using working directory"}
+{"time":"2024-11-20T16:16:31.300646646+01:00","level":"INFO","msg":"stream: closing","id":"hkezd9ys"}
+{"time":"2024-11-20T16:16:31.300668098+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-20T16:16:31.301020842+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-20T16:16:34.889541245+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-20T16:16:35.178354409+01:00","level":"INFO","msg":"handler: closed","stream_id":"hkezd9ys"}
+{"time":"2024-11-20T16:16:35.178433389+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"hkezd9ys"}
+{"time":"2024-11-20T16:16:35.178451199+01:00","level":"INFO","msg":"sender: closed","stream_id":"hkezd9ys"}
+{"time":"2024-11-20T16:16:35.178508623+01:00","level":"INFO","msg":"stream: closed","id":"hkezd9ys"}

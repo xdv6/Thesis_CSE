@@ -15,6 +15,7 @@ import gym
 from gym import spaces
 import numpy as np
 from reward_machines.reward_machine import RewardMachine
+import wandb
 
 
 class RewardMachineEnv(gym.Wrapper):
@@ -89,6 +90,7 @@ class RewardMachineEnv(gym.Wrapper):
 
         # update the RM state
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, info)
+        wandb.log({"current_u_id": self.current_u_id})
 
         # returning the result of this action
         done = rm_done or env_done

@@ -1,0 +1,75 @@
+Using cuda device
+Logging to ./tensorboard_logs/DDPG_1
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 1e+03    |
+|    ep_rew_mean     | 0        |
+| time/              |          |
+|    episodes        | 4        |
+|    fps             | 93       |
+|    time_elapsed    | 42       |
+|    total_timesteps | 4000     |
+| train/             |          |
+|    actor_loss      | -0.233   |
+|    critic_loss     | 8.16e-05 |
+|    learning_rate   | 0.0001   |
+|    n_updates       | 3000     |
+---------------------------------
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 1e+03    |
+|    ep_rew_mean     | 0        |
+| time/              |          |
+|    episodes        | 8        |
+|    fps             | 87       |
+|    time_elapsed    | 90       |
+|    total_timesteps | 8000     |
+| train/             |          |
+|    actor_loss      | -0.15    |
+|    critic_loss     | 3.44e-05 |
+|    learning_rate   | 0.0001   |
+|    n_updates       | 7000     |
+---------------------------------
+---------------------------------
+| rollout/           |          |
+|    ep_len_mean     | 1e+03    |
+|    ep_rew_mean     | 0        |
+| time/              |          |
+|    episodes        | 12       |
+|    fps             | 87       |
+|    time_elapsed    | 137      |
+|    total_timesteps | 12000    |
+| train/             |          |
+|    actor_loss      | -0.0965  |
+|    critic_loss     | 1.42e-05 |
+|    learning_rate   | 0.0001   |
+|    n_updates       | 11000    |
+---------------------------------
+Traceback (most recent call last):
+  File "run_robosuite.py", line 588, in <module>
+    main(sys.argv)
+  File "run_robosuite.py", line 535, in main
+    model, env = train(args, extra_args)
+  File "run_robosuite.py", line 395, in train
+    **alg_kwargs
+  File "/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/rl_agents/ddpg/ddpg.py", line 91, in learn
+    verbose=2,
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/ddpg/ddpg.py", line 129, in learn
+    progress_bar=progress_bar,
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/td3/td3.py", line 228, in learn
+    progress_bar=progress_bar,
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/off_policy_algorithm.py", line 319, in learn
+    log_interval=log_interval,
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/off_policy_algorithm.py", line 541, in collect_rollouts
+    actions, buffer_actions = self._sample_action(learning_starts, action_noise, env.num_envs)
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/off_policy_algorithm.py", line 373, in _sample_action
+    unscaled_action, _ = self.predict(self._last_obs, deterministic=False)
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/base_class.py", line 555, in predict
+    return self.policy.predict(observation, state, episode_start, deterministic)
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/policies.py", line 346, in predict
+    observation, vectorized_env = self.obs_to_tensor(observation)
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/policies.py", line 268, in obs_to_tensor
+    observation = obs_as_tensor(observation, self.device)
+  File "/home/xdvisch/miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/stable_baselines3/common/policies.py", line 155, in device
+    return param.device
+KeyboardInterrupt

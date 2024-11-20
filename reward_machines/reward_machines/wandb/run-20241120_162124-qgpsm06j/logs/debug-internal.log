@@ -1,0 +1,19 @@
+{"time":"2024-11-20T16:21:24.733895538+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-20T16:21:24.733903154+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241120_162124-qgpsm06j/logs/debug-core.log"}
+{"time":"2024-11-20T16:21:24.851724698+01:00","level":"INFO","msg":"created new stream","id":"qgpsm06j"}
+{"time":"2024-11-20T16:21:24.851748518+01:00","level":"INFO","msg":"stream: started","id":"qgpsm06j"}
+{"time":"2024-11-20T16:21:24.851769886+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"qgpsm06j"}
+{"time":"2024-11-20T16:21:24.851784443+01:00","level":"INFO","msg":"sender: started","stream_id":"qgpsm06j"}
+{"time":"2024-11-20T16:21:24.851811627+01:00","level":"INFO","msg":"handler: started","stream_id":"qgpsm06j"}
+{"time":"2024-11-20T16:21:25.192467088+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-20T16:21:25.19298786+01:00","level":"ERROR","msg":"git repo not found","error":"repository does not exist"}
+{"time":"2024-11-20T16:21:36.591098085+01:00","level":"INFO","msg":"tensorboard: no root directory after 10 seconds, using working directory"}
+{"time":"2024-11-20T16:41:29.922968506+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-20T16:41:29.923554561+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-20T16:41:30.923333474+01:00","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"saving job artifact","runtime_seconds":0.630332787},{"desc":"uploading model.zip","runtime_seconds":0.618833911,"progress":"1.1MB/4.1MB"},{"desc":"uploading config.yaml","runtime_seconds":0.426290116,"progress":"7.7KB/7.7KB"},{"desc":"uploading output.log","runtime_seconds":0.426280355,"progress":"12.5KB/12.5KB"}],"total_operations":4}}
+{"time":"2024-11-20T16:41:34.996731934+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-20T16:41:36.400189119+01:00","level":"INFO","msg":"stream: closing","id":"qgpsm06j"}
+{"time":"2024-11-20T16:41:36.400232821+01:00","level":"INFO","msg":"handler: closed","stream_id":"qgpsm06j"}
+{"time":"2024-11-20T16:41:36.400243392+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"qgpsm06j"}
+{"time":"2024-11-20T16:41:36.40059931+01:00","level":"INFO","msg":"sender: closed","stream_id":"qgpsm06j"}
+{"time":"2024-11-20T16:41:36.400740499+01:00","level":"INFO","msg":"stream: closed","id":"qgpsm06j"}
