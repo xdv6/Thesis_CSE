@@ -126,6 +126,8 @@ def learn(env,
             # Take action and update exploration to the newest value
             action = options.get_action(env.get_option_observation(option_id), t, reset)
             reset = False
+
+            action = action.squeeze()
             new_obs, rew, done, info = env.step(action)
 
             # Saving the real reward that the option is getting

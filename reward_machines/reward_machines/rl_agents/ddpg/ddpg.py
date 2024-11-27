@@ -13,12 +13,12 @@ import baselines.common.tf_util as U
 from baselines import logger
 import numpy as np
 
+import wandb
+
 try:
     from mpi4py import MPI
 except ImportError:
     MPI = None
-
-
 
 def learn(network, env,
           seed=None,
@@ -50,6 +50,12 @@ def learn(network, env,
 
     set_global_seeds(seed)
 
+    run = wandb.init(
+        # Set the project where this run will be logged
+        project="reward_machines",
+        # Track hyperparameters and run metadata
+    )
+
     if total_timesteps is not None:
         assert nb_epochs is None
         nb_epochs = int(total_timesteps) // (nb_epoch_cycles * nb_rollout_steps)
@@ -64,13 +70,11 @@ def learn(network, env,
     nb_actions = env.action_space.shape[-1]
     assert (np.abs(env.action_space.low) == env.action_space.high).all()  # we assume symmetric actions.
 
-
     limit = int(1e6)
     if use_crm:
         rm_states  = env.envs[0].get_num_rm_states()
-        batch_size = rm_states*batch_size
-        limit = rm_states*int(1e6)
-
+        batch_size = rm_states * batch_size
+        limit = rm_states * int(1e6)
 
     memory = Memory(limit=limit, action_shape=env.action_space.shape, observation_shape=env.observation_space.shape)
     critic = Critic(network=network, **network_kwargs)
@@ -120,14 +124,12 @@ def learn(network, env,
         eval_obs = eval_env.reset()
     nenvs = obs.shape[0]
 
-    episode_reward = np.zeros(nenvs, dtype = np.float32) #vector
-    episode_step = np.zeros(nenvs, dtype = int) # vector
-    episodes = 0 #scalar
-    t = 0 # scalar
+    episode_reward = np.zeros(nenvs, dtype=np.float32)  # vector
+    episode_step = np.zeros(nenvs, dtype=int)  # vector
+    episodes = 0  # scalar
+    t = 0  # scalar
 
     epoch = 0
-
-
 
     start_time = time.time()
 
@@ -167,9 +169,9 @@ def learn(network, env,
 
                 # Adding counterfactual experience from the reward machines
                 if nenvs == 1:
-                    if not(use_crm or use_rs):
+                    if not (use_crm or use_rs):
                         # Standard DDPG
-                        agent.store_transition(obs, action, r, new_obs, done) #the batched data will be unrolled in memory.py's append.
+                        agent.store_transition(obs, action, r, new_obs, done)  # the batched data will be unrolled in memory.py's append.
                     else:
                         # Adding crm and/or reward shaping to DDPG
                         if use_crm:
@@ -178,12 +180,12 @@ def learn(network, env,
                             experiences = [(obs, action, info[0]["rs-reward"], new_obs, done)]
 
                         for _obs, _action, _r, _new_obs, _done in experiences:
-                            _obs.shape     = obs.shape
-                            _action.shape  = action.shape
+                            _obs.shape = obs.shape
+                            _action.shape = action.shape
                             _new_obs.shape = new_obs.shape
-                            _r             = np.array([_r])
-                            _done          = np.array([_done])
-                            agent.store_transition(_obs, _action, _r, _new_obs, _done) #the batched data will be unrolled in memory.py's append.
+                            _r = np.array([_r])
+                            _done = np.array([_done])
+                            agent.store_transition(_obs, _action, _r, _new_obs, _done)  # the batched data will be unrolled in memory.py's append.
                 else:
                     assert False, "We have not implemented crm for nenvs > 1 yet"
 
@@ -201,7 +203,6 @@ def learn(network, env,
                         episodes += 1
                         if nenvs == 1:
                             agent.reset()
-
 
             # Train.
             epoch_actor_losses = []
@@ -223,7 +224,7 @@ def learn(network, env,
             eval_qs = []
             if eval_env is not None:
                 nenvs_eval = eval_obs.shape[0]
-                eval_episode_reward = np.zeros(nenvs_eval, dtype = np.float32)
+                eval_episode_reward = np.zeros(nenvs_eval, dtype=np.float32)
                 for t_rollout in range(nb_eval_steps):
                     eval_action, eval_q, _, _ = agent.step(eval_obs, apply_noise=False, compute_Q=True)
                     eval_obs, eval_r, eval_done, eval_info = eval_env.step(max_action * eval_action)  # scale for execution in env (as far as DDPG is concerned, every action is in [-1, 1])
@@ -265,10 +266,11 @@ def learn(network, env,
         combined_stats['rollout/actions_std'] = np.std(epoch_actions)
         # Evaluation statistics.
         if eval_env is not None:
-            combined_stats['eval/return'] = eval_episode_rewards
+            combined_stats['eval/return'] = np.mean(eval_episode_rewards)
             combined_stats['eval/return_history'] = np.mean(eval_episode_rewards_history)
-            combined_stats['eval/Q'] = eval_qs
+            combined_stats['eval/Q'] = np.mean(eval_qs)
             combined_stats['eval/episodes'] = len(eval_episode_rewards)
+
         def as_scalar(x):
             if isinstance(x, np.ndarray):
                 assert x.size == 1
@@ -276,13 +278,41 @@ def learn(network, env,
             elif np.isscalar(x):
                 return x
             else:
-                raise ValueError('expected scalar, got %s'%x)
+                raise ValueError('expected scalar, got %s' % x)
 
-        combined_stats_sums = np.array([ np.array(x).flatten()[0] for x in combined_stats.values()])
+        combined_stats_sums = np.array([np.array(x).flatten()[0] for x in combined_stats.values()])
         if MPI is not None:
             combined_stats_sums = MPI.COMM_WORLD.allreduce(combined_stats_sums)
 
-        combined_stats = {k : v / mpi_size for (k,v) in zip(combined_stats.keys(), combined_stats_sums)}
+        combined_stats = {k: v / mpi_size for (k, v) in zip(combined_stats.keys(), combined_stats_sums)}
+
+        # Log to WandB
+        wandb.log({
+            'rollout/return_mean': combined_stats['rollout/return'],
+            'rollout/return_std': combined_stats['rollout/return_std'],
+            'rollout/return_history_mean': combined_stats['rollout/return_history'],
+            'rollout/return_history_std': combined_stats['rollout/return_history_std'],
+            'rollout/episode_steps_mean': combined_stats['rollout/episode_steps'],
+            'rollout/actions_mean': combined_stats['rollout/actions_mean'],
+            'rollout/actions_std': combined_stats['rollout/actions_std'],
+            'rollout/Q_mean': combined_stats['rollout/Q_mean'],
+            'train/loss_actor_mean': combined_stats['train/loss_actor'],
+            'train/loss_critic_mean': combined_stats['train/loss_critic'],
+            'train/param_noise_distance_mean': combined_stats['train/param_noise_distance'],
+            'total/duration': combined_stats['total/duration'],
+            'total/steps_per_second': combined_stats['total/steps_per_second'],
+            'total/episodes': combined_stats['total/episodes'],
+            'rollout/episodes': combined_stats['rollout/episodes'],
+            'total/steps': t,
+        })
+
+        if eval_env is not None:
+            wandb.log({
+                'eval/return_mean': combined_stats['eval/return'],
+                'eval/return_history_mean': combined_stats['eval/return_history'],
+                'eval/Q_mean': combined_stats['eval/Q'],
+                'eval/episodes': combined_stats['eval/episodes'],
+            })
 
         # Total statistics.
         combined_stats['total/epochs'] = epoch + 1
@@ -302,6 +332,5 @@ def learn(network, env,
             if eval_env and hasattr(eval_env, 'get_state'):
                 with open(os.path.join(logdir, 'eval_env_state.pkl'), 'wb') as f:
                     pickle.dump(eval_env.get_state(), f)
-
 
     return agent

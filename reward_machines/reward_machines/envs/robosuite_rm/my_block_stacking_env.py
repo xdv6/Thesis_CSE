@@ -111,6 +111,7 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
         self.obs_dict = next_obs
         flattened_observation = flatten_observation(next_obs)
+        # self.env.render()
         return flattened_observation, reward, done, info
 
     def get_events(self):

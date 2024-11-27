@@ -1,0 +1,8 @@
+{"time":"2024-11-27T09:14:00.72013754+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-27T09:14:00.720153094+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241127_091400-d0ncdthx/logs/debug-core.log"}
+{"time":"2024-11-27T09:14:00.837961501+01:00","level":"INFO","msg":"created new stream","id":"d0ncdthx"}
+{"time":"2024-11-27T09:14:00.837985298+01:00","level":"INFO","msg":"stream: started","id":"d0ncdthx"}
+{"time":"2024-11-27T09:14:00.838021745+01:00","level":"INFO","msg":"handler: started","stream_id":"d0ncdthx"}
+{"time":"2024-11-27T09:14:00.838250549+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"d0ncdthx"}
+{"time":"2024-11-27T09:14:00.838255478+01:00","level":"INFO","msg":"sender: started","stream_id":"d0ncdthx"}
+{"time":"2024-11-27T09:14:01.135370721+01:00","level":"INFO","msg":"Starting system monitor"}
