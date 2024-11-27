@@ -90,6 +90,8 @@ class MyBlockStackingEnv(GymWrapper):
         env.placement_initializer = placement_initializer
         super().__init__(env)  # Wrap the environment with GymWrapper
 
+        # for recognition in reward machine
+        self.status = "robosuite"
         # Flatten observation space
         reset_env = env.reset()
         self.obs_dict = reset_env

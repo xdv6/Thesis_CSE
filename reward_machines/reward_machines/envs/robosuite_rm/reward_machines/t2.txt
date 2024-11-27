@@ -1,10 +1,16 @@
-0   # initial state
-[4]  # terminal state
-(0,0,'!g',RewardControl())   # Stay in state 0 until block is grasped
-(0,1,'g',RewardControl())    # Move to state 1 when block is grasped
-(1,1,'!p',RewardControl())   # Stay in state 1 until block is placed
-(1,2,'p',RewardControl())    # Move to state 2 when block is placed
-(2,2,'!s',RewardControl())   # Stay in state 2 until block is stacked
-(2,3,'s',RewardControl())    # Move to state 3 when block is stacked
-(3,3,'!s',RewardControl())   # Stay in state 3 for final stacking
-(3,4,'s',ConstantRewardFunction(1000))   # Final reward and terminate
+0  # initial state
+[5]  # terminal state
+(0, 0, '!g', ConstantRewardFunction(0))  # If cubeA is not grasped, remain in state 0 with 0 reward
+(0, 1, 'g', ConstantRewardFunction(0))   # If cubeA is grasped, move to state 1 with 0 reward
+(1, 1, '!h&!d', ConstantRewardFunction(0))  # If not above cubeB in height and not dropped, remain in state 1 with 0 reward
+(1, 0, 'd', ConstantRewardFunction(0))  # If cubeA is dropped, move back to state 0 with 0 reward
+(1, 2, 'h&!d', ConstantRewardFunction(0))  # If above cubeB in height and not dropped, move to state 2 with 0 reward
+(2, 2, '!p&!d', ConstantRewardFunction(0))  # If not above cubeB in x, y and not dropped, remain in state 2 with 0 reward
+(2, 0, 'd', ConstantRewardFunction(0))  # If cubeA is dropped, move back to state 0 with 0 reward
+(2, 3, 'p&!d', ConstantRewardFunction(0))  # If above cubeB in x, y coordinates and not dropped, move to state 3 with 0 reward
+(3, 3, '!b&!d', ConstantRewardFunction(0))  # If cubeA is not in contact with cubeB and not dropped, remain in state 3 with 0 reward
+(3, 0, 'd', ConstantRewardFunction(0))  # If cubeA is dropped, move back to state 0 with 0 reward
+(3, 4, 'b&!d', ConstantRewardFunction(0))  # If cubeA is above cubeB and in contact and not dropped, move to state 4 with 0 reward
+(4, 4, '!l&!d', ConstantRewardFunction(0))  # If cubeA is not stacked on cubeB for enough time and not dropped, remain in state 4 with 0 reward
+(4, 0, 'd', ConstantRewardFunction(0))  # If cubeA is dropped, move back to state 0 with 0 reward
+(4, 5, 'l&!d', ConstantRewardFunction(1))  # If cubeA is stacked on cubeB for more than 5 seconds and not dropped, move to state 5 with 1000 reward

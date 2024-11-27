@@ -1,4 +1,6 @@
 import math
+import numpy as np
+import wandb
 
 class RewardFunction:
     def __init__(self):
@@ -37,7 +39,11 @@ class RewardControl(RewardFunction):
         return "ctrl"
 
     def get_reward(self, s_info):
-        return s_info['reward_ctrl']
+        # euclidian distance
+        distance = np.linalg.norm(s_info)
+        wandb.log({"distance": distance})
+        # return s_info['reward_ctrl']
+        return -distance
 
 class RewardForward(RewardFunction):
     """

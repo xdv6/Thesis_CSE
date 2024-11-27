@@ -6,3 +6,11 @@
 {"time":"2024-11-27T09:14:00.838250549+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"d0ncdthx"}
 {"time":"2024-11-27T09:14:00.838255478+01:00","level":"INFO","msg":"sender: started","stream_id":"d0ncdthx"}
 {"time":"2024-11-27T09:14:01.135370721+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-27T09:30:17.172556902+01:00","level":"INFO","msg":"stream: closing","id":"d0ncdthx"}
+{"time":"2024-11-27T09:30:17.172791143+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-27T09:30:17.174472299+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-27T09:30:19.947312325+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-27T09:30:20.33118491+01:00","level":"INFO","msg":"handler: closed","stream_id":"d0ncdthx"}
+{"time":"2024-11-27T09:30:20.33122992+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"d0ncdthx"}
+{"time":"2024-11-27T09:30:20.331257502+01:00","level":"INFO","msg":"sender: closed","stream_id":"d0ncdthx"}
+{"time":"2024-11-27T09:30:20.331261533+01:00","level":"INFO","msg":"stream: closed","id":"d0ncdthx"}
