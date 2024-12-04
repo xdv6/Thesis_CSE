@@ -16,6 +16,8 @@ from gym import spaces
 import numpy as np
 from reward_machines.reward_machine import RewardMachine
 
+import wandb
+
 
 class RewardMachineEnv(gym.Wrapper):
     def __init__(self, env, rm_files):
@@ -86,9 +88,9 @@ class RewardMachineEnv(gym.Wrapper):
         self.obs = next_obs
 
         # update the RM state
-        info = self.env.obs_dict["gripper_to_cubeA"]
+        distance_block_gripper = self.env.obs_dict["gripper_to_cubeA"]
 
-        self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, info)
+        self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, distance_block_gripper)
 
         # returning the result of this action
         done = rm_done or env_done
@@ -139,6 +141,8 @@ class RewardMachineWrapper(gym.Wrapper):
 
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
+        wandb.log({"current_u_id": self.env.current_u_id})
+
 
         # adding crm if needed
         if self.add_crm:
@@ -280,6 +284,7 @@ class HierarchicalRMWrapper(gym.Wrapper):
 
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
+        wandb.log({"current_u_id": self.env.current_u_id})
 
         # adding crm if needed
         if self.add_rs:

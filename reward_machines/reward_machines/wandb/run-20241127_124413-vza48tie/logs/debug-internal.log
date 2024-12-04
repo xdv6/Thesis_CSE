@@ -1,0 +1,16 @@
+{"time":"2024-11-27T12:44:13.518579536+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-11-27T12:44:13.518592253+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241127_124413-vza48tie/logs/debug-core.log"}
+{"time":"2024-11-27T12:44:13.637059443+01:00","level":"INFO","msg":"created new stream","id":"vza48tie"}
+{"time":"2024-11-27T12:44:13.637085774+01:00","level":"INFO","msg":"stream: started","id":"vza48tie"}
+{"time":"2024-11-27T12:44:13.637146993+01:00","level":"INFO","msg":"handler: started","stream_id":"vza48tie"}
+{"time":"2024-11-27T12:44:13.637323606+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"vza48tie"}
+{"time":"2024-11-27T12:44:13.637330156+01:00","level":"INFO","msg":"sender: started","stream_id":"vza48tie"}
+{"time":"2024-11-27T12:44:13.978201759+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-11-27T12:44:27.828194043+01:00","level":"INFO","msg":"stream: closing","id":"vza48tie"}
+{"time":"2024-11-27T12:44:27.828207714+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-11-27T12:44:27.828680205+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-11-27T12:44:28.9063587+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-11-27T12:44:29.426919196+01:00","level":"INFO","msg":"handler: closed","stream_id":"vza48tie"}
+{"time":"2024-11-27T12:44:29.426960585+01:00","level":"INFO","msg":"sender: closed","stream_id":"vza48tie"}
+{"time":"2024-11-27T12:44:29.426955484+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"vza48tie"}
+{"time":"2024-11-27T12:44:29.427032186+01:00","level":"INFO","msg":"stream: closed","id":"vza48tie"}

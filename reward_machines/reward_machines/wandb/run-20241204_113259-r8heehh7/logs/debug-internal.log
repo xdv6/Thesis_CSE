@@ -1,0 +1,16 @@
+{"time":"2024-12-04T11:32:59.9827206+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-04T11:32:59.982749439+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241204_113259-r8heehh7/logs/debug-core.log"}
+{"time":"2024-12-04T11:33:00.204068878+01:00","level":"INFO","msg":"created new stream","id":"r8heehh7"}
+{"time":"2024-12-04T11:33:00.204100782+01:00","level":"INFO","msg":"stream: started","id":"r8heehh7"}
+{"time":"2024-12-04T11:33:00.204177201+01:00","level":"INFO","msg":"handler: started","stream_id":"r8heehh7"}
+{"time":"2024-12-04T11:33:00.204460809+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"r8heehh7"}
+{"time":"2024-12-04T11:33:00.204473518+01:00","level":"INFO","msg":"sender: started","stream_id":"r8heehh7"}
+{"time":"2024-12-04T11:33:00.575734491+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-04T11:33:13.648181365+01:00","level":"INFO","msg":"stream: closing","id":"r8heehh7"}
+{"time":"2024-12-04T11:33:13.648198856+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-04T11:33:13.648502681+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-04T11:33:14.724086836+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-04T11:33:15.001470624+01:00","level":"INFO","msg":"handler: closed","stream_id":"r8heehh7"}
+{"time":"2024-12-04T11:33:15.001518008+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"r8heehh7"}
+{"time":"2024-12-04T11:33:15.001551442+01:00","level":"INFO","msg":"sender: closed","stream_id":"r8heehh7"}
+{"time":"2024-12-04T11:33:15.001567699+01:00","level":"INFO","msg":"stream: closed","id":"r8heehh7"}

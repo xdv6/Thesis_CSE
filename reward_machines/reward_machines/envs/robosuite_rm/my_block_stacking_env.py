@@ -25,18 +25,21 @@ def flatten_observation(obs):
     for key in keys_to_keep:
         if key in obs:
             value = obs[key]
+            # Print the key and its value
+            # print(f"Key: {key}, Value: {value}")
             if isinstance(value, np.ndarray):
                 flat_obs.extend(value.flatten())
             else:
                 flat_obs.append(value)
     return np.array(flat_obs)
 
+
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
     def __init__(self):
         # Initialize the robosuite environment and wrap it with GymWrapper
         # Load controller configuration
-        controller_config = load_controller_config(default_controller="OSC_POSE")
+        controller_config = load_controller_config(default_controller="OSC_POSITION")
 
         # Create environment instance with the given configuration
         env = suite.make(
@@ -44,11 +47,10 @@ class MyBlockStackingEnv(GymWrapper):
             robots="Panda",  # Using Panda robot
             controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
-            has_renderer=False,  # Enable rendering for visualization
+            has_renderer=True,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
-            has_offscreen_renderer=False,
-            control_freq=20,  # Set control frequency for smooth simulation
-            horizon=1000,
+            control_freq=5,  # Set control frequency for smooth simulation
+            horizon=100,
             use_camera_obs=False,  # Disable camera observations
         )
 
@@ -59,8 +61,8 @@ class MyBlockStackingEnv(GymWrapper):
             # Create a placement initializer with a y_range and dynamically updated x_range
             sampler = UniformRandomSampler(
                 name="ObjectSamplerCubeA",
-                x_range=[0.0, 0.0],
-                y_range=[0.0, 0.0],
+                x_range=[0.01, 0.01],
+                y_range=[0.01, 0.01],
                 rotation=0.0,
                 ensure_object_boundary_in_range=False,
                 ensure_valid_placement=True,
@@ -73,8 +75,8 @@ class MyBlockStackingEnv(GymWrapper):
             # Create a placement initializer with a y_range and dynamically updated x_range
             sampler = UniformRandomSampler(
                 name="ObjectSamplerCubeB",
-                x_range=[0.1, 0.1],
-                y_range=[0.1, 0.1],
+                x_range=[0.2, 0.2],
+                y_range=[0.2, 0.2],
                 rotation=0.0,
                 ensure_object_boundary_in_range=False,
                 ensure_valid_placement=True,
@@ -113,7 +115,9 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
         self.obs_dict = next_obs
         flattened_observation = flatten_observation(next_obs)
-        # self.env.render()
+        self.env.render()
+        print("A pos", self.obs_dict["cubeA_pos"])
+        print("B pos", self.obs_dict["cubeB_pos"])
         return flattened_observation, reward, done, info
 
     def get_events(self):
