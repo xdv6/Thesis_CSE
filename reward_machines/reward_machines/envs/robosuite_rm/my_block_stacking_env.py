@@ -47,7 +47,7 @@ class MyBlockStackingEnv(GymWrapper):
             robots="Panda",  # Using Panda robot
             controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
-            has_renderer=True,  # Enable rendering for visualization
+            has_renderer=False,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
             control_freq=5,  # Set control frequency for smooth simulation
             horizon=100,
@@ -115,9 +115,7 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
         self.obs_dict = next_obs
         flattened_observation = flatten_observation(next_obs)
-        self.env.render()
-        print("A pos", self.obs_dict["cubeA_pos"])
-        print("B pos", self.obs_dict["cubeB_pos"])
+        # self.env.render()
         return flattened_observation, reward, done, info
 
     def get_events(self):

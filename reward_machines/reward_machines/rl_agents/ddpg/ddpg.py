@@ -50,11 +50,7 @@ def learn(network, env,
 
     set_global_seeds(seed)
 
-    run = wandb.init(
-        # Set the project where this run will be logged
-        project="reward_machines",
-        # Track hyperparameters and run metadata
-    )
+
 
     if total_timesteps is not None:
         assert nb_epochs is None

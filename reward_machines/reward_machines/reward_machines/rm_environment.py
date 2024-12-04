@@ -87,9 +87,9 @@ class RewardMachineEnv(gym.Wrapper):
         self.crm_params = self.obs, action, next_obs, env_done, true_props, info
         self.obs = next_obs
 
-        # update the RM state
         distance_block_gripper = self.env.obs_dict["gripper_to_cubeA"]
 
+        # update the RM state
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, distance_block_gripper)
 
         # returning the result of this action
@@ -307,7 +307,10 @@ class HierarchicalRMWrapper(gym.Wrapper):
         rm = self.env.reward_machines[rm_id]
 
         opt_obs = self.get_option_observation(option_id, obs)
-        un, rm_rew, _ = rm.step(u1, true_props, info, self.add_rs, env_done)
+
+        distance_block_gripper = self.env.obs_dict["gripper_to_cubeA"]
+
+        un, rm_rew, _ = rm.step(u1, true_props, distance_block_gripper, self.add_rs, env_done)
         done = env_done or u1 != un
         opt_next_obs = self.get_option_observation(option_id, next_obs)
 
@@ -332,7 +335,8 @@ class HierarchicalRMWrapper(gym.Wrapper):
             # Computing reachable states (for the next state)
             rm_id, u1, u2 = self.options[option_id]
             rm = self.env.reward_machines[rm_id]
-            un, _, _ = rm.step(u1, true_props, info)
+            distance_block_gripper = self.env.obs_dict["gripper_to_cubeA"]
+            un, _, _ = rm.step(u1, true_props, distance_block_gripper)
             reachable_states.add((rm_id,un))
             # Adding experience (if needed)
             if self.valid_states is None or (rm_id,u1) in self.valid_states:

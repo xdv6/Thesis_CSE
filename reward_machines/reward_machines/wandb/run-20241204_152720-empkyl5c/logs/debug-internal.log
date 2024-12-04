@@ -1,0 +1,16 @@
+{"time":"2024-12-04T15:27:20.217927272+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-04T15:27:20.217935568+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241204_152720-empkyl5c/logs/debug-core.log"}
+{"time":"2024-12-04T15:27:20.3336466+01:00","level":"INFO","msg":"created new stream","id":"empkyl5c"}
+{"time":"2024-12-04T15:27:20.333677388+01:00","level":"INFO","msg":"stream: started","id":"empkyl5c"}
+{"time":"2024-12-04T15:27:20.333704815+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"empkyl5c"}
+{"time":"2024-12-04T15:27:20.33371177+01:00","level":"INFO","msg":"sender: started","stream_id":"empkyl5c"}
+{"time":"2024-12-04T15:27:20.333743412+01:00","level":"INFO","msg":"handler: started","stream_id":"empkyl5c"}
+{"time":"2024-12-04T15:27:20.685001326+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-04T15:28:07.975635729+01:00","level":"INFO","msg":"stream: closing","id":"empkyl5c"}
+{"time":"2024-12-04T15:28:07.975670388+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-04T15:28:07.976271984+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-04T15:28:10.819145353+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-04T15:28:11.093155694+01:00","level":"INFO","msg":"handler: closed","stream_id":"empkyl5c"}
+{"time":"2024-12-04T15:28:11.093187857+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"empkyl5c"}
+{"time":"2024-12-04T15:28:11.09319692+01:00","level":"INFO","msg":"sender: closed","stream_id":"empkyl5c"}
+{"time":"2024-12-04T15:28:11.093223044+01:00","level":"INFO","msg":"stream: closed","id":"empkyl5c"}

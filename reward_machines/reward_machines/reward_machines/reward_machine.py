@@ -75,6 +75,7 @@ class RewardMachine:
         """
         # Getting reward from the RM
         reward = 0 # NOTE: if the agent falls from the reward machine it receives reward of zero
+
         if u1 in self.delta_r and u2 in self.delta_r[u1]:
             reward += self.delta_r[u1][u2].get_reward(s_info)
         # Adding the reward shaping (if needed)

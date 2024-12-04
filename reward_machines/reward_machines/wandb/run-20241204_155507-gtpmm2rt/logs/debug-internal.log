@@ -1,0 +1,16 @@
+{"time":"2024-12-04T15:55:07.925248415+01:00","level":"INFO","msg":"using version","core version":"0.18.7"}
+{"time":"2024-12-04T15:55:07.92525834+01:00","level":"INFO","msg":"created symlink","path":"/home/xdvisch/masterproef/Thesis_CSE/reward_machines/reward_machines/wandb/run-20241204_155507-gtpmm2rt/logs/debug-core.log"}
+{"time":"2024-12-04T15:55:08.040909864+01:00","level":"INFO","msg":"created new stream","id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:08.040933793+01:00","level":"INFO","msg":"stream: started","id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:08.041042283+01:00","level":"INFO","msg":"writer: Do: started","stream_id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:08.041053376+01:00","level":"INFO","msg":"handler: started","stream_id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:08.041116543+01:00","level":"INFO","msg":"sender: started","stream_id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:08.381602068+01:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2024-12-04T15:55:12.64178735+01:00","level":"INFO","msg":"stream: closing","id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:12.641832105+01:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2024-12-04T15:55:12.642342405+01:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2024-12-04T15:55:13.6998823+01:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2024-12-04T15:55:13.999081322+01:00","level":"INFO","msg":"handler: closed","stream_id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:13.999255803+01:00","level":"INFO","msg":"writer: Close: closed","stream_id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:13.999332005+01:00","level":"INFO","msg":"sender: closed","stream_id":"gtpmm2rt"}
+{"time":"2024-12-04T15:55:13.999405597+01:00","level":"INFO","msg":"stream: closed","id":"gtpmm2rt"}
