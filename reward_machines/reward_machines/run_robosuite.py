@@ -232,7 +232,15 @@ def main(args):
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
+        import ipdb; ipdb.set_trace()
         model.save(save_path)
+
+        # act_wrapper = model[0]
+        # act_wrapper.save_act("act_wrapper.pkl")
+        # act_wrapper.save("act_wrapper_model.pkl")
+        # act_wrapper = ActWrapper.load("act_wrapper_model.pkl")
+
+
 
     if args.play:
         logger.log("Running trained model")
