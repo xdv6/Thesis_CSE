@@ -47,7 +47,7 @@ class MyBlockStackingEnv(GymWrapper):
             robots="Panda",  # Using Panda robot
             controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
-            has_renderer=False,  # Enable rendering for visualization
+            has_renderer=True,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
             control_freq=5,  # Set control frequency for smooth simulation
             horizon=100,
@@ -115,7 +115,7 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
         self.obs_dict = next_obs
         flattened_observation = flatten_observation(next_obs)
-        # self.env.render()
+        self.env.render()
         return flattened_observation, reward, done, info
 
     def get_events(self):
@@ -214,14 +214,56 @@ class MyBlockStackingEnv(GymWrapper):
         return not self.block_grasped()
 
     def reset(self):
-        # Reset the environment and return the flattened observation
+        # Reset the environment
         obs = self.env.reset()
         self.stack_timer = 0.0  # Reset timer on environment reset
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs
+
+        # Move the gripper above the block (cubeA)
+        target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Target position above cubeA
+        for _ in range(100):
+            curr_pos = obs["robot0_eef_pos"]
+            delta_pos = target_pos - curr_pos
+            action = np.concatenate([5 * delta_pos, [-1]])  # Gripper open
+            obs, reward, done, info = self.env.step(action)
+            self.obs_dict = obs
+            if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+                break
+
+        # Move down to grasp the block
+        target_pos = obs["cubeA_pos"]
+        target_pos[-1] -= 0.01  # Lower the gripper slightly for grasping
+        for _ in range(100):
+            curr_pos = obs["robot0_eef_pos"]
+            delta_pos = target_pos - curr_pos
+            action = np.concatenate([4 * delta_pos, [-1]])  # Gripper open
+            obs, reward, done, info = self.env.step(action)
+            self.obs_dict = obs
+            if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+                break
+
+        # Close the gripper to grasp the block
+        for _ in range(25):
+            action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
+            obs, reward, done, info = self.env.step(action)
+            self.obs_dict = obs
+            # Check for contact between gripper and cubeA
+            is_contact = self.env.check_contact(
+                geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
+                geoms_2=["cubeA_g0"]
+            )
+            if is_contact:  # Stop if the block is grasped
+                break
+
+        # Return the flattened observation
         flattened_observation = flatten_observation(obs)
         return flattened_observation
-    
+
+        # Return the flattened observation
+        flattened_observation = flatten_observation(obs)
+        return flattened_observation
+        
     def seed(self, seed):
         # Set the random seed for reproducibility
         # needed for gym compatibility

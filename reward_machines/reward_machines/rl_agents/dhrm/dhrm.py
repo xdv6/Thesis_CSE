@@ -21,6 +21,7 @@ from baselines.deepq.models import build_q_func
 
 from rl_agents.dhrm.options import OptionDQN, OptionDDPG
 from rl_agents.dhrm.controller import ControllerDQN
+import wandb
 
 
 def learn(env,
@@ -134,6 +135,7 @@ def learn(env,
             if use_rs:
                 option_rews.append(info["rs-reward"])
             else:
+                wandb.log({"reward": rew})
                 option_rews.append(rew)
 
             # Store transition for the option policies
