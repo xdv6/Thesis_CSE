@@ -54,7 +54,7 @@ class MyBlockStackingEnv(GymWrapper):
             use_camera_obs=False,  # Disable camera observations
         )
 
-        # put line 358 en 359 from stack environment in comments 
+        # put line 358 en 359 from stack environment in comments
         placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
 
         placement_initializer.append_sampler(
@@ -124,7 +124,7 @@ class MyBlockStackingEnv(GymWrapper):
         if self.block_grasped():
             events += 'g'  # 'g' event for block grasped, robot in contact with cubeA
         if self.above_block_b_and_grasped():
-            events += 'h'  # 'h' event for above cubeB in height 
+            events += 'h'  # 'h' event for above cubeB in height
         if self.above_block_b_in_xy_and_grasped():
             events += 'p'  # 'p' event for above cubeB in x, y coordinates
         if self.cube_a_above_cube_b_and_in_contact():
@@ -141,15 +141,15 @@ class MyBlockStackingEnv(GymWrapper):
             geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
             geoms_2=["cubeA_g0"]
         )
-        return is_contact_with_cubeA 
+        return is_contact_with_cubeA
 
     def above_block_b_and_grasped(self):
         # Check if the end-effector is above the height of cubeB while still grasping cubeA
         obs = self.obs_dict
         eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
         cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
-        is_above_cube_b = eef_height > cube_b_height    
-        return is_above_cube_b 
+        is_above_cube_b = eef_height > cube_b_height
+        return is_above_cube_b
 
     def above_block_b_in_xy_and_grasped(self):
         # Check if the end-effector is above cubeB in the x and y plane while still grasping cubeA
@@ -165,7 +165,7 @@ class MyBlockStackingEnv(GymWrapper):
         )
 
         return is_above_cube_b_xy
-    
+
     def cube_a_above_cube_b_and_in_contact(self):
         # Check if cubeA is directly above cubeB and if they are in contact
         obs = self.obs_dict
@@ -220,50 +220,50 @@ class MyBlockStackingEnv(GymWrapper):
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs
 
-        # Move the gripper above the block (cubeA)
-        target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Target position above cubeA
-        for _ in range(100):
-            curr_pos = obs["robot0_eef_pos"]
-            delta_pos = target_pos - curr_pos
-            action = np.concatenate([5 * delta_pos, [-1]])  # Gripper open
-            obs, reward, done, info = self.env.step(action)
-            self.obs_dict = obs
-            if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
-                break
+        # # Move the gripper above the block (cubeA)
+        # target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Target position above cubeA
+        # for _ in range(100):
+        #     curr_pos = obs["robot0_eef_pos"]
+        #     delta_pos = target_pos - curr_pos
+        #     action = np.concatenate([5 * delta_pos, [-1]])  # Gripper open
+        #     obs, reward, done, info = self.env.step(action)
+        #     self.obs_dict = obs
+        #     if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+        #         break
+        #
+        # # Move down to grasp the block
+        # target_pos = obs["cubeA_pos"]
+        # target_pos[-1] -= 0.01  # Lower the gripper slightly for grasping
+        # for _ in range(100):
+        #     curr_pos = obs["robot0_eef_pos"]
+        #     delta_pos = target_pos - curr_pos
+        #     action = np.concatenate([4 * delta_pos, [-1]])  # Gripper open
+        #     obs, reward, done, info = self.env.step(action)
+        #     self.obs_dict = obs
+        #     if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+        #         break
+        #
+        # # Close the gripper to grasp the block
+        # for _ in range(25):
+        #     action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
+        #     obs, reward, done, info = self.env.step(action)
+        #     self.obs_dict = obs
+        #     # Check for contact between gripper and cubeA
+        #     is_contact = self.env.check_contact(
+        #         geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
+        #         geoms_2=["cubeA_g0"]
+        #     )
+        #     if is_contact:  # Stop if the block is grasped
+        #         break
 
-        # Move down to grasp the block
-        target_pos = obs["cubeA_pos"]
-        target_pos[-1] -= 0.01  # Lower the gripper slightly for grasping
-        for _ in range(100):
-            curr_pos = obs["robot0_eef_pos"]
-            delta_pos = target_pos - curr_pos
-            action = np.concatenate([4 * delta_pos, [-1]])  # Gripper open
-            obs, reward, done, info = self.env.step(action)
-            self.obs_dict = obs
-            if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
-                break
-
-        # Close the gripper to grasp the block
-        for _ in range(25):
-            action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
-            obs, reward, done, info = self.env.step(action)
-            self.obs_dict = obs
-            # Check for contact between gripper and cubeA
-            is_contact = self.env.check_contact(
-                geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
-                geoms_2=["cubeA_g0"]
-            )
-            if is_contact:  # Stop if the block is grasped
-                break
+        # Return the flattened observation
+        flattened_observation = flatten_observation(obs)
+        return flattened_observation
 
         # Return the flattened observation
         flattened_observation = flatten_observation(obs)
         return flattened_observation
 
-        # Return the flattened observation
-        flattened_observation = flatten_observation(obs)
-        return flattened_observation
-        
     def seed(self, seed):
         # Set the random seed for reproducibility
         # needed for gym compatibility
@@ -293,3 +293,7 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
+
+
+
+
