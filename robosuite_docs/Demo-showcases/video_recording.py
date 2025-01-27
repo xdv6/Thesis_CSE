@@ -1,4 +1,4 @@
-"""
+    """
 Record video of agent episodes with the imageio library.
 This script uses offscreen rendering.
 

@@ -8,6 +8,7 @@ import random
 import time
 from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
 from robosuite import load_controller_config
+import imageio
 
 
 def flatten_observation(obs):
@@ -36,7 +37,7 @@ def flatten_observation(obs):
 
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
-    def __init__(self):
+    def __init__(self, video_path="training_video.mp4", render_height=512, render_width=512):
         # Initialize the robosuite environment and wrap it with GymWrapper
         # Load controller configuration
         controller_config = load_controller_config(default_controller="OSC_POSITION")
@@ -47,10 +48,10 @@ class MyBlockStackingEnv(GymWrapper):
             robots="Panda",  # Using Panda robot
             controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
-            has_renderer=True,  # Enable rendering for visualization
+            has_renderer=False,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
             control_freq=5,  # Set control frequency for smooth simulation
-            horizon=100,
+            horizon=50,
             use_camera_obs=False,  # Disable camera observations
         )
 
@@ -92,6 +93,12 @@ class MyBlockStackingEnv(GymWrapper):
         env.placement_initializer = placement_initializer
         super().__init__(env)  # Wrap the environment with GymWrapper
 
+        # Video recording setup
+        self.video_path = video_path
+        self.writer = imageio.get_writer(self.video_path, fps=20)
+        self.render_height = render_height
+        self.render_width = render_width
+
         # for recognition in reward machine
         self.status = "robosuite"
         # Flatten observation space
@@ -114,8 +121,17 @@ class MyBlockStackingEnv(GymWrapper):
         # Step the environment and return the flattened observation, reward, done, and info
         next_obs, reward, done, info = self.env.step(action)
         self.obs_dict = next_obs
+
+        # Render and save the frame to the video
+        frame = self.env.sim.render(
+            height=self.render_height,
+            width=self.render_width,
+            camera_name="frontview"
+        )
+        self.writer.append_data(frame)
+
         flattened_observation = flatten_observation(next_obs)
-        self.env.render()
+        # self.env.render()
         return flattened_observation, reward, done, info
 
     def get_events(self):
@@ -256,9 +272,13 @@ class MyBlockStackingEnv(GymWrapper):
         #     if is_contact:  # Stop if the block is grasped
         #         break
 
-        # Return the flattened observation
-        flattened_observation = flatten_observation(obs)
-        return flattened_observation
+        # Render and save the initial frame to the video
+        frame = self.env.sim.render(
+            height=self.render_height,
+            width=self.render_width,
+            camera_name="frontview"
+        )
+        self.writer.append_data(frame)
 
         # Return the flattened observation
         flattened_observation = flatten_observation(obs)
@@ -268,6 +288,20 @@ class MyBlockStackingEnv(GymWrapper):
         # Set the random seed for reproducibility
         # needed for gym compatibility
         pass
+
+    def close(self):
+        # Close the video writer
+        if self.writer is not None:
+            self.writer.close()
+        # Close the environment
+        super().close()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
 
 
 # RewardMachineEnv wrapper for the MyBlockStackingEnv using the first reward machine (t1.txt)
@@ -293,6 +327,7 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
+
 
 
 
