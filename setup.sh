@@ -12,6 +12,6 @@ echo "wandb_api_key=${WANDB_API_KEY}" > /root/.wandb_config
 # Print confirmation
 echo "✅ WANDB API key has been set in /root/.wandb_config"
 
-ls
+pwd 
 
 python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm
