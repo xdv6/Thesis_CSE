@@ -45,16 +45,10 @@ RUN sed -i '357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/r
 # Set environment variable for MuJoCo
 ENV MUJOCO_GL=egl
 
-# Set up Weights & Biases API Key
-# ARG WANDB_API_KEY
-# ENV WANDB_API_KEY=${WANDB_API_KEY}
-# RUN echo "wandb_api_key=${WANDB_API_KEY}" > /root/.wandb_config
-
 # Clone the repository during build
 RUN git clone https://github.com/xdv6/Thesis_CSE.git /root/Thesis_CSE && chmod +x /root/Thesis_CSE/setup.sh
 
-# move pulling and setup to runtime
-ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && git reset --hard HEAD && git pull && /root/Thesis_CSE/setup.sh && exec bash"]
+ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE && chmod u+x /root/Thesis_CSE/setup.sh && chown root:root /root/Thesis_CSE/setup.sh && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && git reset --hard HEAD && git pull && /bin/bash /root/Thesis_CSE/setup.sh && exec bash"]
 
 
 
