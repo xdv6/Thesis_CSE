@@ -38,24 +38,29 @@ RUN conda init bash && \
     pip install tensorflow==1.14 && \
     pip install -e git+https://github.com/openai/baselines.git#egg=baselines && \
     pip install mujoco==2.3.6 robosuite==1.4.1 protobuf==3.20.3 wandb gymnasium==0.28.1 imageio[ffmpeg]"
-
-
-# Set up Weights & Biases API Key
-ARG WANDB_API_KEY
-ENV WANDB_API_KEY=${WANDB_API_KEY}
-RUN echo "wandb_api_key=${WANDB_API_KEY}" > /root/.wandb_config
-
-# Clone your Thesis_CSE repo and execute setup.sh
-RUN git clone https://github.com/xdv6/Thesis_CSE.git && \
-    ls -la /root/Thesis_CSE > /dev/stdout && \
-    chmod +x /root/Thesis_CSE/setup.sh && \
-    /bin/bash /root/Thesis_CSE/setup.sh
-
+    
 # Modify stack.py (comment out line 357)
 RUN sed -i '357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
 
 # Set environment variable for MuJoCo
 ENV MUJOCO_GL=egl
 
-# Set entrypoint and change directory
-ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE/reward_machines/reward_machines && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm && exec bash"]
+# Set up Weights & Biases API Key
+# ARG WANDB_API_KEY
+# ENV WANDB_API_KEY=${WANDB_API_KEY}
+# RUN echo "wandb_api_key=${WANDB_API_KEY}" > /root/.wandb_config
+
+# Clone the repository during build
+RUN git clone https://github.com/xdv6/Thesis_CSE.git /root/Thesis_CSE && chmod +x /root/Thesis_CSE/setup.sh
+
+# Move pulling and setup to runtime
+ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && git pull && /root/Thesis_CSE/setup.sh && exec bash"]
+
+
+
+
+
+
+# # Set entrypoint and change directory
+# ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE/reward_machines/reward_machines && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && /root/Thesis_CSE/setup.sh && exec bash"]
+# # ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE/reward_machines/reward_machines && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm && exec bash"]
