@@ -54,7 +54,7 @@ ENV MUJOCO_GL=egl
 RUN git clone https://github.com/xdv6/Thesis_CSE.git /root/Thesis_CSE && chmod +x /root/Thesis_CSE/setup.sh
 
 # Move pulling and setup to runtime
-ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && git pull && /root/Thesis_CSE/setup.sh && exec bash"]
+ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && git stash && git pull && /root/Thesis_CSE/setup.sh && exec bash"]
 
 
 
