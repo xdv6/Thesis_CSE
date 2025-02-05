@@ -48,17 +48,18 @@ ARG WANDB_API_KEY
 ENV WANDB_API_KEY=${WANDB_API_KEY}
 RUN echo "wandb_api_key=${WANDB_API_KEY}" > $WORKDIR_PATH/.wandb_config
 
-# Clone your Thesis_CSE repo and execute setup.sh
-RUN git clone https://github.com/xdv6/Thesis_CSE.git && \
-    ls -la $WORKDIR_PATH/Thesis_CSE > /dev/stdout && \
-    chmod +x $WORKDIR_PATH/Thesis_CSE/setup.sh && \
-    /bin/bash $WORKDIR_PATH/Thesis_CSE/setup.sh
-
 # Modify stack.py (comment out line 357)
 RUN sed -i '357s/^/#/' $WORKDIR_PATH/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
 
 # Set environment variable for MuJoCo
 ENV MUJOCO_GL=egl
 
-# Set entrypoint and change directory
-ENTRYPOINT ["/bin/bash", "-c", "cd $WORKDIR_PATH/Thesis_CSE/reward_machines/reward_machines && source $WORKDIR_PATH/miniconda3/etc/profile.d/conda.sh && conda activate myenv && python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm && exec bash"]
+# Clone your Thesis_CSE repo and execute setup.sh
+RUN git clone https://github.com/xdv6/Thesis_CSE.git && \
+    ls -la $WORKDIR_PATH/Thesis_CSE > /dev/stdout && \
+    chmod +x $WORKDIR_PATH/Thesis_CSE/setup.sh && \
+    /bin/bash $WORKDIR_PATH/Thesis_CSE/setup.sh
+
+
+# # Set entrypoint and change directory
+# ENTRYPOINT ["/bin/bash", "-c", "cd $WORKDIR_PATH/Thesis_CSE/reward_machines/reward_machines && source $WORKDIR_PATH/miniconda3/etc/profile.d/conda.sh && conda activate myenv && python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm && exec bash"]
