@@ -14,4 +14,16 @@ echo "✅ WANDB API key has been set in /root/.wandb_config"
 
 cd /root/Thesis_CSE/reward_machines/reward_machines
 
-python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm
+# python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm
+
+
+# Run specified number of instances in parallel
+for i in $(seq 1 $NUM_INSTANCES); do
+    echo "Launching instance $i..."
+    python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm &
+done
+
+# Wait for all background processes to finish
+wait
+
+echo "✅ All ${NUM_INSTANCES} instances have completed!"
