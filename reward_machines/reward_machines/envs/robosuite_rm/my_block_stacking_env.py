@@ -39,6 +39,7 @@ def flatten_observation(obs):
 
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
+
     def __init__(self, video_path=os.path.join(os.environ.get("WORKDIR_PATH", "."), os.environ.get("WANDB_RUN_NAME", "default_run") + ".mp4"), render_height=512, render_width=512):
         # Initialize the robosuite environment and wrap it with GymWrapper
         # Load controller configuration
@@ -130,6 +131,8 @@ class MyBlockStackingEnv(GymWrapper):
             width=self.render_width,
             camera_name="frontview"
         )
+        frame = np.flipud(frame)
+
         self.writer.append_data(frame)
 
         flattened_observation = flatten_observation(next_obs)
@@ -280,6 +283,8 @@ class MyBlockStackingEnv(GymWrapper):
             width=self.render_width,
             camera_name="frontview"
         )
+
+        frame = np.flipud(frame)
         self.writer.append_data(frame)
 
         # Return the flattened observation
