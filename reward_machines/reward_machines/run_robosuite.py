@@ -16,7 +16,14 @@ from baselines import logger
 from importlib import import_module
 import wandb
 
+import datetime
+import os
 
+timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+run_name = f"{timestamp}_PID{os.getpid()}"
+
+# Store the run name as an environment variable
+os.environ["WANDB_RUN_NAME"] = run_name
 
 # Importing our environments and auxiliary functions
 import envs
@@ -272,9 +279,11 @@ def main(args):
 
 if __name__ == '__main__':
 
+
     run = wandb.init(
         # Set the project where this run will be logged
         project="reward_machines",
+        name=run_name
         # Track hyperparameters and run metadata
     )
 
