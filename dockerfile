@@ -51,10 +51,3 @@ RUN git clone https://github.com/xdv6/Thesis_CSE.git /root/Thesis_CSE && chmod +
 ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE && chmod u+x /root/Thesis_CSE/setup.sh && chown root:root /root/Thesis_CSE/setup.sh && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && git reset --hard HEAD && git pull && /bin/bash /root/Thesis_CSE/setup.sh && exec bash"]
 
 
-
-
-
-
-# # Set entrypoint and change directory
-# ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE/reward_machines/reward_machines && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && /root/Thesis_CSE/setup.sh && exec bash"]
-# # ENTRYPOINT ["/bin/bash", "-c", "cd /root/Thesis_CSE/reward_machines/reward_machines && source /root/miniconda3/etc/profile.d/conda.sh && conda activate myenv && python run_robosuite.py --env=MyBlockStackingEnvRM1 --num_timesteps=100000 --alg=dhrm && exec bash"]

@@ -9,6 +9,7 @@ import time
 from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
 from robosuite import load_controller_config
 import imageio
+import os
 
 
 def flatten_observation(obs):
@@ -37,7 +38,7 @@ def flatten_observation(obs):
 
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
-    def __init__(self, video_path="training_video.mp4", render_height=512, render_width=512):
+    def __init__(self, video_path=os.path.join(os.environ.get("WORKDIR_PATH", "."), "training_video.mp4"), render_height=512, render_width=512):
         # Initialize the robosuite environment and wrap it with GymWrapper
         # Load controller configuration
         controller_config = load_controller_config(default_controller="OSC_POSITION")
