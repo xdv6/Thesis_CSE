@@ -4,10 +4,13 @@
 # Comment out lines 356 and 357 in stack.py
 sed -i '356,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
 
-# Insert "pass" after line 355
-sed -i '355apass' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+# Get the indentation of line 355
+indentation=$(sed -n '355s/\([^a-zA-Z0-9]*\).*/\1/p' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py)
 
-echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added after line 355."
+# Insert "pass" after line 355 with the same indentation
+sed -i "355a\\${indentation}pass" /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+
+echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added after line 355 with proper indentation."
 
 
 # Ensure the WANDB_API_KEY is set at runtime
