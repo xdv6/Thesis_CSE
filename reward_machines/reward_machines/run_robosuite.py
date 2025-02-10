@@ -262,6 +262,7 @@ def main(args):
                 print("obs: ", obs)
                 actions, _, state, _ = model.step(obs,S=state, M=dones)
             else:
+                import ipdb; ipdb.set_trace()
                 actions, _, _, _ = model.step(obs)
 
             obs, rew, done, _ = env.step(actions)
