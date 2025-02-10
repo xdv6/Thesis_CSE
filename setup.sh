@@ -1,9 +1,13 @@
 #!/bin/bash
 
 
-# Comment out lines 355, 356, and 357 in stack.py
-sed -i '355,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
-echo "✅ Lines 355-357 in stack.py have been commented out."
+# Comment out lines 356 and 357 in stack.py
+sed -i '356,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+
+# Insert "pass" after line 355
+sed -i '355apass' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+
+echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added after line 355."
 
 
 # Ensure the WANDB_API_KEY is set at runtime
