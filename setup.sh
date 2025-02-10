@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+
+# change the installation of the cubes initialization
 # Capture the indentation of line 356 (spaces or tabs) BEFORE modifying the file
 indentation=$(sed -n '356s/^\([[:space:]]*\).*/\1/p' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py)
 
