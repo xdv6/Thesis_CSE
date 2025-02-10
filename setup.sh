@@ -1,5 +1,11 @@
 #!/bin/bash
 
+
+# Comment out lines 355, 356, and 357 in stack.py
+sed -i '355,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+echo "✅ Lines 355-357 in stack.py have been commented out."
+
+
 # Ensure the WANDB_API_KEY is set at runtime
 if [[ -z "$WANDB_API_KEY" ]]; then
     echo "Error: WANDB_API_KEY is not set! Please provide it when running the container."
