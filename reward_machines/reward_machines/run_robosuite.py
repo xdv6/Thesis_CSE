@@ -15,6 +15,7 @@ from baselines.common.tf_util import get_session
 from baselines import logger
 from importlib import import_module
 import wandb
+from rl_agents.dhrm.dhrm import evaluate
 
 import datetime
 import os
@@ -251,28 +252,31 @@ def main(args):
 
     if args.play:
         logger.log("Running trained model")
-        obs = env.reset()
+        # obs = env.reset()
+        #
+        # state = model.initial_state if hasattr(model, 'initial_state') else None
+        # dones = np.zeros((1,))
+        #
+        # episode_rew = np.zeros(env.num_envs) if isinstance(env, VecEnv) else np.zeros(1)
+        # while True:
+        #     if state is not None:
+        #         print("obs: ", obs)
+        #         actions, _, state, _ = model.step(obs,S=state, M=dones)
+        #     else:
+        #         import ipdb; ipdb.set_trace()
+        #         actions, _, _, _ = model.step(obs)
+        #
+        #     obs, rew, done, _ = env.step(actions)
+        #     episode_rew += rew
+        #     env.render()
+        #     done_any = done.any() if isinstance(done, np.ndarray) else done
+        #     if done_any:
+        #         for i in np.nonzero(done)[0]:
+        #             print('episode_rew={}'.format(episode_rew[i]))
+        #             episode_rew[i] = 0
+        evaluate(env, model[0], model[1])
 
-        state = model.initial_state if hasattr(model, 'initial_state') else None
-        dones = np.zeros((1,))
 
-        episode_rew = np.zeros(env.num_envs) if isinstance(env, VecEnv) else np.zeros(1)
-        while True:
-            if state is not None:
-                print("obs: ", obs)
-                actions, _, state, _ = model.step(obs,S=state, M=dones)
-            else:
-                import ipdb; ipdb.set_trace()
-                actions, _, _, _ = model.step(obs)
-
-            obs, rew, done, _ = env.step(actions)
-            episode_rew += rew
-            env.render()
-            done_any = done.any() if isinstance(done, np.ndarray) else done
-            if done_any:
-                for i in np.nonzero(done)[0]:
-                    print('episode_rew={}'.format(episode_rew[i]))
-                    episode_rew[i] = 0
 
     env.close()
 

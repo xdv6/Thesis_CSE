@@ -190,17 +190,17 @@ def learn(env,
                 logger.log("Restored model with mean reward: {}".format(saved_mean_reward))
             #load_variables(model_file)
 
-    return controller.act, options.act
+    return controller, options
 
 
-def evaluate(env, options, controller,
+def evaluate(env, controller, options,
           use_ddpg=False,
           gamma=0.9,
           use_rs=False,
           controller_kargs={},
           option_kargs={},
           seed=None,
-          total_timesteps=100000,
+          total_timesteps=1000,
           print_freq=100,
           callback=None,
           checkpoint_path=None,
