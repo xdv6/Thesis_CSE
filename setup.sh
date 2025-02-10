@@ -1,13 +1,20 @@
 #!/bin/bash
 
 
+# Capture the indentation of line 356 (spaces or tabs) BEFORE modifying the file
+indentation=$(sed -n '356s/^\([[:space:]]*\).*/\1/p' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py)
+
+# Escape special characters in indentation (important for sed compatibility)
+escaped_indentation=$(echo "$indentation" | sed 's/[&/\]/\\&/g')
+
 # Comment out lines 356 and 357 in stack.py
 sed -i '356,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
 
-# Insert "pass" after line 355 with three tabs for indentation
-sed -i "355a\\$(printf '\t\t\t')pass" /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+# Insert "pass" on line 356 with the correct indentation
+sed -i "356i\\${escaped_indentation}pass" /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
 
-echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added after line 355 with three tab indentations."
+echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added on line 356 with correct indentation."
+
 
 
 # Ensure the WANDB_API_KEY is set at runtime
