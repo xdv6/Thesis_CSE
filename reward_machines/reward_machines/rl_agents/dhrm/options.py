@@ -293,7 +293,7 @@ class OptionDDPG:
         sess = U.get_session()
         # Prepare everything.
         agent.initialize(sess)
-        sess.graph.finalize()
+        # sess.graph.finalize()
 
         agent.reset()
 

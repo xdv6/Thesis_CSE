@@ -99,12 +99,15 @@ def train(args, extra_args):
 
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
-    model = learn(
-        env=env,
-        seed=seed,
-        total_timesteps=total_timesteps,
-        **alg_kwargs
-    )
+    if args.play:
+        model = None
+    else:
+        model = learn(
+            env=env,
+            seed=seed,
+            total_timesteps=total_timesteps,
+            **alg_kwargs
+        )
 
     return model, env
 
@@ -240,7 +243,6 @@ def main(args):
 
     if args.save_path is not None and rank == 0:
         save_path = osp.expanduser(args.save_path)
-        import ipdb; ipdb.set_trace()
         model.save(save_path)
 
         # act_wrapper = model[0]
@@ -274,8 +276,7 @@ def main(args):
         #         for i in np.nonzero(done)[0]:
         #             print('episode_rew={}'.format(episode_rew[i]))
         #             episode_rew[i] = 0
-        evaluate(env, model[0], model[1])
-
+        evaluate(env)
 
 
     env.close()

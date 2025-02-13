@@ -1,5 +1,6 @@
 import os
 import tempfile
+from datetime import time
 
 import tensorflow as tf
 import zipfile
@@ -34,9 +35,9 @@ def learn(env,
           total_timesteps=100000,
           print_freq=100,
           callback=None,
-          checkpoint_path=None,
+          checkpoint_path="./checkpoints",
           checkpoint_freq=10000,
-          load_path=None,
+          load_path="./checkpoints",
           **others):
     """Train a deepq model.
 
@@ -108,7 +109,8 @@ def learn(env,
             logger.log('Loaded model from {}'.format(model_file))
             model_saved = True
         elif load_path is not None:
-            load_variables(load_path)
+            # load_variables(model_file)
+            # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
             logger.log('Loaded model from {}'.format(load_path))
 
 
@@ -146,7 +148,7 @@ def learn(env,
             options.learn(t)
             options.update_target_network(t)
 
-            # Update the meta-controller if needed 
+            # Update the meta-controller if needed
             # Note that this condition always hold if done is True
             if env.did_option_terminate(option_id):
                 option_sn = new_obs
@@ -167,6 +169,8 @@ def learn(env,
                 episode_rewards.append(0.0)
                 reset = True
 
+            # save_path = os.path.join(td, "model_" + str(t))
+            # save_variables(save_path)
             # General stats
             mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
             num_episodes = len(episode_rewards)
@@ -175,6 +179,7 @@ def learn(env,
                 logger.record_tabular("episodes", num_episodes)
                 logger.record_tabular("mean 100 episode reward", mean_100ep_reward)
                 logger.dump_tabular()
+                save_variables(model_file)
 
             if (checkpoint_freq is not None and
                     num_episodes > 100 and t % checkpoint_freq == 0):
@@ -190,10 +195,10 @@ def learn(env,
                 logger.log("Restored model with mean reward: {}".format(saved_mean_reward))
             #load_variables(model_file)
 
-    return controller, options
+    return controller.act, options.act
 
 
-def evaluate(env, controller, options,
+def evaluate(env,
           use_ddpg=False,
           gamma=0.9,
           use_rs=False,
@@ -251,6 +256,10 @@ def evaluate(env, controller, options,
     sess = get_session()
     set_global_seeds(seed)
 
+    controller  = ControllerDQN(env, **controller_kargs)
+    options = OptionDDPG(env, gamma, total_timesteps, **option_kargs)
+
+
     # Override get_action to ensure deterministic execution (no noise)
     options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
 
@@ -264,40 +273,55 @@ def evaluate(env, controller, options,
     options.reset()
     reset = True
 
-    for t in range(total_timesteps):
-        if callback is not None:
-            if callback(locals(), globals()):
-                break
+    with tempfile.TemporaryDirectory() as td:
+        td = checkpoint_path or td
 
-        # Selecting an option if needed
-        if option_id is None:
-            valid_options = env.get_valid_options()
-            option_s    = obs
-            option_id   = controller.get_action(option_s, valid_options)
-            option_rews = []
+        model_file = os.path.join(td, "model")
+        model_saved = False
 
-        # Take action and update exploration to the newest value
-        action = options.get_action(env.get_option_observation(option_id), t, reset)
-        reset = False
+        if tf.train.latest_checkpoint(td) is not None:
+            load_variables(model_file)
+            logger.log('Loaded model from {}'.format(model_file))
+            model_saved = True
+        elif load_path is not None:
+            load_variables(model_file)
+            tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
+            logger.log('Loaded model from {}'.format(load_path))
 
-        action = action.squeeze()
-        new_obs, rew, done, info = env.step(action)
+        for t in range(total_timesteps):
+            if callback is not None:
+                if callback(locals(), globals()):
+                    break
 
-        # Saving the real reward that the option is getting
-        if use_rs:
-            option_rews.append(info["rs-reward"])
-        else:
-            wandb.log({"reward": rew})
-            option_rews.append(rew)
+            # Selecting an option if needed
+            if option_id is None:
+                valid_options = env.get_valid_options()
+                option_s    = obs
+                option_id   = controller.get_action(option_s, valid_options)
+                option_rews = []
 
-        obs = new_obs
-        episode_rewards[-1] += rew
+            # Take action and update exploration to the newest value
+            action = options.get_action(env.get_option_observation(option_id), t, reset)
+            reset = False
 
-        if done:
-            obs = env.reset()
-            options.reset()
-            episode_rewards.append(0.0)
-            reset = True
+            action = action.squeeze()
+            new_obs, rew, done, info = env.step(action)
+
+            # Saving the real reward that the option is getting
+            if use_rs:
+                option_rews.append(info["rs-reward"])
+            else:
+                wandb.log({"reward": rew})
+                option_rews.append(rew)
+
+            obs = new_obs
+            episode_rewards[-1] += rew
+
+            if done:
+                obs = env.reset()
+                options.reset()
+                episode_rewards.append(0.0)
+                reset = True
 
     return controller.act, options.act
 
