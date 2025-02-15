@@ -100,6 +100,7 @@ def train(args, extra_args):
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
     if args.play:
+        # if we are just playing we don't want to train the model, so we can pass None as the model
         model = None
     else:
         model = learn(
@@ -109,7 +110,7 @@ def train(args, extra_args):
             **alg_kwargs
         )
 
-    return model, env
+    return model, env, alg_kwargs
 
 
 def build_env(args):
@@ -226,11 +227,21 @@ def configure_logger(log_path, **kwargs):
 
 
 def main(args):
-    # configure logger, disable logging in child MPI processes (with rank > 0)
 
+    # configure logger, disable logging in child MPI processes (with rank > 0)
     arg_parser = common_arg_parser()
     args, unknown_args = arg_parser.parse_known_args(args)
     extra_args = parse_cmdline_kwargs(unknown_args)
+
+    if args.play:
+        os.environ["ENABLE_RENDERER"] = "True"
+
+    run = wandb.init(
+        # Set the project where this run will be logged
+        project="reward_machines",
+        name=run_name,
+        mode = "offline" if args.play else "online"  # Set offline mode dynamically
+    )
 
     if MPI is None or MPI.COMM_WORLD.Get_rank() == 0:
         rank = 0
@@ -239,45 +250,11 @@ def main(args):
         rank = MPI.COMM_WORLD.Get_rank()
         configure_logger(args.log_path, format_strs=[])
 
-    model, env = train(args, extra_args)
-
-    if args.save_path is not None and rank == 0:
-        save_path = osp.expanduser(args.save_path)
-        model.save(save_path)
-
-        # act_wrapper = model[0]
-        # act_wrapper.save_act("act_wrapper.pkl")
-        # act_wrapper.save("act_wrapper_model.pkl")
-        # act_wrapper = ActWrapper.load("act_wrapper_model.pkl")
-
-
+    model, env, alg_kwargs = train(args, extra_args)
 
     if args.play:
         logger.log("Running trained model")
-        # obs = env.reset()
-        #
-        # state = model.initial_state if hasattr(model, 'initial_state') else None
-        # dones = np.zeros((1,))
-        #
-        # episode_rew = np.zeros(env.num_envs) if isinstance(env, VecEnv) else np.zeros(1)
-        # while True:
-        #     if state is not None:
-        #         print("obs: ", obs)
-        #         actions, _, state, _ = model.step(obs,S=state, M=dones)
-        #     else:
-        #         import ipdb; ipdb.set_trace()
-        #         actions, _, _, _ = model.step(obs)
-        #
-        #     obs, rew, done, _ = env.step(actions)
-        #     episode_rew += rew
-        #     env.render()
-        #     done_any = done.any() if isinstance(done, np.ndarray) else done
-        #     if done_any:
-        #         for i in np.nonzero(done)[0]:
-        #             print('episode_rew={}'.format(episode_rew[i]))
-        #             episode_rew[i] = 0
-        evaluate(env)
-
+        evaluate(env=env, seed=args.seed, total_timesteps=int(args.num_timesteps), **alg_kwargs)
 
     env.close()
 
@@ -286,12 +263,6 @@ def main(args):
 if __name__ == '__main__':
 
 
-    run = wandb.init(
-        # Set the project where this run will be logged
-        project="reward_machines",
-        name=run_name
-        # Track hyperparameters and run metadata
-    )
 
     # Examples over the office world:
     #    cross-product baseline:

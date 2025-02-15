@@ -45,13 +45,20 @@ class MyBlockStackingEnv(GymWrapper):
         # Load controller configuration
         controller_config = load_controller_config(default_controller="OSC_POSITION")
 
+        # Check if rendering is enabled
+        self.enable_renderer = False
+        check_renderer = os.getenv("ENABLE_RENDERER", "False")
+        if check_renderer == "True": # Enable rendering if the environment is set to render
+            self.enable_renderer = True
+
+
         # Create environment instance with the given configuration
         env = suite.make(
             "Stack",
             robots="Panda",  # Using Panda robot
             controller_configs=controller_config,
             use_object_obs=True,  # Include object observations
-            has_renderer=False,  # Enable rendering for visualization
+            has_renderer=self.enable_renderer,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
             control_freq=5,  # Set control frequency for smooth simulation
             horizon=50,
@@ -136,7 +143,10 @@ class MyBlockStackingEnv(GymWrapper):
         self.writer.append_data(frame)
 
         flattened_observation = flatten_observation(next_obs)
-        # self.env.render()
+
+        if self.enable_renderer:
+            self.env.render()
+
         return flattened_observation, reward, done, info
 
     def get_events(self):
