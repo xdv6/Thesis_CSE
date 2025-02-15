@@ -36,8 +36,8 @@ def learn(env,
           print_freq=100,
           callback=None,
           checkpoint_path="./checkpoints",
-          checkpoint_freq=10000,
-          load_path="./checkpoints",
+          checkpoint_freq=10,
+          load_path=None,
           **others):
     """Train a deepq model.
 
@@ -101,7 +101,19 @@ def learn(env,
     with tempfile.TemporaryDirectory() as td:
         td = checkpoint_path or td
 
-        model_file = os.path.join(td, "model")
+        # Get the base save location from the environment variable
+        model_save_location = os.environ.get("CHECKPOINT_PATH", "./checkpoints")  # Default to "./checkpoints" if not set
+
+        # Get the run name from the environment variable (default to "default_run" if not set)
+        model_name = os.environ.get("WANDB_RUN_NAME", "default_run")
+
+        # Create the full path
+        run_save_path = os.path.join(model_save_location, model_name)
+
+        # Create the directory if it doesn't exist
+        os.makedirs(run_save_path, exist_ok=True)
+
+        model_file = os.path.join(run_save_path, "best_model")
         model_saved = False
 
         if tf.train.latest_checkpoint(td) is not None:
@@ -115,6 +127,7 @@ def learn(env,
 
 
         for t in range(total_timesteps):
+            wandb.log({"timestep": t})
             if callback is not None:
                 if callback(locals(), globals()):
                     break
@@ -171,6 +184,7 @@ def learn(env,
 
             # save_path = os.path.join(td, "model_" + str(t))
             # save_variables(save_path)
+
             # General stats
             mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
             num_episodes = len(episode_rewards)
@@ -183,6 +197,11 @@ def learn(env,
 
             if (checkpoint_freq is not None and
                     num_episodes > 100 and t % checkpoint_freq == 0):
+
+                # saving checkpoint model
+                model_chekpoint_file = os.path.join(run_save_path, "model_" + str(t))
+                save_variables(model_chekpoint_file)
+                import ipdb; ipdb.set_trace()
                 if saved_mean_reward is None or mean_100ep_reward > saved_mean_reward:
                     if print_freq is not None:
                         logger.log("Saving model due to mean reward increase: {} -> {}".format(
@@ -208,9 +227,9 @@ def evaluate(env,
           total_timesteps=1000,
           print_freq=100,
           callback=None,
-          checkpoint_path=None,
+          checkpoint_path="./checkpoints",
           checkpoint_freq=10000,
-          load_path=None,
+          load_path="./checkpoints",
           **others):
     """Train a deepq model.
 
