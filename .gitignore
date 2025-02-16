@@ -1,1 +1,3 @@
 reward_machines/reward_machines/wandb/
+*.mp4
+reward_machines/reward_machines/checkpoints/
