@@ -36,7 +36,7 @@ def learn(env,
           print_freq=100,
           callback=None,
           checkpoint_path="./checkpoints",
-          checkpoint_freq=10000,
+          checkpoint_freq=1000,
           load_path=None,
           **others):
     """Train a deepq model.
