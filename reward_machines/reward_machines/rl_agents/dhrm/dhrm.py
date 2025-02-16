@@ -182,9 +182,6 @@ def learn(env,
                 episode_rewards.append(0.0)
                 reset = True
 
-            # save_path = os.path.join(td, "model_" + str(t))
-            # save_variables(save_path)
-
             # General stats
             mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
             num_episodes = len(episode_rewards)
