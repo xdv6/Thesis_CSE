@@ -36,7 +36,7 @@ def learn(env,
           print_freq=100,
           callback=None,
           checkpoint_path="./checkpoints",
-          checkpoint_freq=10,
+          checkpoint_freq=10000,
           load_path=None,
           **others):
     """Train a deepq model.
@@ -201,7 +201,6 @@ def learn(env,
                 # saving checkpoint model
                 model_chekpoint_file = os.path.join(run_save_path, "model_" + str(t))
                 save_variables(model_chekpoint_file)
-                import ipdb; ipdb.set_trace()
                 if saved_mean_reward is None or mean_100ep_reward > saved_mean_reward:
                     if print_freq is not None:
                         logger.log("Saving model due to mean reward increase: {} -> {}".format(

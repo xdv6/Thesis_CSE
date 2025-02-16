@@ -40,7 +40,6 @@ class RewardControl(RewardFunction):
 
     def get_reward(self, s_info):
         # euclidian distance
-        # import ipdb; ipdb.set_trace()
         distance = np.linalg.norm(s_info)
         wandb.log({"distance": distance})
         # return s_info['reward_ctrl']

@@ -97,7 +97,6 @@ class RewardMachineEnv(gym.Wrapper):
     def get_observation(self, next_obs, rm_id, u_id, done):
         rm_feat = self.rm_done_feat if done else self.rm_state_features[(rm_id,u_id)]
         rm_obs = {'features': next_obs,'rm-state': rm_feat}
-        import ipdb; ipdb.set_trace()
 
         return gym.spaces.flatten(self.observation_dict, rm_obs)           
 
