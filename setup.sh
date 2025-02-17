@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# change the installation of the cubes initialization
+# Change the installation of the cubes initialization
 indentation=$(sed -n '356s/^\([[:space:]]*\).*/\1/p' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py)
 escaped_indentation=$(echo "$indentation" | sed 's/[&/\]/\\&/g')
 
@@ -36,6 +36,17 @@ nohup bash -c 'while true; do
     du -ah /root/Thesis_CSE/reward_machines | sort -rh | head -20 >> "'"$LOG_FILE"'"
     echo "----------------" >> "'"$LOG_FILE"'"
     sleep 10
+done' >/dev/null 2>&1 &
+
+# Start background process to clean up old wandb logs every 12 hours
+CLEANUP_LOG="$LOG_DIRECTORY/cleanup.log"
+echo "🗑️  Starting periodic cleanup of wandb logs (every 12 hours)..."
+nohup bash -c 'while true; do
+    echo "🗑️  Cleaning up old wandb files..." >> "'"$CLEANUP_LOG"'"
+    find /root/Thesis_CSE/reward_machines/reward_machines/wandb -type f -mtime +1 -delete
+    find /root/Thesis_CSE/reward_machines/reward_machines/wandb -type d -empty -delete
+    echo "✅ Cleanup completed at $(date)" >> "'"$CLEANUP_LOG"'"
+    sleep 60  # Wait 12 hours (43200 seconds) before next cleanup
 done' >/dev/null 2>&1 &
 
 # Run specified number of instances in parallel
