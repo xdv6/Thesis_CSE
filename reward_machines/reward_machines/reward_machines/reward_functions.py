@@ -53,6 +53,8 @@ class RewardControl(RewardFunction):
             return -distance_block_gripper_norm
         elif s_info['current_u_id'] == 1:
             return -height_diff_norm
+        else:
+            return 0.0
 
 
 class RewardForward(RewardFunction):

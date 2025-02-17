@@ -51,6 +51,9 @@ class MyBlockStackingEnv(GymWrapper):
         if check_renderer == "True": # Enable rendering if the environment is set to render
             self.enable_renderer = True
 
+        # checking start state
+        self.start_state_value = int(os.getenv("START_STATE", "0"))
+
 
         # Create environment instance with the given configuration
         env = suite.make(
@@ -251,41 +254,51 @@ class MyBlockStackingEnv(GymWrapper):
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs
 
-        # # Move the gripper above the block (cubeA)
-        # target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Target position above cubeA
-        # for _ in range(100):
-        #     curr_pos = obs["robot0_eef_pos"]
-        #     delta_pos = target_pos - curr_pos
-        #     action = np.concatenate([5 * delta_pos, [-1]])  # Gripper open
-        #     obs, reward, done, info = self.env.step(action)
-        #     self.obs_dict = obs
-        #     if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
-        #         break
-        #
-        # # Move down to grasp the block
-        # target_pos = obs["cubeA_pos"]
-        # target_pos[-1] -= 0.01  # Lower the gripper slightly for grasping
-        # for _ in range(100):
-        #     curr_pos = obs["robot0_eef_pos"]
-        #     delta_pos = target_pos - curr_pos
-        #     action = np.concatenate([4 * delta_pos, [-1]])  # Gripper open
-        #     obs, reward, done, info = self.env.step(action)
-        #     self.obs_dict = obs
-        #     if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
-        #         break
-        #
-        # # Close the gripper to grasp the block
-        # for _ in range(25):
-        #     action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
-        #     obs, reward, done, info = self.env.step(action)
-        #     self.obs_dict = obs
-        #     # Check for contact between gripper and cubeA
-        #     is_contact = self.env.check_contact(
-        #         geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
-        #         geoms_2=["cubeA_g0"]
-        #     )
-        #     if is_contact:  # Stop if the block is grasped
-        #         break
+
+        move_gripper_to_cube = False
+        if self.start_state_value == 1:
+            move_gripper_to_cube = True
+
+        elif self.start_state_value == -1:
+            # choose random start state
+            move_gripper_to_cube = random.choice([True, False])
+
+        if move_gripper_to_cube:
+            # Move the gripper above the block (cubeA)
+            target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Target position above cubeA
+            for _ in range(100):
+                curr_pos = obs["robot0_eef_pos"]
+                delta_pos = target_pos - curr_pos
+                action = np.concatenate([5 * delta_pos, [-1]])  # Gripper open
+                obs, reward, done, info = self.env.step(action)
+                self.obs_dict = obs
+                if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+                    break
+
+            # Move down to grasp the block
+            target_pos = obs["cubeA_pos"]
+            target_pos[-1] -= 0.01  # Lower the gripper slightly for grasping
+            for _ in range(100):
+                curr_pos = obs["robot0_eef_pos"]
+                delta_pos = target_pos - curr_pos
+                action = np.concatenate([4 * delta_pos, [-1]])  # Gripper open
+                obs, reward, done, info = self.env.step(action)
+                self.obs_dict = obs
+                if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+                    break
+
+            # Close the gripper to grasp the block
+            for _ in range(25):
+                action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
+                obs, reward, done, info = self.env.step(action)
+                self.obs_dict = obs
+                # Check for contact between gripper and cubeA
+                is_contact = self.env.check_contact(
+                    geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
+                    geoms_2=["cubeA_g0"]
+                )
+                if is_contact:  # Stop if the block is grasped
+                    break
 
         # Render and save the initial frame to the video
         frame = self.env.sim.render(
