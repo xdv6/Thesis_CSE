@@ -79,6 +79,7 @@ def make_env(env_id, env_type, args, mpi_rank=0, subrank=0, seed=None, reward_sc
         importlib.import_module(module_name)
 
     if env_type == "robosuite":
+
         env = MyBlockStackingEnvRM1()
         env = TimeLimit(env, max_episode_steps=1000)
     else:

@@ -311,6 +311,7 @@ def evaluate(env,
             # Selecting an option if needed
             if option_id is None:
                 valid_options = env.get_valid_options()
+                print(valid_options)
                 option_s    = obs
                 option_id   = controller.get_action(option_s, valid_options)
                 option_rews = []
