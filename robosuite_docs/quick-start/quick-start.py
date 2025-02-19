@@ -114,6 +114,7 @@ while True:
 
         # Step the environment with the provided action
         obs, reward, done, info = env.step(action)
+        
 
         # If the environment is done, break and reset
         if done:
@@ -159,6 +160,8 @@ while True:
 
         # Condition: Check if the robot's end-effector is above the target height and in contact with cubeA
         is_above_target_height = eef_height > target_height_threshold
+
+        # print( np.round(cube_pos, 5))
 
         # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
         is_above_cubeB = (
