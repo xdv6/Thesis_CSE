@@ -161,6 +161,9 @@ while True:
         # Condition: Check if the robot's end-effector is above the target height and in contact with cubeA
         is_above_target_height = eef_height > target_height_threshold
 
+        # check if the bottom of cubeA is above the top of cubeB
+        block_A_above_B = block_A[2] - env.cubeA.size[2] > block_B[2] + env.cubeB.size[2]
+
         # print( np.round(cube_pos, 5))
 
         # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
@@ -195,8 +198,8 @@ while True:
             message = "Block is dropped."
 
         # Print message if conditions for second event are met: robot is holding the block and is above the target height
-        if is_proper_grasp and is_above_target_height:
-            message = "The robot is holding the block and is above the target height."
+        if is_proper_grasp and block_A_above_B:
+            message = "The robot is holding the block and block A is above block B."
 
         # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
         if is_proper_grasp and is_above_cubeB:

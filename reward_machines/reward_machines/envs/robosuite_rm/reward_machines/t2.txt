@@ -1,4 +1,4 @@
 1  # initial state
 [2]  # terminal state
-(1, 1, '!h&!d',RewardControl())  # If not above cubeB in height and not dropped, remain in state 1 with 0 reward
-(1, 2, 'h&!d', ConstantRewardFunction(1000))  # If above cubeB in height and not dropped, move to state 2 with 0 reward
+(1, 1, '!h',RewardControl())  # If not above cubeB in height and not dropped, remain in state 1 with 0 reward
+(1, 2, 'h', ConstantRewardFunction(1000))  # If above cubeB in height and not dropped, move to state 2 with 0 reward

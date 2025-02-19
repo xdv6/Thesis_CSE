@@ -134,7 +134,11 @@ class MyBlockStackingEnv(GymWrapper):
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
         next_obs, reward, done, info = self.env.step(action)
+
         self.obs_dict = next_obs
+        # add the original_reward to the obs_dict
+        self.obs_dict["original_reward"] = reward
+
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
@@ -209,11 +213,16 @@ class MyBlockStackingEnv(GymWrapper):
 
     def above_block_b_and_grasped(self):
         # Check if the end-effector is above the height of cubeB while still grasping cubeA
-        obs = self.obs_dict
-        eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
-        cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
-        is_above_cube_b = eef_height > cube_b_height
-        return is_above_cube_b
+        # obs = self.obs_dict
+        # eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
+        # cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
+        # is_above_cube_b = eef_height > cube_b_height
+        # return is_above_cube_b
+        block_A = self.obs_dict["cubeA_pos"]
+        block_B = self.obs_dict["cubeB_pos"]
+        block_A_above_B = block_A[2] - self.env.cubeA.size[2] > block_B[2] + self.env.cubeB.size[2]
+        return block_A_above_B
+
 
     def above_block_b_in_xy_and_grasped(self):
         # Check if the end-effector is above cubeB in the x and y plane while still grasping cubeA
