@@ -88,6 +88,8 @@ stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked
 
 last_message = None
 
+temp_left_finger_pos = 0.0
+
 # Main control loop
 while True:
     # Reset the environment
@@ -126,8 +128,34 @@ while True:
         block_A = obs["cubeA_pos"]  # Get cubeA position
         block_B = obs["cubeB_pos"]  # Get cubeB position
 
-        # Check if there's contact between the gripper and cubeA
-        is_contact = env.check_contact(geoms_1=gripper_geom_names, geoms_2=cubeA_geom_name)
+
+        # Define gripper collision geoms
+        left_gripper_geom = ["gripper0_finger1_pad_collision"]  # Left gripper pad
+        right_gripper_geom = ["gripper0_finger2_pad_collision"]  # Right gripper pad
+
+        # Define cube collision geom
+        cube_geom = ["cubeA_g0"]
+
+        # 1️⃣ Step 1: Check for contact
+        left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
+        right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
+
+        # 2️⃣ Step 2: Get gripper pad positions
+        left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_leftfinger")]
+        right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_rightfinger")]
+
+        # 3️⃣ Step 3: Get cube center position
+        cube_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+
+        # 4️⃣ Step 4: Get cube width (assuming size is [0.02, 0.02, 0.02])
+        cube_width = env.cubeA.size[0] * 2  
+
+        # 5️⃣ Step 5: Ensure contact is on the correct faces
+        left_touching_left_face = left_contact and (abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
+        right_touching_right_face = right_contact and (abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
+
+        # 6️⃣ Step 6: Final check → Both contacts must be on the correct sides
+        is_proper_grasp = left_touching_left_face and right_touching_right_face
 
         # Condition: Check if the robot's end-effector is above the target height and in contact with cubeA
         is_above_target_height = eef_height > target_height_threshold
@@ -147,7 +175,7 @@ while True:
         are_blocks_in_contact = env.check_contact(geoms_1=cubeA_geom_name, geoms_2=cubeB_geom_name)
 
         # Condition for fifth event: Check if cubeA is above cubeB, in contact for more than 5 seconds, and the robot is not in contact with cubeA
-        is_robot_not_in_contact_with_cubeA = not is_contact
+        is_robot_not_in_contact_with_cubeA = not is_proper_grasp
         if is_cubeA_above_cubeB and are_blocks_in_contact:
             stack_timer += time.time() - start_time
         else:
@@ -156,19 +184,19 @@ while True:
 
         message = None
 
-        if is_contact:
-            message = "The robot is in contact with the block."
+        if is_proper_grasp:
+            message = "The robot is correctly in contact with the block."
 
         # if last message had block gripped, but now it doesn't, print message block is dropped
-        if last_message and not is_contact:
+        if last_message and not is_proper_grasp:
             message = "Block is dropped."
 
         # Print message if conditions for second event are met: robot is holding the block and is above the target height
-        if is_contact and is_above_target_height:
+        if is_proper_grasp and is_above_target_height:
             message = "The robot is holding the block and is above the target height."
 
         # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
-        if is_contact and is_above_cubeB:
+        if is_proper_grasp and is_above_cubeB:
             message = "The robot is holding block A and is positioned above block B."
 
         # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
