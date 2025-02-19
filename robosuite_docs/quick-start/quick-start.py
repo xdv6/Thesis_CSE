@@ -20,7 +20,7 @@ env = suite.make(
     has_renderer=True,  # Enable rendering for visualization
     reward_shaping=True,  # Use dense rewards for easier learning
     control_freq=20,  # Set control frequency for smooth simulation
-    horizon=1000,
+    horizon=1000000,
     use_camera_obs=False,  # Disable camera observations
 )
 
@@ -84,6 +84,9 @@ cubeB_geom_name = ["cubeB_g0"]
 # Timer to track how long cubeA is above cubeB and in contact
 stack_timer = 0.0
 stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked" on cubeB
+
+
+last_message = None
 
 # Main control loop
 while True:
@@ -151,21 +154,34 @@ while True:
             stack_timer = 0.0
         start_time = time.time()
 
+        message = None
+
+        if is_contact:
+            message = "The robot is in contact with the block."
+
+        # if last message had block gripped, but now it doesn't, print message block is dropped
+        if last_message and not is_contact:
+            message = "Block is dropped."
+
         # Print message if conditions for second event are met: robot is holding the block and is above the target height
         if is_contact and is_above_target_height:
-            print("The robot is holding the block and is above the target height.")
+            message = "The robot is holding the block and is above the target height."
 
         # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
         if is_contact and is_above_cubeB:
-            print("The robot is holding block A and is positioned above block B.")
+            message = "The robot is holding block A and is positioned above block B."
 
         # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
         if is_cubeA_above_cubeB and are_blocks_in_contact:
-            print("Cube A is above Cube B and they are in contact.")
+            message = "Cube A is above Cube B and they are in contact."
 
         # Print message if conditions for fifth event are met: cubeA is stacked on cubeB for more than 5 seconds and the robot is not in contact with cubeA
         if stack_timer > stack_threshold and is_robot_not_in_contact_with_cubeA:
-            print("Cube A is stacked on Cube B for more than 5 seconds and the robot is not in contact with Cube A.")
+            message = "Cube A is stacked on Cube B for more than 5 seconds and the robot is not in contact with Cube A."
+
+        if message and message != last_message:
+            print(message)
+            last_message = message
 
         # Render the environment to visualize the robot's action
         env.render()
