@@ -34,7 +34,8 @@ def flatten_observation(obs):
                 flat_obs.extend(value.flatten())
             else:
                 flat_obs.append(value)
-    return np.array(flat_obs)
+    flat_obs_rounded = np.round(flat_obs, 5)  # Round the values to 5 decimal places
+    return flat_obs_rounded
 
 
 # Custom environment wrapper for block stacking using GymWrapper
@@ -171,11 +172,40 @@ class MyBlockStackingEnv(GymWrapper):
 
     def block_grasped(self):
         # Check if the block cubeA is grasped by the gripper
-        is_contact_with_cubeA = self.env.check_contact(
-            geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
-            geoms_2=["cubeA_g0"]
-        )
-        return is_contact_with_cubeA
+        # is_contact_with_cubeA = self.env.check_contact(
+        #     geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
+        #     geoms_2=["cubeA_g0"]
+        # )
+
+        # Define gripper collision geoms
+        left_gripper_geom = ["gripper0_finger1_pad_collision"]  # Left gripper pad
+        right_gripper_geom = ["gripper0_finger2_pad_collision"]  # Right gripper pad
+
+        # Define cube collision geom
+        cube_geom = ["cubeA_g0"]
+
+        # 1️⃣ Step 1: Check for contact
+        left_contact = self.env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
+        right_contact = self.env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
+
+        # 2️⃣ Step 2: Get gripper pad positions
+        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+
+        # 3️⃣ Step 3: Get cube center position
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+
+        # 4️⃣ Step 4: Get cube width (assuming size is [0.02, 0.02, 0.02])
+        cube_width = self.env.cubeA.size[0] * 2
+
+        # 5️⃣ Step 5: Ensure contact is on the correct faces
+        left_touching_left_face = left_contact and (abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
+        right_touching_right_face = right_contact and (abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
+
+        # 6️⃣ Step 6: Final check → Both contacts must be on the correct sides
+        is_proper_grasp = left_touching_left_face and right_touching_right_face
+
+        return is_proper_grasp
 
     def above_block_b_and_grasped(self):
         # Check if the end-effector is above the height of cubeB while still grasping cubeA
