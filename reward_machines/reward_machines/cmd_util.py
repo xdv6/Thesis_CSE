@@ -80,7 +80,8 @@ def make_env(env_id, env_type, args, mpi_rank=0, subrank=0, seed=None, reward_sc
 
     if env_type == "robosuite":
 
-        env = MyBlockStackingEnvRM1()
+        # env = MyBlockStackingEnvRM1()
+        env = globals()[env_id]()
         env = TimeLimit(env, max_episode_steps=1000)
     else:
         env = gym.make(env_id, **env_kwargs)
