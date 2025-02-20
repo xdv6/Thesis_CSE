@@ -217,5 +217,6 @@ while True:
             print(message)
             last_message = message
 
+        print("distance to block A: ", np.linalg.norm(obs['gripper_to_cubeA']))
         # Render the environment to visualize the robot's action
         env.render()

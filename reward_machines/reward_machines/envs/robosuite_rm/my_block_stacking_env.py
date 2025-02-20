@@ -15,15 +15,17 @@ import wandb
 
 def flatten_observation(obs):
     # Flatten the observation dictionary into a single array while removing unneeded values
+    import ipdb; ipdb.set_trace()
     flat_obs = []
     keys_to_keep = [
         "robot0_eef_pos",  # End-effector position
         "robot0_gripper_qpos",  # Gripper position
         "cubeA_pos",  # Position of cubeA
         "cubeB_pos",  # Position of cubeB
-        # "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
-        # "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
-        # "cubeA_to_cubeB"  # Relative position vector between cubeA and cubeB
+        "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
+        "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
+        "cubeA_to_cubeB",  # Relative position vector between cubeA and cubeB
+        "robot0_gripper_qvel"
     ]
     for key in keys_to_keep:
         if key in obs:
@@ -64,7 +66,7 @@ class MyBlockStackingEnv(GymWrapper):
             use_object_obs=True,  # Include object observations
             has_renderer=self.enable_renderer,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
-            control_freq=5,  # Set control frequency for smooth simulation
+            control_freq=10,  # Set control frequency for smooth simulation
             horizon=50,
             use_camera_obs=False,  # Disable camera observations
         )
@@ -133,6 +135,11 @@ class MyBlockStackingEnv(GymWrapper):
 
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
+        # clip gripper action
+        if action[-1] <= 0:
+            action[-1] = -1
+        else:
+            action[-1] = 1
         next_obs, reward, done, info = self.env.step(action)
 
         self.obs_dict = next_obs
