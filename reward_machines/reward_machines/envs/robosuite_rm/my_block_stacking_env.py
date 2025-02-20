@@ -13,33 +13,6 @@ import os
 import wandb
 
 
-def flatten_observation(obs):
-    # Flatten the observation dictionary into a single array while removing unneeded values
-    import ipdb; ipdb.set_trace()
-    flat_obs = []
-    keys_to_keep = [
-        "robot0_eef_pos",  # End-effector position
-        "robot0_gripper_qpos",  # Gripper position
-        "cubeA_pos",  # Position of cubeA
-        "cubeB_pos",  # Position of cubeB
-        "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
-        "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
-        "cubeA_to_cubeB",  # Relative position vector between cubeA and cubeB
-        "robot0_gripper_qvel"
-    ]
-    for key in keys_to_keep:
-        if key in obs:
-            value = obs[key]
-            # Print the key and its value
-            # print(f"Key: {key}, Value: {value}")
-            if isinstance(value, np.ndarray):
-                flat_obs.extend(value.flatten())
-            else:
-                flat_obs.append(value)
-    flat_obs_rounded = np.round(flat_obs, 5)  # Round the values to 5 decimal places
-    return flat_obs_rounded
-
-
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
 
@@ -120,7 +93,7 @@ class MyBlockStackingEnv(GymWrapper):
         # Flatten observation space
         reset_env = env.reset()
         self.obs_dict = reset_env
-        flattened_observation = flatten_observation(reset_env)
+        flattened_observation = self.flatten_observation(reset_env)
 
         # Define the observation space based on the flattened observation
         self.obs_dim = flattened_observation.size
@@ -132,6 +105,38 @@ class MyBlockStackingEnv(GymWrapper):
         self.stack_timer = 0.0
         self.stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked" on cubeB
         self.start_time = time.time()
+
+    def flatten_observation(self, obs):
+        # Flatten the observation dictionary into a single array while removing unneeded values
+        flat_obs = []
+        keys_to_keep = [
+            "robot0_eef_pos",  # End-effector position
+            "robot0_gripper_qpos",  # Gripper position
+            "cubeA_pos",  # Position of cubeA
+            "cubeB_pos",  # Position of cubeB
+            "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
+            "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
+            "cubeA_to_cubeB",  # Relative position vector between cubeA and cubeB
+            "robot0_gripper_qvel"
+        ]
+        for key in keys_to_keep:
+            if key in obs:
+                value = obs[key]
+                # Print the key and its value
+                # print(f"Key: {key}, Value: {value}")
+                if isinstance(value, np.ndarray):
+                    flat_obs.extend(value.flatten())
+                else:
+                    flat_obs.append(value)
+
+        # add left and right finger positions to flat obs
+        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        flat_obs.extend(left_finger_pos)
+        flat_obs.extend(right_finger_pos)
+
+        flat_obs_rounded = np.round(flat_obs, 5)  # Round the values to 5 decimal places
+        return flat_obs_rounded
 
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
@@ -145,6 +150,9 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = next_obs
         # add the original_reward to the obs_dict
         self.obs_dict["original_reward"] = reward
+        # add left and right finger positions to flat obs
+        self.obs_dict["left_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        self.obs_dict["right_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
 
         # Render and save the frame to the video
@@ -157,7 +165,7 @@ class MyBlockStackingEnv(GymWrapper):
 
         self.writer.append_data(frame)
 
-        flattened_observation = flatten_observation(next_obs)
+        flattened_observation = self.flatten_observation(next_obs)
 
         if self.enable_renderer:
             self.env.render()
@@ -299,6 +307,10 @@ class MyBlockStackingEnv(GymWrapper):
         self.stack_timer = 0.0  # Reset timer on environment reset
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs
+        self.obs_dict["original_reward"] = 0
+        # add left and right finger positions to flat obs
+        self.obs_dict["left_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        self.obs_dict["right_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
 
         move_gripper_to_cube = False
@@ -357,7 +369,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.writer.append_data(frame)
 
         # Return the flattened observation
-        flattened_observation = flatten_observation(obs)
+        flattened_observation = self.flatten_observation(obs)
         return flattened_observation
 
     def seed(self, seed):
