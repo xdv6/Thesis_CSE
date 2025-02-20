@@ -217,6 +217,20 @@ while True:
             print(message)
             last_message = message
 
-        print("distance to block A: ", np.linalg.norm(obs['gripper_to_cubeA']))
+        # reward debugging: 
+        left_dist = abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2))
+        right_dist = abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2))
+        reward -= (left_dist + right_dist) * 5.0
+
+        left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
+        right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
+
+        # 5️⃣ Separate rewards for left and right finger placement
+        if left_contact and left_dist < 0.005:
+            reward += 5.0  # Bonus for left finger in correct position
+        if right_contact and right_dist < 0.005:
+            reward += 5.0  # Bonus for right finger in correct position
+        print('reward: ', reward)
+        # print("distance to block A: ", np.linalg.norm(obs['gripper_to_cubeA']))
         # Render the environment to visualize the robot's action
         env.render()
