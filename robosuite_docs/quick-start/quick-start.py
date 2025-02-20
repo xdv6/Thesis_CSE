@@ -220,7 +220,7 @@ while True:
         # reward debugging: 
         left_dist = abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2))
         right_dist = abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2))
-        reward -= (left_dist + right_dist) * 5.0
+        reward = (left_dist + right_dist) * 5.0
 
         left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)

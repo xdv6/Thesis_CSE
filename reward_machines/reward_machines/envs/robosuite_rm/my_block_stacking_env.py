@@ -16,6 +16,28 @@ import wandb
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
 
+    def calculate_reward_gripper_to_cube(self):
+        reward = 0
+        cube_width = self.env.cubeA.size[0] * 2
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        left_dist = abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2))
+        right_dist = abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2))
+        reward -= (left_dist + right_dist) * 5.0
+        left_contact = self.env.check_contact(geoms_1=["gripper0_finger1_pad_collision"], geoms_2=["cubeA_g0"])
+        right_contact = self.env.check_contact(geoms_1=["gripper0_finger2_pad_collision"], geoms_2=["cubeA_g0"])
+        if left_contact and left_dist < 0.005:
+            reward += 5.0  # Bonus for left finger in correct position
+        if right_contact and right_dist < 0.005:
+            reward += 5.0  # Bonus for right finger in correct position
+        wandb.log({"left_dist": left_dist})
+        wandb.log({"right_dist": right_dist})
+        wandb.log({"left_contact": left_contact})
+        wandb.log({"right_contact": right_contact})
+        return reward
+
+
     def __init__(self, video_path=os.path.join(os.environ.get("WORKDIR_PATH", "./videos"), os.environ.get("WANDB_RUN_NAME", "default_run") + ".mp4"), render_height=512, render_width=512):
         # Initialize the robosuite environment and wrap it with GymWrapper
         # Load controller configuration
@@ -148,11 +170,8 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
 
         self.obs_dict = next_obs
-        # add the original_reward to the obs_dict
-        self.obs_dict["original_reward"] = reward
-        # add left and right finger positions to flat obs
-        self.obs_dict["left_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        self.obs_dict["right_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        # add the reward_for_gripper_to_cube to the obs_dict
+        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
 
 
         # Render and save the frame to the video
@@ -307,11 +326,8 @@ class MyBlockStackingEnv(GymWrapper):
         self.stack_timer = 0.0  # Reset timer on environment reset
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs
-        self.obs_dict["original_reward"] = 0
-        # add left and right finger positions to flat obs
-        self.obs_dict["left_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        self.obs_dict["right_finger_pos"] = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
-
+        # add the reward_for_gripper_to_cube to the obs_dict
+        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
 
         move_gripper_to_cube = False
         if self.start_state_value == 1:
