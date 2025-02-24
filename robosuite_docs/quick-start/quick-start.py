@@ -232,20 +232,18 @@ while True:
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
         reward -= (left_dist + right_dist) *10
 
+        bottom_of_A = block_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+        top_of_B = block_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+
+        distance = bottom_of_A - top_of_B  # Correct distance
+        reward -= abs(distance) * 10  # Penalize based on absolute distance
+
+
         left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
 
-        # 5️⃣ Separate rewards for left and right finger placement
-        # if left_contact and left_dist < 0.005:
-        #     reward += 5.0  # Bonus for left finger in correct position
-        # if right_contact and right_dist < 0.005:
-        #     reward += 5.0  # Bonus for right finger in correct position
             
         print('reward: ', reward)
-        print('left_finger_pos: ', left_finger_pos)
-        print('right_finger_pos: ', right_finger_pos)
-        print("cube_left_face_3d_coords: ", [cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]])
-        print("cube_right_face_3d_coords: ", [cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]])
         # print("distance to block A: ", np.linalg.norm(obs['gripper_to_cubeA']))
         # Render the environment to visualize the robot's action
         env.render()

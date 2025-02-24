@@ -19,14 +19,25 @@ class MyBlockStackingEnv(GymWrapper):
     def calculate_reward_gripper_to_cube(self):
         reward = 0.0
         cube_width = self.env.cubeA.size[0] * 2
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
-        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
-        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
+        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
+        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
         reward -= (left_dist + right_dist) * 10
+
+
+        bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
+        top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
+
+        distance = bottom_of_A - top_of_B  # Correct distance
+        reward -= abs(distance) * 10  # Penalize based on absolute distance
+
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
+        wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
 
