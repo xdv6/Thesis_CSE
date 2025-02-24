@@ -175,7 +175,7 @@ class MyBlockStackingEnv(GymWrapper):
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
         flat_obs.extend(left_finger_pos)
         flat_obs.extend(right_finger_pos)
-        return flat_obs
+        return np.array(flat_obs)
 
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
