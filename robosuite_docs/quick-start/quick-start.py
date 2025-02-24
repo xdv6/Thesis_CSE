@@ -143,8 +143,8 @@ while True:
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
 
         # 2️⃣ Step 2: Get gripper pad positions
-        # left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_leftfinger")]
-        # right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_rightfinger")]
+        left_finger_pos_pad = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_leftfinger")]
+        right_finger_pos_pad = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_rightfinger")]
 
         left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
@@ -156,8 +156,8 @@ while True:
         cube_width = env.cubeA.size[0] * 2  
 
         # 5️⃣ Step 5: Ensure contact is on the correct faces
-        left_touching_left_face = left_contact and (abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
-        right_touching_right_face = right_contact and (abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
+        left_touching_left_face = left_contact and (abs(left_finger_pos_pad[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
+        right_touching_right_face = right_contact and (abs(right_finger_pos_pad[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
 
         # 6️⃣ Step 6: Final check → Both contacts must be on the correct sides
         is_proper_grasp = left_touching_left_face and right_touching_right_face
@@ -232,11 +232,29 @@ while True:
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
         reward -= (left_dist + right_dist) *10
 
-        bottom_of_A = block_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-        top_of_B = block_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+        # bottom_of_A = block_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+        # top_of_B = block_B[2] + env.cubeB.size[2]  # Top surface of cubeB
 
-        distance = bottom_of_A - top_of_B  # Correct distance
-        reward -= abs(distance) * 10  # Penalize based on absolute distance
+        # distance = bottom_of_A - top_of_B  # Correct distance
+        # reward -= abs(distance) * 10  # Penalize based on absolute distance
+
+        left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
+        right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
+
+
+
+
+        left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos[1] - cube_width / 2))
+        right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos[1] + cube_width / 2))
+
+
+        # 5️⃣ Separate rewards for left and right finger placement
+        if left_contact and left_dist_y < 0.005:
+            reward += 5.0  # Bonus for left finger in correct position
+        if right_contact and right_dist_y < 0.005:
+            reward += 5.0  # Bonus for right finger in correct position
+        print('reward: ', reward)
+
 
 
         left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)

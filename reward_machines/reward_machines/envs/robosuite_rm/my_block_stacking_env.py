@@ -28,16 +28,25 @@ class MyBlockStackingEnv(GymWrapper):
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
         reward -= (left_dist + right_dist) * 10
 
+        left_contact = self.env.check_contact(geoms_1=["gripper0_finger1_pad_collision"], geoms_2=["cubeA_g0"])
+        right_contact = self.env.check_contact(geoms_1=["gripper0_finger2_pad_collision"], geoms_2=["cubeA_g0"])
+        if left_contact and left_dist < 0.005:
+            reward += 5.0  # Bonus for left finger in correct position
+        if right_contact and right_dist < 0.005:
+            reward += 5.0  # Bonus for right finger in correct position
 
-        bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
-        top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
 
-        distance = bottom_of_A - top_of_B  # Correct distance
-        reward -= abs(distance) * 10  # Penalize based on absolute distance
+        # bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
+        # top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
+        #
+        # distance = bottom_of_A - top_of_B  # Correct distance
+        # reward -= abs(distance) * 10  # Penalize based on absolute distance
+        # wandb.log({"distance_between_cubeA_and_cubeB": distance})
+
+
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
-        wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
 
@@ -137,12 +146,12 @@ class MyBlockStackingEnv(GymWrapper):
         keys_to_keep = [
             "robot0_eef_pos",  # End-effector position
             "robot0_gripper_qpos",  # Gripper position
-            "cubeA_pos",  # Position of cubeA
-            "cubeB_pos",  # Position of cubeB
+            # "cubeA_pos",  # Position of cubeA
+            # "cubeB_pos",  # Position of cubeB
             "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
             "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
             "cubeA_to_cubeB",  # Relative position vector between cubeA and cubeB
-            "robot0_gripper_qvel"
+            # "robot0_gripper_qvel"
         ]
         for key in keys_to_keep:
             if key in obs:
@@ -159,9 +168,7 @@ class MyBlockStackingEnv(GymWrapper):
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
         flat_obs.extend(left_finger_pos)
         flat_obs.extend(right_finger_pos)
-
-        flat_obs_rounded = np.round(flat_obs, 5)  # Round the values to 5 decimal places
-        return flat_obs_rounded
+        return flat_obs
 
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
