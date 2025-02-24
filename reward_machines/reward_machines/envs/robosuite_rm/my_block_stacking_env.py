@@ -20,10 +20,11 @@ class MyBlockStackingEnv(GymWrapper):
         reward = 0.0
         cube_width = self.env.cubeA.size[0] * 2
         cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
+        reward -= (left_dist + right_dist) * 10
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
         return reward
@@ -143,8 +144,8 @@ class MyBlockStackingEnv(GymWrapper):
                     flat_obs.append(value)
 
         # add left and right finger positions to flat obs
-        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+        right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
         flat_obs.extend(left_finger_pos)
         flat_obs.extend(right_finger_pos)
 

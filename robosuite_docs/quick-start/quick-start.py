@@ -133,6 +133,7 @@ while True:
         # Define gripper collision geoms
         left_gripper_geom = ["gripper0_finger1_pad_collision"]  # Left gripper pad
         right_gripper_geom = ["gripper0_finger2_pad_collision"]  # Right gripper pad
+        
 
         # Define cube collision geom
         cube_geom = ["cubeA_g0"]
@@ -142,8 +143,11 @@ while True:
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
 
         # 2️⃣ Step 2: Get gripper pad positions
-        left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_leftfinger")]
-        right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_rightfinger")]
+        # left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_leftfinger")]
+        # right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_rightfinger")]
+
+        left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+        right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
 
         # 3️⃣ Step 3: Get cube center position
         cube_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
@@ -221,22 +225,27 @@ while True:
         reward = 0.0
 
         # 1️⃣ Encourage the gripper to move toward cubeA (distance reward)
-        distance_block_gripper = obs["gripper_to_cubeA"]
-        distance_block_gripper_norm = np.linalg.norm(distance_block_gripper)
-        reward -= distance_block_gripper_norm * 5.0  # Scale factor to adjust learning speed
+        # distance_block_gripper = obs["gripper_to_cubeA"]
+        # distance_block_gripper_norm = np.linalg.norm(distance_block_gripper)
+        # reward -= distance_block_gripper_norm * 5.0  # Scale factor to adjust learning speed
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
-        # reward = - (left_dist + right_dist) * 5.0
+        reward -= (left_dist + right_dist) *10
 
         left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
 
         # 5️⃣ Separate rewards for left and right finger placement
-        if left_contact and left_dist < 0.005:
-            reward += 5.0  # Bonus for left finger in correct position
-        if right_contact and right_dist < 0.005:
-            reward += 5.0  # Bonus for right finger in correct position
+        # if left_contact and left_dist < 0.005:
+        #     reward += 5.0  # Bonus for left finger in correct position
+        # if right_contact and right_dist < 0.005:
+        #     reward += 5.0  # Bonus for right finger in correct position
+            
         print('reward: ', reward)
+        print('left_finger_pos: ', left_finger_pos)
+        print('right_finger_pos: ', right_finger_pos)
+        print("cube_left_face_3d_coords: ", [cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]])
+        print("cube_right_face_3d_coords: ", [cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]])
         # print("distance to block A: ", np.linalg.norm(obs['gripper_to_cubeA']))
         # Render the environment to visualize the robot's action
         env.render()
