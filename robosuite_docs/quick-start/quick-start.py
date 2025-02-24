@@ -218,9 +218,15 @@ while True:
             last_message = message
 
         # reward debugging: 
-        left_dist = abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2))
-        right_dist = abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2))
-        reward = (left_dist + right_dist) * 5.0
+        reward = 0.0
+
+        # 1️⃣ Encourage the gripper to move toward cubeA (distance reward)
+        distance_block_gripper = obs["gripper_to_cubeA"]
+        distance_block_gripper_norm = np.linalg.norm(distance_block_gripper)
+        reward -= distance_block_gripper_norm * 5.0  # Scale factor to adjust learning speed
+        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
+        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
+        # reward = - (left_dist + right_dist) * 5.0
 
         left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
