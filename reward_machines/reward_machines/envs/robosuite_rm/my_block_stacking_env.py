@@ -346,6 +346,16 @@ class MyBlockStackingEnv(GymWrapper):
     def reset(self):
         # Reset the environment
         obs = self.env.reset()
+
+        table_geom_id = self.env.sim.model.geom_name2id("table_collision")  # Correct table collision name
+
+        # 🚀 ABSOLUTE MAXIMUM stiffness for contact resolution 🚀
+        self.env.sim.model.geom_solref[table_geom_id] = [0.00001, 1]  # Hardest contact resolution possible
+        self.env.sim.model.geom_solimp[table_geom_id] = [1, 1, 0.0, 0.0, 10]  # Hardest possible contact surface
+
+        # 🚀 ABSOLUTE MAXIMUM friction to prevent sliding or sinking 🚀
+        self.env.sim.model.geom_friction[table_geom_id] = [100.0, 10.0, 1.0]  #
+
         self.stack_timer = 0.0  # Reset timer on environment reset
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs

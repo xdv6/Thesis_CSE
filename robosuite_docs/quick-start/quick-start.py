@@ -114,9 +114,6 @@ while True:
     env.sim.model.geom_friction[table_geom_id] = [100.0, 10.0, 1.0]  #
 
 
-
-
-
     while True:
         # Get the newest action from the keyboard device
         action, grasp = input2action(
