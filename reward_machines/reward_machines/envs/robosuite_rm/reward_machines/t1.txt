@@ -4,4 +4,3 @@
 (0, 1, 'g', RewardControl())   # If cubeA is grasped, move to state 1 with 0 reward
 (1, 1, '!h',RewardControl())  # If not above cubeB in height and not dropped, remain in state 1 with 0 reward
 (1, 2, 'h', ConstantRewardFunction(1000))  # If above cubeB in height and not dropped, move to state 2 with 0 reward
-
