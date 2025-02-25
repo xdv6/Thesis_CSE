@@ -42,19 +42,24 @@ class MyBlockStackingEnv(GymWrapper):
         if right_contact and right_dist_y < 0.005:
             reward += 5.0  # Bonus for right finger in correct position
 
-
-        # bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
-        # top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
-        #
-        # distance = bottom_of_A - top_of_B  # Correct distance
-        # reward -= abs(distance) * 10  # Penalize based on absolute distance
-        # wandb.log({"distance_between_cubeA_and_cubeB": distance})
-
-
-
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
         return reward
+
+
+    def calculate_reward_cube_A_to_cube_B(self):
+        reward = 0.0
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
+        bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
+        top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
+
+        distance = bottom_of_A - top_of_B  # Correct distance
+        reward -= abs(distance) * 10  # Penalize based on absolute distance
+        wandb.log({"distance_between_cubeA_and_cubeB": distance})
+        return reward
+
 
 
     def __init__(self, video_path=os.path.join(os.environ.get("WORKDIR_PATH", "./videos"), os.environ.get("WANDB_RUN_NAME", "default_run") + ".mp4"), render_height=512, render_width=512):
@@ -189,6 +194,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
+        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
 
 
         # Render and save the frame to the video
@@ -345,6 +351,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
+        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
 
         move_gripper_to_cube = False
         if self.start_state_value == 1:
