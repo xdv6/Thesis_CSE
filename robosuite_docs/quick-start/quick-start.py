@@ -86,6 +86,10 @@ stack_timer = 0.0
 stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked" on cubeB
 
 
+
+
+
+
 last_message = None
 
 temp_left_finger_pos = 0.0
@@ -98,6 +102,20 @@ while True:
     device.start_control()  # Start listening for keyboard input
     stack_timer = 0.0  # Reset the timer
     start_time = time.time()
+
+
+    table_geom_id = env.sim.model.geom_name2id("table_collision")  # Correct table collision name
+
+    # 🚀 ABSOLUTE MAXIMUM stiffness for contact resolution 🚀
+    env.sim.model.geom_solref[table_geom_id] = [0.00001, 1]  # Hardest contact resolution possible
+    env.sim.model.geom_solimp[table_geom_id] = [1, 1, 0.0, 0.0, 10]  # Hardest possible contact surface
+
+    # 🚀 ABSOLUTE MAXIMUM friction to prevent sliding or sinking 🚀
+    env.sim.model.geom_friction[table_geom_id] = [100.0, 10.0, 1.0]  #
+
+
+
+
 
     while True:
         # Get the newest action from the keyboard device
