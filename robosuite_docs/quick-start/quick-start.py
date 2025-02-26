@@ -266,7 +266,6 @@ while True:
 
 
 
-
         left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos[1] - cube_width / 2))
         right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos[1] + cube_width / 2))
 
