@@ -150,6 +150,8 @@ class RewardMachineWrapper(gym.Wrapper):
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
         wandb.log({"current_u_id": self.env.current_u_id})
+        if self.current_u_id == -1:
+            print("SUCCESS: self.env.current_u_id == -1")  # This message will be checked by the script
 
 
         # adding crm if needed

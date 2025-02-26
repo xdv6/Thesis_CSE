@@ -258,6 +258,7 @@ def main(args):
         logger.log("Running trained model")
         evaluate(env=env, seed=args.seed, total_timesteps=int(args.num_timesteps), **alg_kwargs)
 
+
     env.close()
 
     return model

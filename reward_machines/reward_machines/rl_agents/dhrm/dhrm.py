@@ -288,6 +288,8 @@ def evaluate(env,
     options.reset()
     reset = True
 
+    print("test")
+
     with tempfile.TemporaryDirectory() as td:
         td = checkpoint_path or td
 
@@ -332,6 +334,11 @@ def evaluate(env,
 
             obs = new_obs
             episode_rewards[-1] += rew
+
+            if rew > 500:
+                print(rew)
+                print("SUCCESS: self.env.current_u_id == -1")
+                break
 
             if done:
                 obs = env.reset()
