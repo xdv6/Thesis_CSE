@@ -235,7 +235,7 @@ def main(args):
 
     os.environ["START_STATE"] = str(args.start_state)
 
-    if args.play:
+    if args.enable_visualization:
         os.environ["ENABLE_RENDERER"] = "True"
 
     run = wandb.init(

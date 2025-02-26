@@ -29,18 +29,18 @@ class MyBlockStackingEnv(GymWrapper):
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
         reward -= (left_dist + right_dist) * 10
 
-        left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        # left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        # right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
-        left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos_A[1] - cube_width / 2))
-        right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos_A[1] + cube_width / 2))
-
-        left_contact = self.env.check_contact(geoms_1=["gripper0_finger1_pad_collision"], geoms_2=["cubeA_g0"])
-        right_contact = self.env.check_contact(geoms_1=["gripper0_finger2_pad_collision"], geoms_2=["cubeA_g0"])
-        if left_contact and left_dist_y < 0.005:
-            reward += 5.0  # Bonus for left finger in correct position
-        if right_contact and right_dist_y < 0.005:
-            reward += 5.0  # Bonus for right finger in correct position
+        # left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos_A[1] - cube_width / 2))
+        # right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos_A[1] + cube_width / 2))
+        #
+        # left_contact = self.env.check_contact(geoms_1=["gripper0_finger1_pad_collision"], geoms_2=["cubeA_g0"])
+        # right_contact = self.env.check_contact(geoms_1=["gripper0_finger2_pad_collision"], geoms_2=["cubeA_g0"])
+        # if left_contact and left_dist_y < 0.005:
+        #     reward += 5.0  # Bonus for left finger in correct position
+        # if right_contact and right_dist_y < 0.005:
+        #     reward += 5.0  # Bonus for right finger in correct position
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})

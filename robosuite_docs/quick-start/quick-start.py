@@ -112,6 +112,7 @@ while True:
 
     # 🚀 ABSOLUTE MAXIMUM friction to prevent sliding or sinking 🚀
     env.sim.model.geom_friction[table_geom_id] = [100.0, 10.0, 1.0]  #
+    
 
 
     while True:
@@ -256,12 +257,12 @@ while True:
         left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
 
-
-        # 5️⃣ Separate rewards for left and right finger placement
-        if left_contact and left_dist_y < 0.005:
-            reward += 5.0  # Bonus for left finger in correct position
-        if right_contact and right_dist_y < 0.005:
-            reward += 5.0  # Bonus for right finger in correct position
+        print("reward: ", reward)
+        # # 5️⃣ Separate rewards for left and right finger placement
+        # if left_contact and left_dist_y < 0.005:
+        #     reward += 5.0  # Bonus for left finger in correct position
+        # if right_contact and right_dist_y < 0.005:
+        #     reward += 5.0  # Bonus for right finger in correct position
 
 
 
