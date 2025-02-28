@@ -41,7 +41,7 @@ class MyBlockStackingEnv(GymWrapper):
 
         # Penalty if fingers are too far apart after reaching the block
         if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-            r_grip -= 0.25
+            r_grip -= 0.4
 
         # ---- Lifting Reward ---- #
         cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]

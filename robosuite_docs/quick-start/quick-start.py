@@ -274,7 +274,7 @@ while True:
 
         # Penalty if fingers are too far apart after reaching the block
         if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-            r_grip -= 0.25  
+            r_grip -= 0.4 
 
         # ---- Lifting Reward ---- #
         cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
@@ -292,8 +292,8 @@ while True:
         # ---- Combined Reward ---- #
         reward = -(1 - (0.6 * r_grip + 0.4 * r_lift)) # Adjust weights as needed
 
-        print("r_grip: ", r_grip)
-        print("r_lift: ", r_lift)
+        # print("r_grip: ", r_grip)
+        # print("r_lift: ", r_lift)
         print("reward: ", reward)
 
         # Render the environment to visualize the robot's action
