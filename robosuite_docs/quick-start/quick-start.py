@@ -252,29 +252,49 @@ while True:
             last_message = message
 
         # reward debugging: 
+
+
+
+
+        # reward for reaching the block
         reward = 0.0
 
-        # 1️⃣ Encourage the gripper to move toward cubeA (distance reward)
-        # distance_block_gripper = obs["gripper_to_cubeA"]
-        # distance_block_gripper_norm = np.linalg.norm(distance_block_gripper)
-        # reward -= distance_block_gripper_norm * 5.0  # Scale factor to adjust learning speed
+        # ---- Gripping Reward ---- #
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
-
 
         distance_block_gripper = np.linalg.norm(obs["gripper_to_cubeA"])
         gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
 
-        # dist is the max of left_dist and right_dist
+        # Compute distance metric
         dist = max(left_dist, right_dist)
 
-        r_reach = (1 - np.tanh(10.0 * dist))
+        # Smooth reward for reaching
+        r_grip = (1 - np.tanh(10.0 * dist))  
 
-        if distance_block_gripper < 0.1:
-            if gripper_closing_distance < 0.02:
-                r_reach -= 0.25
+        # Penalty if fingers are too far apart after reaching the block
+        if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
+            r_grip -= 0.25  
 
-        reward = - (1 - r_reach)
+        # ---- Lifting Reward ---- #
+        cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+        bottom_of_A = cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+        top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+
+        # Compute height difference between cube A and cube B
+        distance = bottom_of_A - top_of_B  # Positive when lifted
+
+        # Smooth lifting reward
+        r_lift = (1 - np.tanh(10.0 * abs(distance)))  
+
+        # ---- Combined Reward ---- #
+        reward = -(1 - (0.6 * r_grip + 0.4 * r_lift)) # Adjust weights as needed
+
+        print("r_grip: ", r_grip)
+        print("r_lift: ", r_lift)
         print("reward: ", reward)
+
         # Render the environment to visualize the robot's action
         env.render()
