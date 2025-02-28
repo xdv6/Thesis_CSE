@@ -20,27 +20,30 @@ class MyBlockStackingEnv(GymWrapper):
         reward = 0.0
         cube_width = self.env.cubeA.size[0] * 2
         cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
 
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
 
+        left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
-        reward -= (left_dist + right_dist) * 10
 
-        # left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        # right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        distance_block_gripper = np.linalg.norm(self.obs_dict["gripper_to_cubeA"])
+        gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
 
-        # left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos_A[1] - cube_width / 2))
-        # right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos_A[1] + cube_width / 2))
-        #
-        # left_contact = self.env.check_contact(geoms_1=["gripper0_finger1_pad_collision"], geoms_2=["cubeA_g0"])
-        # right_contact = self.env.check_contact(geoms_1=["gripper0_finger2_pad_collision"], geoms_2=["cubeA_g0"])
-        # if left_contact and left_dist_y < 0.005:
-        #     reward += 5.0  # Bonus for left finger in correct position
-        # if right_contact and right_dist_y < 0.005:
-        #     reward += 5.0  # Bonus for right finger in correct position
+        # dist is the max of left_dist and right_dist
+        dist = max(left_dist, right_dist)
+
+        r_reach = (1 - np.tanh(10.0 * dist))
+
+        if distance_block_gripper < 0.1:
+            if gripper_closing_distance < 0.02:
+                r_reach -= 0.25
+
+        reward = -(1 - r_reach)
+
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})

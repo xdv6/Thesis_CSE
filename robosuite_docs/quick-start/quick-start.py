@@ -272,7 +272,7 @@ while True:
 
         if distance_block_gripper < 0.1:
             if gripper_closing_distance < 0.02:
-                r_reach -= 0.2
+                r_reach -= 0.25
 
         reward = - (1 - r_reach)
         print("reward: ", reward)
