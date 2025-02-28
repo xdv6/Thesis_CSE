@@ -283,7 +283,25 @@ while True:
 
         distance = map_values(distance, distance_min, distance_max, linear=False, steepness=2.5)
         reward = -(1 - distance)
+
+
+
+        cubeA_pos = env.sim.data.body_xpos[env.cubeA_body_id]
+        cubeB_pos = env.sim.data.body_xpos[env.cubeB_body_id]
+        dist = min(
+            [
+                np.linalg.norm(env.sim.data.site_xpos[env.robots[0].eef_site_id[arm]] - cubeA_pos)
+                for arm in env.robots[0].arms
+            ]
+        )
+        r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
+
+        # grasping reward
+        grasping_cubeA = env._check_grasp(gripper=env.robots[0].gripper, object_geoms=env.cubeA)
+        if grasping_cubeA:
+            r_reach += 0.25
+
             
-        print("reward: ", reward)
+        print("reward: ", r_reach)
         # Render the environment to visualize the robot's action
         env.render()
