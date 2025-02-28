@@ -260,48 +260,21 @@ while True:
         # reward -= distance_block_gripper_norm * 5.0  # Scale factor to adjust learning speed
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
-        distance =  left_dist + right_dist
+
 
         distance_block_gripper = np.linalg.norm(obs["gripper_to_cubeA"])
         gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
 
-        # Punish the gripper for closing its fingers against eachother when the gripper is in the vicinity of the cube
+        # dist is the max of left_dist and right_dist
+        dist = max(left_dist, right_dist)
+
+        r_reach = (1 - np.tanh(10.0 * dist))
+
         if distance_block_gripper < 0.1:
             if gripper_closing_distance < 0.02:
-                distance += 0.08
+                r_reach -= 0.2
 
-        # print("gripper closing distance: ", gripper_closing_distance)
-        # print("distance_block_gripper: ", distance_block_gripper)
-
-
-        left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos[1] - cube_width / 2))
-        right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos[1] + cube_width / 2))
-
-
-        distance_max = 0.35
-        distance_min = 0.024
-
-        distance = map_values(distance, distance_min, distance_max, linear=False, steepness=2.5)
-        reward = -(1 - distance)
-
-
-
-        cubeA_pos = env.sim.data.body_xpos[env.cubeA_body_id]
-        cubeB_pos = env.sim.data.body_xpos[env.cubeB_body_id]
-        dist = min(
-            [
-                np.linalg.norm(env.sim.data.site_xpos[env.robots[0].eef_site_id[arm]] - cubeA_pos)
-                for arm in env.robots[0].arms
-            ]
-        )
-        r_reach = (1 - np.tanh(10.0 * dist)) * 0.25
-
-        # grasping reward
-        grasping_cubeA = env._check_grasp(gripper=env.robots[0].gripper, object_geoms=env.cubeA)
-        if grasping_cubeA:
-            r_reach += 0.25
-
-            
-        print("reward: ", r_reach)
+        reward = - (1 - r_reach)
+        print("reward: ", reward)
         # Render the environment to visualize the robot's action
         env.render()
