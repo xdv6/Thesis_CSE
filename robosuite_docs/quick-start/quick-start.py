@@ -91,6 +91,23 @@ last_message = None
 
 temp_left_finger_pos = 0.0
 
+def map_values(value, min_value, max_value, linear=True, steepness=1):
+    """
+    Maps a value to a normalized range [0,1] using linear or exponential scaling.
+    """
+    # Normalize the value between 0 and 1
+    normalized_value = (value - min_value) / (max_value - min_value)
+    
+    # Apply exponential mapping if non-linear
+    if not linear:
+        normalized_value = math.exp(-normalized_value * steepness)
+    else:
+        normalized_value = 1 - normalized_value
+    
+    # Clip value between 0 and 1
+    return max(0, min(1, normalized_value))
+
+
 # Main control loop
 while True:
     # Reset the environment
@@ -243,23 +260,7 @@ while True:
         # reward -= distance_block_gripper_norm * 5.0  # Scale factor to adjust learning speed
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
-        reward -= math.exp((left_dist + right_dist) *10)
-
-        bottom_of_A = block_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-        top_of_B = block_B[2] + env.cubeB.size[2]  # Top surface of cubeB
-
-        distance = bottom_of_A - top_of_B  # Correct distance
-        reward -= math.exp(abs(distance) * 20)  # Penalize based on absolute distance
-
-        left_contact = env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
-        right_contact = env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
-
-        # # 5️⃣ Separate rewards for left and right finger placement
-        # if left_contact and left_dist_y < 0.005:
-        #     reward += 5.0  # Bonus for left finger in correct position
-        # if right_contact and right_dist_y < 0.005:
-        #     reward += 5.0  # Bonus for right finger in correct position
-
+        distance =  left_dist + right_dist
 
         distance_block_gripper = np.linalg.norm(obs["gripper_to_cubeA"])
         gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
@@ -267,7 +268,7 @@ while True:
         # Punish the gripper for closing its fingers against eachother when the gripper is in the vicinity of the cube
         if distance_block_gripper < 0.1:
             if gripper_closing_distance < 0.02:
-                reward -= 3.0  
+                distance += 0.08
 
         # print("gripper closing distance: ", gripper_closing_distance)
         # print("distance_block_gripper: ", distance_block_gripper)
@@ -277,6 +278,11 @@ while True:
         right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos[1] + cube_width / 2))
 
 
+        distance_max = 0.35
+        distance_min = 0.024
+
+        distance = map_values(distance, distance_min, distance_max, linear=False, steepness=2.5)
+        reward = -(1 - distance)
             
         print("reward: ", reward)
         # Render the environment to visualize the robot's action
