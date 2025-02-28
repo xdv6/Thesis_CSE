@@ -47,15 +47,17 @@ class RewardControl(RewardFunction):
         # height_cubeB = s_info['cubeB_pos'][2]
         # height_diff_norm = np.linalg.norm([eef_height - height_cubeB])
 
-        if s_info['current_u_id'] == 0:
-            wandb.log({"gripper_to_cube_reward": s_info['reward_gripper_to_cube']})
-            return s_info['reward_gripper_to_cube']
-        elif s_info['current_u_id'] == 1:
-            wandb.log({"reward_cube_A_to_cube_B": s_info['reward_cube_A_to_cube_B']})
-            return s_info['reward_cube_A_to_cube_B']
-        else:
-            return 0.0
+        # if s_info['current_u_id'] == 0:
+        #     wandb.log({"gripper_to_cube_reward": s_info['reward_gripper_to_cube']})
+        #     return s_info['reward_gripper_to_cube']
+        # elif s_info['current_u_id'] == 1:
+        #     wandb.log({"reward_cube_A_to_cube_B": s_info['reward_cube_A_to_cube_B']})
+        #     return s_info['reward_cube_A_to_cube_B']
+        # else:
+        #     return 0.0
 
+        wandb.log({"gripper_to_cube_reward": s_info['reward_gripper_to_cube']})
+        return s_info['reward_gripper_to_cube']
         # original_reward = s_info['original_reward']
         # wandb.log({"robosuite_rs_reward": original_reward})
         # return original_reward

@@ -17,9 +17,8 @@ import wandb
 class MyBlockStackingEnv(GymWrapper):
 
     def calculate_reward_gripper_to_cube(self):
-        reward = 0.0
         cube_width = self.env.cubeA.size[0] * 2
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
 
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
@@ -27,26 +26,44 @@ class MyBlockStackingEnv(GymWrapper):
         left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
         right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
-        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
-        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
+        # ---- Gripping Reward ---- #
+        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
+        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
 
         distance_block_gripper = np.linalg.norm(self.obs_dict["gripper_to_cubeA"])
         gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
 
-        # dist is the max of left_dist and right_dist
+        # Compute distance metric
         dist = max(left_dist, right_dist)
 
-        r_reach = (1 - np.tanh(10.0 * dist))
+        # Smooth reward for reaching
+        r_grip = (1 - np.tanh(10.0 * dist))
 
-        if distance_block_gripper < 0.1:
-            if gripper_closing_distance < 0.02:
-                r_reach -= 0.25
+        # Penalty if fingers are too far apart after reaching the block
+        if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
+            r_grip -= 0.25
 
-        reward = -(1 - r_reach)
+        # ---- Lifting Reward ---- #
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
+        bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
+        top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
+
+        # Compute height difference between cube A and cube B
+        distance = bottom_of_A - top_of_B  # Positive when lifted
+
+        # Smooth lifting reward
+        r_lift = (1 - np.tanh(10.0 * abs(distance)))
+
+        # ---- Combined Reward ---- #
+        reward = -(1 - (0.6 * r_grip + 0.4 * r_lift)) # Adjust weights as needed
 
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
+        wandb.log({"r_grip": r_grip})
+        wandb.log({"r_lift": r_lift})
         return reward
 
 
