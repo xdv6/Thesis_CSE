@@ -274,6 +274,7 @@ while True:
         if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
             dist += 0.05
 
+        dist/=0.45
         # print(dist)
 
         # ---- Lifting Reward ---- #
@@ -297,7 +298,7 @@ while True:
         normalized_distance = max(0, min(1, normalized_distance))
 
 
-        total_reward = dist + normalized_distance
+        total_reward = -( 0.7* dist + 0.3*normalized_distance)
 
         print("total reward: ", total_reward)
         # Render the environment to visualize the robot's action
