@@ -64,7 +64,7 @@ class MyBlockStackingEnv(GymWrapper):
         normalized_distance = max(0, min(1, normalized_distance))
 
 
-        total_reward = -( 0.7*dist + 0.3*normalized_distance )
+        total_reward = 1 - ( 0.7*dist + 0.3*normalized_distance )
 
 
 
