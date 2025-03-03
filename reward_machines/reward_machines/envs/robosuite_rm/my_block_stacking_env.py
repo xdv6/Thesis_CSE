@@ -64,7 +64,7 @@ class MyBlockStackingEnv(GymWrapper):
         normalized_distance = max(0, min(1, normalized_distance))
 
 
-        total_reward = 1 - ( 0.7*dist + 0.3*normalized_distance )
+        total_reward = - ( 0.7*dist + 0.3*normalized_distance )
 
 
 
@@ -113,7 +113,7 @@ class MyBlockStackingEnv(GymWrapper):
             use_object_obs=True,  # Include object observations
             has_renderer=self.enable_renderer,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
-            control_freq=10,  # Set control frequency for smooth simulation
+            control_freq=5,  # Set control frequency for smooth simulation
             horizon=50,
             use_camera_obs=False,  # Disable camera observations
         )
