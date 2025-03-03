@@ -113,8 +113,8 @@ class MyBlockStackingEnv(GymWrapper):
             use_object_obs=True,  # Include object observations
             has_renderer=self.enable_renderer,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
-            control_freq=10,  # Set control frequency for smooth simulation
-            horizon=150,
+            control_freq=30,  # Set control frequency for smooth simulation
+            horizon=450,
             use_camera_obs=False,  # Disable camera observations
         )
 
