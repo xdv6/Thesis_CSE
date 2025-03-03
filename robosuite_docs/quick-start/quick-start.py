@@ -108,6 +108,8 @@ def map_values(value, min_value, max_value, linear=True, steepness=1):
     return max(0, min(1, normalized_value))
 
 
+
+contact_check = False
 # Main control loop
 while True:
     # Reset the environment
@@ -231,6 +233,7 @@ while True:
         if last_message and not is_proper_grasp:
             message = "Block is dropped."
 
+
         # Print message if conditions for second event are met: robot is holding the block and is above the target height
         if is_proper_grasp and block_A_above_B:
             message = "The robot is holding the block and block A is above block B."
@@ -298,7 +301,7 @@ while True:
         normalized_distance = max(0, min(1, normalized_distance))
 
 
-        total_reward = 1 - ( 0.7* dist + 0.3*normalized_distance)
+        total_reward = -( 0.7* dist + 0.3*normalized_distance)
 
         print("total reward: ", total_reward)
         # Render the environment to visualize the robot's action
