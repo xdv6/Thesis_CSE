@@ -41,6 +41,7 @@ class MyBlockStackingEnv(GymWrapper):
         if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
             dist += 0.05
 
+        dist /= 0.45
         # ---- Lifting Reward ---- #
         cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
         cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
