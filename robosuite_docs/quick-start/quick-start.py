@@ -267,7 +267,7 @@ while True:
         gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
 
         # Compute distance metric
-        dist = max(left_dist, right_dist)
+        dist = max(left_dist, right_dist) 
 
         # Smooth reward for reaching
         r_grip = (1 - np.tanh(10.0 * dist))  
