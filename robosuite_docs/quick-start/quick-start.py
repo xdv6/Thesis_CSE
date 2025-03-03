@@ -283,7 +283,7 @@ while True:
         # ---- Lifting Reward ---- #
         cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")] 
         cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
-
+ 
         bottom_of_A = cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
         top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
 
