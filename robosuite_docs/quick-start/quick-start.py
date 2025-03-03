@@ -303,6 +303,8 @@ while True:
 
         total_reward = -( 0.7* dist + 0.3*normalized_distance)
 
+        print("left_dist: ", left_dist)
+        print("right_dist: ", right_dist)
         print("total reward: ", total_reward)
         # Render the environment to visualize the robot's action
         env.render()

@@ -38,8 +38,8 @@ class MyBlockStackingEnv(GymWrapper):
 
 
         # Penalty if fingers are too far apart after reaching the block
-        if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-            dist += 0.05
+        # if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
+        #     dist += 0.05
 
         dist /= 0.45
         # ---- Lifting Reward ---- #
