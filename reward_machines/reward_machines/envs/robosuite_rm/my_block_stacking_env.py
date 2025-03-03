@@ -36,12 +36,10 @@ class MyBlockStackingEnv(GymWrapper):
         # Compute distance metric
         dist = max(left_dist, right_dist)
 
-        # Smooth reward for reaching
-        r_grip = (1 - np.tanh(10.0 * dist))
 
         # Penalty if fingers are too far apart after reaching the block
         if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-            r_grip -= 0.4
+            dist += 0.05
 
         # ---- Lifting Reward ---- #
         cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
@@ -53,18 +51,27 @@ class MyBlockStackingEnv(GymWrapper):
         # Compute height difference between cube A and cube B
         distance = bottom_of_A - top_of_B  # Positive when lifted
 
-        # Smooth lifting reward
-        r_lift = (1 - np.tanh(10.0 * abs(distance)))
 
-        # ---- Combined Reward ---- #
-        reward = -(1 - (0.6 * r_grip + 0.4 * r_lift)) # Adjust weights as needed
+        # Smooth lifting reward
+        max_distance = 0.05
+        min_distance = 0.0
+
+        # Normalize the height difference
+        normalized_distance = abs((distance - min_distance) / (max_distance - min_distance))
+
+        # Ensure the value stays within [0,1]
+        normalized_distance = max(0, min(1, normalized_distance))
+
+
+        total_reward = -( 0.7*dist + 0.3*normalized_distance )
+
 
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
-        wandb.log({"r_grip": r_grip})
-        wandb.log({"r_lift": r_lift})
-        return reward
+        wandb.log({"dist_gripper_to_cube": dist})
+        wandb.log({"dista_cube_to_cube": normalized_distance})
+        return total_reward
 
 
     def calculate_reward_cube_A_to_cube_B(self):

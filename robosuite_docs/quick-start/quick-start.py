@@ -269,12 +269,12 @@ while True:
         # Compute distance metric
         dist = max(left_dist, right_dist) 
 
-        # Smooth reward for reaching
-        r_grip = (1 - np.tanh(10.0 * dist))  
 
         # Penalty if fingers are too far apart after reaching the block
         if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-            r_grip -= 0.4 
+            dist += 0.05
+
+        # print(dist)
 
         # ---- Lifting Reward ---- #
         cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
@@ -287,14 +287,18 @@ while True:
         distance = bottom_of_A - top_of_B  # Positive when lifted
 
         # Smooth lifting reward
-        r_lift = (1 - np.tanh(10.0 * abs(distance)))  
+        max_distance = 0.05
+        min_distance = 0.0
 
-        # ---- Combined Reward ---- #
-        reward = -(1 - (0.6 * r_grip + 0.4 * r_lift)) # Adjust weights as needed
+        # Normalize the height difference
+        normalized_distance = abs((distance - min_distance) / (max_distance - min_distance))
 
-        # print("r_grip: ", r_grip)
-        # print("r_lift: ", r_lift)
-        print("reward: ", reward)
+        # Ensure the value stays within [0,1]
+        normalized_distance = max(0, min(1, normalized_distance))
 
+
+        total_reward = dist + normalized_distance
+
+        print("total reward: ", total_reward)
         # Render the environment to visualize the robot's action
         env.render()
