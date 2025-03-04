@@ -72,6 +72,9 @@ class MyBlockStackingEnv(GymWrapper):
 
         # Penalize based on the full distance (not just z)
         reward -= distance * 10
+
+        if self.block_gripped and not self.block_grasped():
+            reward = -7.0
         wandb.log({"distance_between_cubeA_and_cubeB_full": distance})
 
         return reward
@@ -91,7 +94,7 @@ class MyBlockStackingEnv(GymWrapper):
         reward -= abs(distance) * 10  # Penalize based on absolute distance
 
         if self.block_gripped and not self.block_grasped():
-            reward = -10.0
+            reward = -5.0
         wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
@@ -236,8 +239,8 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
-        # self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B_full()
+        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
+        # self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B_full()
 
         # Render and save the frame to the video
         frame = self.env.sim.render(

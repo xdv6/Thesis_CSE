@@ -314,9 +314,9 @@ while True:
         # reward debugging: 
 
         # reward = calculate_reward_gripper_to_cube()
-        # reward = calculate_reward_cube_A_to_cube_B()
-        reward = calculate_reward_cube_A_to_cube_B_full()
-        # print("Reward gripper to cube: ", reward)
+        reward = calculate_reward_cube_A_to_cube_B()
+        # reward = calculate_reward_cube_A_to_cube_B_full()
+        print("Reward gripper to cube: ", reward)
 
 
         # Render the environment to visualize the robot's action
