@@ -124,6 +124,33 @@ def calculate_reward_gripper_to_cube():
     return reward
 
 
+def calculate_reward_cube_A_to_cube_B_full():
+    reward = 0.0
+    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+    # Compute central points of the bottom face of cube A and top face of cube B
+    bottom_of_A = np.array([
+        cube_pos_A[0],  # x-coordinate remains the same
+        cube_pos_A[1],  # y-coordinate remains the same
+        cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+    ])
+
+    top_of_B = np.array([
+        cube_pos_B[0],  # x-coordinate remains the same
+        cube_pos_B[1],  # y-coordinate remains the same
+        cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+    ])
+
+    # Compute full Euclidean distance
+    distance = np.linalg.norm(bottom_of_A - top_of_B)  
+
+    # Penalize based on the full distance (not just z)
+    reward -= distance * 10  
+
+    return reward
+
+
 
 def calculate_reward_cube_A_to_cube_B():
     reward = 0.0
@@ -264,13 +291,13 @@ while True:
             message = "Block is dropped."
 
 
-        # Print message if conditions for second event are met: robot is holding the block and is above the target height
-        if is_proper_grasp and block_A_above_B:
-            message = "The robot is holding the block and block A is above block B."
+        # # Print message if conditions for second event are met: robot is holding the block and is above the target height
+        # if is_proper_grasp and block_A_above_B:
+        #     message = "The robot is holding the block and block A is above block B."
 
-        # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
-        if is_proper_grasp and is_above_cubeB:
-            message = "The robot is holding block A and is positioned above block B."
+        # # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
+        # if is_proper_grasp and is_above_cubeB:
+        #     message = "The robot is holding block A and is positioned above block B."
 
         # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
         if is_cubeA_above_cubeB and are_blocks_in_contact:
@@ -286,9 +313,10 @@ while True:
 
         # reward debugging: 
 
-        reward = calculate_reward_gripper_to_cube()
+        # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
-        print("Reward gripper to cube: ", reward)
+        reward = calculate_reward_cube_A_to_cube_B_full()
+        # print("Reward gripper to cube: ", reward)
 
 
         # Render the environment to visualize the robot's action

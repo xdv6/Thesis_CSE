@@ -49,6 +49,32 @@ class MyBlockStackingEnv(GymWrapper):
         wandb.log({"right_dist": right_dist})
         return reward
 
+    def calculate_reward_cube_A_to_cube_B_full(self):
+        reward = 0.0
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
+        # Compute central points of the bottom face of cube A and top face of cube B
+        bottom_of_A = np.array([
+            cube_pos_A[0],  # x-coordinate remains the same
+            cube_pos_A[1],  # y-coordinate remains the same
+            cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
+        ])
+
+        top_of_B = np.array([
+            cube_pos_B[0],  # x-coordinate remains the same
+            cube_pos_B[1],  # y-coordinate remains the same
+            cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
+        ])
+
+        # Compute full Euclidean distance
+        distance = np.linalg.norm(bottom_of_A - top_of_B)
+
+        # Penalize based on the full distance (not just z)
+        reward -= distance * 10
+
+        return reward
+
 
     def calculate_reward_cube_A_to_cube_B(self):
 
@@ -63,8 +89,8 @@ class MyBlockStackingEnv(GymWrapper):
         distance = bottom_of_A - top_of_B  # Correct distance
         reward -= abs(distance) * 10  # Penalize based on absolute distance
 
-        if self.block_gripped and not self.block_grasped():
-            reward = -10.0
+        # if self.block_gripped and not self.block_grasped():
+        #     reward = -10.0
         wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
@@ -203,14 +229,14 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
 
         # if cube is dropped after it was picked up, then the episode is done
-        if self.block_gripped and not self.block_grasped():
-            done = True
+        # if self.block_gripped and not self.block_grasped():
+        #     done = True
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
-        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-
+        # self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
+        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B_full()
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
