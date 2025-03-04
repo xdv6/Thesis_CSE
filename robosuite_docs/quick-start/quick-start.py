@@ -109,6 +109,35 @@ def map_values(value, min_value, max_value, linear=True, steepness=1):
 
 
 
+def calculate_reward_gripper_to_cube():
+    reward = 0.0
+    cube_width = env.cubeA.size[0] * 2
+    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+    left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+    right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
+
+    left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
+    right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
+    reward -= (left_dist + right_dist) * 10
+    return reward
+
+
+
+def calculate_reward_cube_A_to_cube_B():
+    reward = 0.0
+    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+    bottom_of_A = cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+    top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+
+    distance = bottom_of_A - top_of_B  # Correct distance
+    reward -= abs(distance) * 10  # Penalize based on absolute distance
+    return reward
+
+
 contact_check = False
 # Main control loop
 while True:
@@ -167,7 +196,7 @@ while True:
         right_gripper_geom = ["gripper0_finger2_pad_collision"]  # Right gripper pad
         
 
-        # Define cube collision geom
+        # Define cube collision geom 
         cube_geom = ["cubeA_g0"]
 
         # 1️⃣ Step 1: Check for contact
@@ -226,6 +255,7 @@ while True:
 
         message = None
 
+
         if is_proper_grasp:
             message = "The robot is correctly in contact with the block."
 
@@ -256,55 +286,10 @@ while True:
 
         # reward debugging: 
 
+        # reward = calculate_reward_gripper_to_cube()
+        reward = calculate_reward_cube_A_to_cube_B()
+        print("Reward gripper to cube: ", reward)
 
 
-
-        # reward for reaching the block
-        reward = 0.0
-
-        # ---- Gripping Reward ---- #
-        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
-        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
-
-        distance_block_gripper = np.linalg.norm(obs["gripper_to_cubeA"])
-        gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
-
-        # Compute distance metric
-        dist = max(left_dist, right_dist) 
-
-
-        # Penalty if fingers are too far apart after reaching the block
-        if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-            dist += 0.05
-
-        dist/=0.45
-        # print(dist)
-
-        # ---- Lifting Reward ---- #
-        cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")] 
-        cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
- 
-        bottom_of_A = cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-        top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
-
-        # Compute height difference between cube A and cube B
-        distance = bottom_of_A - top_of_B  # Positive when lifted
-
-        # Smooth lifting reward
-        max_distance = 0.05
-        min_distance = 0.0
-
-        # Normalize the height difference
-        normalized_distance = abs((distance - min_distance) / (max_distance - min_distance))
-
-        # Ensure the value stays within [0,1]
-        normalized_distance = max(0, min(1, normalized_distance))
-
-
-        total_reward = -( 0.7* dist + 0.3*normalized_distance)
-
-        print("left_dist: ", left_dist)
-        print("right_dist: ", right_dist)
-        print("total reward: ", total_reward)
         # Render the environment to visualize the robot's action
         env.render()
