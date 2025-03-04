@@ -72,6 +72,7 @@ class MyBlockStackingEnv(GymWrapper):
 
         # Penalize based on the full distance (not just z)
         reward -= distance * 10
+        wandb.log({"distance_between_cubeA_and_cubeB_full": distance})
 
         return reward
 
