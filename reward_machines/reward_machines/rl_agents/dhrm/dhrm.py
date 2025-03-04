@@ -126,6 +126,7 @@ def learn(env,
             logger.log('Loaded model from {}'.format(load_path))
 
 
+        num_steps_in_episode = 0
         for t in range(total_timesteps):
             wandb.log({"timestep": t})
             if callback is not None:
@@ -145,12 +146,14 @@ def learn(env,
 
             action = action.squeeze()
             new_obs, rew, done, info = env.step(action)
+            num_steps_in_episode += 1
 
             # Saving the real reward that the option is getting
             if use_rs:
                 option_rews.append(info["rs-reward"])
             else:
                 wandb.log({"reward": rew})
+
                 option_rews.append(rew)
 
             # Store transition for the option policies
@@ -177,6 +180,8 @@ def learn(env,
             episode_rewards[-1] += rew
 
             if done:
+                wandb.log({"num_steps_in_episode": num_steps_in_episode})
+                num_steps_in_episode = 0
                 obs = env.reset()
                 options.reset()
                 episode_rewards.append(0.0)

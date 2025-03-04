@@ -42,13 +42,18 @@ class MyBlockStackingEnv(GymWrapper):
         # if right_contact and right_dist_y < 0.005:
         #     reward += 5.0  # Bonus for right finger in correct position
 
+
+        # if block is dropped after it was picked up, then the episode is done and reward is -5
+
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
         return reward
 
 
     def calculate_reward_cube_A_to_cube_B(self):
+
         reward = 0.0
+
         cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
         cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
 
@@ -57,6 +62,9 @@ class MyBlockStackingEnv(GymWrapper):
 
         distance = bottom_of_A - top_of_B  # Correct distance
         reward -= abs(distance) * 10  # Penalize based on absolute distance
+
+        if self.block_gripped and not self.block_grasped():
+            reward = -10.0
         wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
@@ -75,6 +83,8 @@ class MyBlockStackingEnv(GymWrapper):
 
         # checking start state
         self.start_state_value = int(os.getenv("START_STATE", "0"))
+
+        self.block_gripped = False
 
 
         # Create environment instance with the given configuration
@@ -189,7 +199,12 @@ class MyBlockStackingEnv(GymWrapper):
             action[-1] = -1
         else:
             action[-1] = 1
+
         next_obs, reward, done, info = self.env.step(action)
+
+        # if cube is dropped after it was picked up, then the episode is done
+        if self.block_gripped and not self.block_grasped():
+            done = True
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
@@ -265,6 +280,9 @@ class MyBlockStackingEnv(GymWrapper):
 
         # 6️⃣ Step 6: Final check → Both contacts must be on the correct sides
         is_proper_grasp = left_touching_left_face and right_touching_right_face
+
+        if is_proper_grasp:
+            self.block_gripped = True
 
         return is_proper_grasp
 
@@ -344,6 +362,8 @@ class MyBlockStackingEnv(GymWrapper):
         return not self.block_grasped()
 
     def reset(self):
+
+        self.block_gripped = False
         # Reset the environment
         obs = self.env.reset()
 
