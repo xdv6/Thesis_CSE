@@ -90,8 +90,8 @@ class MyBlockStackingEnv(GymWrapper):
         distance = bottom_of_A - top_of_B  # Correct distance
         reward -= abs(distance) * 10  # Penalize based on absolute distance
 
-        # if self.block_gripped and not self.block_grasped():
-        #     reward = -10.0
+        if self.block_gripped and not self.block_grasped():
+            reward = -10.0
         wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
@@ -230,8 +230,8 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
 
         # if cube is dropped after it was picked up, then the episode is done
-        # if self.block_gripped and not self.block_grasped():
-        #     done = True
+        if self.block_gripped and not self.block_grasped():
+            done = True
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
