@@ -17,62 +17,34 @@ import wandb
 class MyBlockStackingEnv(GymWrapper):
 
     def calculate_reward_gripper_to_cube(self):
+        reward = 0.0
         cube_width = self.env.cubeA.size[0] * 2
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
 
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
 
-        left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
-        right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
+        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
+        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
+        reward -= (left_dist + right_dist) * 10
 
-        # ---- Gripping Reward ---- #
-        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
-        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
+        # left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
+        # right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
-        distance_block_gripper = np.linalg.norm(self.obs_dict["gripper_to_cubeA"])
-        gripper_closing_distance = np.linalg.norm(left_finger_pos_pad - right_finger_pos_pad)
-
-        # Compute distance metric
-        dist = max(left_dist, right_dist)
-
-
-        # Penalty if fingers are too far apart after reaching the block
-        # if distance_block_gripper < 0.1 and gripper_closing_distance < 0.02:
-        #     dist += 0.05
-
-        dist /= 0.45
-        # ---- Lifting Reward ---- #
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
-        bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
-        top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
-
-        # Compute height difference between cube A and cube B
-        distance = bottom_of_A - top_of_B  # Positive when lifted
-
-
-        # Smooth lifting reward
-        max_distance = 0.05
-        min_distance = 0.0
-
-        # Normalize the height difference
-        normalized_distance = abs((distance - min_distance) / (max_distance - min_distance))
-
-        # Ensure the value stays within [0,1]
-        normalized_distance = max(0, min(1, normalized_distance))
-
-
-        total_reward = - ( 0.7*dist + 0.3*normalized_distance )
-
-
+        # left_dist_y = abs(left_finger_pos_pad[1] - (cube_pos_A[1] - cube_width / 2))
+        # right_dist_y= abs(right_finger_pos_pad[1] - (cube_pos_A[1] + cube_width / 2))
+        #
+        # left_contact = self.env.check_contact(geoms_1=["gripper0_finger1_pad_collision"], geoms_2=["cubeA_g0"])
+        # right_contact = self.env.check_contact(geoms_1=["gripper0_finger2_pad_collision"], geoms_2=["cubeA_g0"])
+        # if left_contact and left_dist_y < 0.005:
+        #     reward += 5.0  # Bonus for left finger in correct position
+        # if right_contact and right_dist_y < 0.005:
+        #     reward += 5.0  # Bonus for right finger in correct position
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
-        wandb.log({"dist_gripper_to_cube": dist})
-        wandb.log({"dista_cube_to_cube": normalized_distance})
-        return total_reward
+        return reward
 
 
     def calculate_reward_cube_A_to_cube_B(self):
@@ -113,8 +85,8 @@ class MyBlockStackingEnv(GymWrapper):
             use_object_obs=True,  # Include object observations
             has_renderer=self.enable_renderer,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
-            control_freq=30,  # Set control frequency for smooth simulation
-            horizon=250,
+            control_freq=10,  # Set control frequency for smooth simulation
+            horizon=50,
             use_camera_obs=False,  # Disable camera observations
         )
 
@@ -493,7 +465,6 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
-
 
 
 
