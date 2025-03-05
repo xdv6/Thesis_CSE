@@ -230,8 +230,6 @@ class MyBlockStackingEnv(GymWrapper):
         else:
             action[-1] = 1
 
-        print(action[-1])
-
         next_obs, reward, done, info = self.env.step(action)
 
         # if cube is dropped after it was picked up, then the episode is done
