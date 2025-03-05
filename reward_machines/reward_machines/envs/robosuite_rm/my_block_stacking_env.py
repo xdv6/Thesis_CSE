@@ -74,7 +74,7 @@ class MyBlockStackingEnv(GymWrapper):
         reward -= distance * 10
 
         if self.block_gripped and not self.block_grasped():
-            reward = -7.0
+            reward = -5.0
         wandb.log({"distance_between_cubeA_and_cubeB_full": distance})
 
         return reward

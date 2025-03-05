@@ -47,6 +47,7 @@ class RewardControl(RewardFunction):
         # height_cubeB = s_info['cubeB_pos'][2]
         # height_diff_norm = np.linalg.norm([eef_height - height_cubeB])
 
+        print("s_info", s_info)
         if s_info['current_u_id'] == 0:
             wandb.log({"gripper_to_cube_reward": s_info['reward_gripper_to_cube']})
             return s_info['reward_gripper_to_cube']

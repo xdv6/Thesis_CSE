@@ -146,6 +146,7 @@ def learn(env,
 
             action = action.squeeze()
             new_obs, rew, done, info = env.step(action)
+            print("info reward shaping: ", info["rs-reward"])
             num_steps_in_episode += 1
 
             # Saving the real reward that the option is getting
