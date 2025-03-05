@@ -27,7 +27,8 @@ class MyBlockStackingEnv(GymWrapper):
 
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
-        reward -= (left_dist + right_dist) * 10
+        reward += 0.5 / (left_dist + right_dist + 0.01)  # Adding 0.01 to avoid division by zero
+        # reward -= (left_dist + right_dist) * 10
 
         # left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
         # right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
@@ -90,8 +91,9 @@ class MyBlockStackingEnv(GymWrapper):
         bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
         top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
 
-        distance = bottom_of_A - top_of_B  # Correct distance
-        reward -= abs(distance) * 10  # Penalize based on absolute distance
+        distance = abs(bottom_of_A - top_of_B)  # Correct distance
+        reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+        # reward -= distance * 10  # Penalize based on absolute distance
 
         if self.block_gripped and not self.block_grasped():
             reward = -5.0
