@@ -27,9 +27,8 @@ class MyBlockStackingEnv(GymWrapper):
 
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
-        # reward += 0.5 / (left_dist + right_dist + 0.01)  # Adding 0.01 to avoid division by zero
+        reward += 0.5 / (left_dist + right_dist + 0.01)  # Adding 0.01 to avoid division by zero
         # reward -= (left_dist + right_dist) * 10
-        reward += 5 - 10 * (left_dist + right_dist)
 
         # left_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
         # right_finger_pos_pad = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
@@ -93,9 +92,8 @@ class MyBlockStackingEnv(GymWrapper):
         top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
 
         distance = abs(bottom_of_A - top_of_B)  # Correct distance
-        # reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+        reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
         # reward -= distance * 10  # Penalize based on absolute distance
-        reward += 15 - 100 * distance
 
         if self.block_gripped and not self.block_grasped():
             reward = -5.0
@@ -519,7 +517,6 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
         super().__init__(env, rm_files)
-
 
 
 
