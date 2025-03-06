@@ -69,10 +69,10 @@ class MyBlockStackingEnv(GymWrapper):
         ])
 
         # Compute full Euclidean distance
-        distance = np.linalg.norm(bottom_of_A - top_of_B)
+        distance = abs(np.linalg.norm(bottom_of_A - top_of_B))
 
         # Penalize based on the full distance (not just z)
-        reward -= distance * 10
+        reward += 2 / (distance + 0.01)
 
         if self.block_gripped and not self.block_grasped():
             reward = -5.0

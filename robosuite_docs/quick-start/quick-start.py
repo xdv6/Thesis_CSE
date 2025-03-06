@@ -160,10 +160,10 @@ def calculate_reward_cube_A_to_cube_B_full():
     ])
 
     # Compute full Euclidean distance
-    distance = np.linalg.norm(bottom_of_A - top_of_B)  
+    distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
 
     # Penalize based on the full distance (not just z)
-    reward += distance * 10  
+    reward += 2 / (distance + 0.01)
 
     return reward
 
@@ -330,9 +330,9 @@ while True:
 
         # reward debugging: 
 
-        reward = calculate_reward_gripper_to_cube()
+        # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
-        # reward = calculate_reward_cube_A_to_cube_B_full()
+        reward = calculate_reward_cube_A_to_cube_B_full()
         print("Reward gripper to cube: ", reward)
 
 
