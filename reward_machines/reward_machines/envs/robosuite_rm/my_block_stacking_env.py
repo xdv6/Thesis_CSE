@@ -424,41 +424,86 @@ class MyBlockStackingEnv(GymWrapper):
             move_gripper_to_cube = random.choice([True, False])
 
         if move_gripper_to_cube:
-            # Move the gripper above the block (cubeA)
-            target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Target position above cubeA
+            # Move the gripper above CubeA
+            target_pos = obs["cubeA_pos"] + np.array([0, 0, 0.1])  # Slightly above CubeA
             for _ in range(100):
                 curr_pos = obs["robot0_eef_pos"]
                 delta_pos = target_pos - curr_pos
-                action = np.concatenate([5 * delta_pos, [-1]])  # Gripper open
+                action = np.concatenate([5 * delta_pos, [-1]])  # Keep gripper open
                 obs, reward, done, info = self.env.step(action)
+                self.env.render()
                 self.obs_dict = obs
                 if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
                     break
 
-            # Move down to grasp the block
+            # Move down to grasp CubeA
             target_pos = obs["cubeA_pos"]
-            target_pos[-1] -= 0.01  # Lower the gripper slightly for grasping
+            target_pos[-1] -= 0.01  # Lower slightly for grasping
             for _ in range(100):
                 curr_pos = obs["robot0_eef_pos"]
                 delta_pos = target_pos - curr_pos
-                action = np.concatenate([4 * delta_pos, [-1]])  # Gripper open
+                action = np.concatenate([4 * delta_pos, [-1]])  # Keep gripper open
                 obs, reward, done, info = self.env.step(action)
+                self.env.render()
                 self.obs_dict = obs
-                if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
+                if np.linalg.norm(delta_pos) < 0.01:
                     break
 
-            # Close the gripper to grasp the block
+            # Close the gripper to grasp CubeA
             for _ in range(25):
                 action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
                 obs, reward, done, info = self.env.step(action)
+                self.env.render()
                 self.obs_dict = obs
-                # Check for contact between gripper and cubeA
                 is_contact = self.env.check_contact(
                     geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
                     geoms_2=["cubeA_g0"]
                 )
-                if is_contact:  # Stop if the block is grasped
+                if is_contact:
                     break
+
+            # Lift CubeA
+            target_pos = obs["robot0_eef_pos"] + np.array([0, 0, 0.15])  # Lift cube up
+            for _ in range(100):
+                curr_pos = obs["robot0_eef_pos"]
+                delta_pos = target_pos - curr_pos
+                action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
+                obs, reward, done, info = self.env.step(action)
+                self.env.render()
+                self.obs_dict = obs
+                if np.linalg.norm(delta_pos) < 0.01:
+                    break
+
+            # Move above CubeB
+            target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.15])  # Move above CubeB
+            for _ in range(100):
+                curr_pos = obs["robot0_eef_pos"]
+                delta_pos = target_pos - curr_pos
+                action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
+                obs, reward, done, info = self.env.step(action)
+                self.env.render()
+                self.obs_dict = obs
+                if np.linalg.norm(delta_pos) < 0.01:
+                    break
+
+            # Lower CubeA onto CubeB
+            target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.05])  # Slightly above CubeB
+            for _ in range(100):
+                curr_pos = obs["robot0_eef_pos"]
+                delta_pos = target_pos - curr_pos
+                action = np.concatenate([4 * delta_pos, [1]])  # Keep gripper closed
+                obs, reward, done, info = self.env.step(action)
+                self.env.render()
+                self.obs_dict = obs
+                if np.linalg.norm(delta_pos) < 0.01:
+                    break
+
+            # Release the gripper
+            for _ in range(25):
+                action = np.concatenate([[0, 0, 0], [-1]])  # Open gripper
+                obs, reward, done, info = self.env.step(action)
+                self.env.render()
+                self.obs_dict = obs
 
         # Render and save the initial frame to the video
         frame = self.env.sim.render(
