@@ -413,8 +413,8 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
-        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-
+        # self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
+        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B_full()
         move_gripper_to_cube = False
         if self.start_state_value == 1:
             move_gripper_to_cube = True
