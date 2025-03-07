@@ -75,6 +75,7 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_rm_id = (self.current_rm_id+1)%self.num_rms
         self.current_rm    = self.reward_machines[self.current_rm_id]
         self.current_u_id  = self.current_rm.reset()
+        
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)

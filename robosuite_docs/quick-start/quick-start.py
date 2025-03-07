@@ -271,7 +271,7 @@ while True:
         is_above_target_height = eef_height > target_height_threshold
 
         # check if the bottom of cubeA is above the top of cubeB
-        block_A_above_B = block_A[2] - env.cubeA.size[2] > block_B[2] + env.cubeB.size[2]
+        block_A_above_B = block_A[2] - env.cubeA.size[2] > block_B[2] + env.cubeB.size[2] + 0.02
 
         # print( np.round(cube_pos, 5))
 
@@ -308,13 +308,13 @@ while True:
             message = "Block is dropped."
 
 
-        # # Print message if conditions for second event are met: robot is holding the block and is above the target height
-        # if is_proper_grasp and block_A_above_B:
-        #     message = "The robot is holding the block and block A is above block B."
+        # Print message if conditions for second event are met: robot is holding the block and is above the target height
+        if is_proper_grasp and block_A_above_B:
+            message = "The robot is holding the block and block A is above block B."
 
-        # # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
-        # if is_proper_grasp and is_above_cubeB:
-        #     message = "The robot is holding block A and is positioned above block B."
+        # Print message if conditions for third event are met: robot is holding block A, above block B in x, y, and above the target height
+        if is_proper_grasp and is_above_cubeB:
+            message = "The robot is holding block A and is positioned above block B."
 
         # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
         if is_cubeA_above_cubeB and are_blocks_in_contact:
@@ -330,9 +330,9 @@ while True:
 
         # reward debugging: 
 
-        # reward = calculate_reward_gripper_to_cube()
+        reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
-        reward = calculate_reward_cube_A_to_cube_B_full()
+        # reward = calculate_reward_cube_A_to_cube_B_full()
         print("Reward gripper to cube: ", reward)
 
 
