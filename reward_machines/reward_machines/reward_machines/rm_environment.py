@@ -77,7 +77,7 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_u_id  = self.current_rm.reset()
         self.steps_in_current_u = 0
         self.previous_u_id = self.current_u_id
-        self.max_steps_in_u = 60
+        self.max_steps_in_u_id = [50, 70, 100]
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)
@@ -114,7 +114,7 @@ class RewardMachineEnv(gym.Wrapper):
             wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
             self.steps_in_current_u = 0
 
-        if self.steps_in_current_u > self.max_steps_in_u:
+        if self.steps_in_current_u > self.max_steps_in_u_id[self.current_rm_id]:
             done = True
 
         self.previous_u_id = self.current_u_id
