@@ -75,7 +75,8 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_rm_id = (self.current_rm_id+1)%self.num_rms
         self.current_rm    = self.reward_machines[self.current_rm_id]
         self.current_u_id  = self.current_rm.reset()
-        
+        self.steps_in_current_u = 0
+        self.previous_u_id = self.current_u_id
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)
@@ -98,11 +99,25 @@ class RewardMachineEnv(gym.Wrapper):
         # Add the new key-value pair
         updated_obs_dict["current_u_id"] = self.current_u_id
 
+        self.steps_in_current_u += 1
         # update the RM state
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, updated_obs_dict)
 
+
+
         # returning the result of this action
         done = rm_done or env_done
+
+        if self.previous_u_id != self.current_u_id:
+            # log the amount of steps taken in the specific RM state
+            wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
+            self.steps_in_current_u = 0
+
+        self.previous_u_id = self.current_u_id
+
+        if done:
+            # log the amount of steps taken in the specific RM state
+            wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
         rm_obs = self.get_observation(next_obs, self.current_rm_id, self.current_u_id, done)
 
         return rm_obs, rm_rew, done, info
