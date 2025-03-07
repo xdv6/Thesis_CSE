@@ -96,7 +96,7 @@ def map_values(value, min_value, max_value, linear=True, steepness=1):
     Maps a value to a normalized range [0,1] using linear or exponential scaling.
     """
     # Normalize the value between 0 and 1
-    normalized_value = (value - min_value) / (max_value - min_value)
+    normalized_value = (value - min_value) / (max_value - min_value) 
     
     # Apply exponential mapping if non-linear
     if not linear:
