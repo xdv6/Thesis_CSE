@@ -24,6 +24,7 @@ from baselines.ddpg.ddpg_learner import DDPG
 from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.memory import Memory
 from baselines.ddpg.noise import AdaptiveParamNoiseSpec, NormalActionNoise, OrnsteinUhlenbeckActionNoise
+import wandb
 
 
 class OptionDQN:
@@ -336,7 +337,8 @@ class OptionDDPG:
                 if self.memory.nb_entries >= self.batch_size and t_train % self.param_noise_adaption_interval == 0:
                     self.agent.adapt_param_noise()
 
-                self.agent.train()
+                critic_loss, actor_loss = self.agent.train()
+                wandb.log({"actor_loss": actor_loss, "critic_loss": critic_loss})
                 self.agent.update_target_net()
 
     def update_target_network(self, t):
