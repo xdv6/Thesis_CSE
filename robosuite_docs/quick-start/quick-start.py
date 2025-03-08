@@ -135,35 +135,48 @@ def calculate_reward_gripper_to_cube():
     right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
     
     # Use negative distance as reward (closer = higher reward)
-    reward += 0.5 / (left_dist + right_dist + 0.01)  # Adding 0.01 to avoid division by zero
+    reward += ( 0.5 / (left_dist + right_dist + 0.01) ) / 12  # Adding 0.01 to avoid division by zero
 
     return reward
 
 
 
-def calculate_reward_cube_A_to_cube_B_full():
+# def calculate_reward_cube_A_to_cube_B_full():
+#     reward = 0.0
+#     cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+#     cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+#     # Compute central points of the bottom face of cube A and top face of cube B
+#     bottom_of_A = np.array([
+#         cube_pos_A[0],  # x-coordinate remains the same
+#         cube_pos_A[1],  # y-coordinate remains the same
+#         cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+#     ])
+
+#     top_of_B = np.array([
+#         cube_pos_B[0],  # x-coordinate remains the same
+#         cube_pos_B[1],  # y-coordinate remains the same
+#         cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+#     ])
+
+#     # Compute full Euclidean distance
+#     distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
+
+#     # Penalize based on the full distance (not just z)
+#     reward += 2 / (distance + 0.01)
+
+#     return reward
+
+def calculate_reward_cube_A_to_cube_B_xy():
     reward = 0.0
     cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
     cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
 
-    # Compute central points of the bottom face of cube A and top face of cube B
-    bottom_of_A = np.array([
-        cube_pos_A[0],  # x-coordinate remains the same
-        cube_pos_A[1],  # y-coordinate remains the same
-        cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-    ])
+    # Compute XY-plane Euclidean distance
+    distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
 
-    top_of_B = np.array([
-        cube_pos_B[0],  # x-coordinate remains the same
-        cube_pos_B[1],  # y-coordinate remains the same
-        cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
-    ])
-
-    # Compute full Euclidean distance
-    distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
-
-    # Penalize based on the full distance (not just z)
-    reward += 2 / (distance + 0.01)
+    # Penalize based on the XY distance
+    reward += 2 / (distance_xy + 0.01)
 
     return reward
 
@@ -178,7 +191,7 @@ def calculate_reward_cube_A_to_cube_B():
     top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
 
     distance = abs(bottom_of_A - top_of_B)  # Correct distance
-    reward +=  1 / (distance + 0.01)  # Penalize based on absolute distance
+    reward += ( 1 / (distance + 0.01) ) / 8 # Penalize based on absolute distance
     return reward
 
 
@@ -337,9 +350,9 @@ while True:
         reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
         # reward = calculate_reward_cube_A_to_cube_B_full()
-        # print("Reward gripper to cube: ", reward)
+        # reward = calculate_reward_cube_A_to_cube_B_xy()
+        print("Reward gripper to cube: ", reward)
 
-        print("height of cube A: ", block_A[2])
 
 
         # Render the environment to visualize the robot's action
