@@ -61,7 +61,7 @@ class MyBlockStackingEnv(GymWrapper):
         top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
 
         distance = abs(bottom_of_A - top_of_B)  # Correct distance
-        reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+        reward += (1 / (distance + 0.01))/8  # Penalize based on absolute distance
         # reward -= distance * 10  # Penalize based on absolute distance
 
         if self.block_gripped and not self.block_grasped():
