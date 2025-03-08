@@ -121,6 +121,7 @@ class RewardMachineEnv(gym.Wrapper):
             cube_A_pos = self.env.obs_dict["cubeA_pos"]
             if cube_A_pos[2] > 0.94 or cube_A_pos[2] < 0.88:
                 done = True
+                rm_rew = -1
 
 
         # if done, but not because of a transition to the terminal state
