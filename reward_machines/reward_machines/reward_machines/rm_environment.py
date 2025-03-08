@@ -105,25 +105,21 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, updated_obs_dict)
 
 
-
         # returning the result of this action
         done = rm_done or env_done
 
         if self.previous_u_id != self.current_u_id:
             # log the amount of steps taken in the specific RM state
-            wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
+            wandb.log({f"steps_in_u_id_{self.previous_u_id}": self.steps_in_current_u})
             self.steps_in_current_u = 0
 
-        if self.steps_in_current_u > self.max_steps_in_u_id[self.current_rm_id]:
+        if self.steps_in_current_u > self.max_steps_in_u_id[self.current_u_id]:
             done = True
 
-        self.previous_u_id = self.current_u_id
 
-        if done:
-            # log the amount of steps taken in the specific RM state
-            wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
         rm_obs = self.get_observation(next_obs, self.current_rm_id, self.current_u_id, done)
 
+        self.previous_u_id = self.current_u_id
         return rm_obs, rm_rew, done, info
 
     def get_observation(self, next_obs, rm_id, u_id, done):
