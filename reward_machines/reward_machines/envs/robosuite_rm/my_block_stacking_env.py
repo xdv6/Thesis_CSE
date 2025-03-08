@@ -327,7 +327,7 @@ class MyBlockStackingEnv(GymWrapper):
         # return is_above_cube_b
         block_A = self.obs_dict["cubeA_pos"]
         block_B = self.obs_dict["cubeB_pos"]
-        block_A_above_B = block_A[2] - self.env.cubeA.size[2] > block_B[2] + self.env.cubeB.size[2]
+        block_A_above_B = block_A[2] - self.env.cubeA.size[2] > block_B[2] + self.env.cubeB.size[2] + 0.02
         return block_A_above_B
 
 

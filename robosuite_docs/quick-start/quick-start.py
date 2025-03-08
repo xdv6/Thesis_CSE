@@ -271,9 +271,13 @@ while True:
         is_above_target_height = eef_height > target_height_threshold
 
         # check if the bottom of cubeA is above the top of cubeB
-        block_A_above_B = block_A[2] - env.cubeA.size[2] > block_B[2] + env.cubeB.size[2] + 0.02
+        block_A_above_B = block_A[2] - env.cubeA.size[2] > 0.91
 
-        # print( np.round(cube_pos, 5))
+        # if height of cubeA is above 0.94 or below 0.88 then reset the environment
+        if last_message == "The robot is holding the block and block A is above block B." and (block_A[2] > 0.94 or block_A[2] < 0.88):
+            print("Episode finished, resetting environment.")
+            last_message = ""
+            break
 
         # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
         is_above_cubeB = (
@@ -300,8 +304,8 @@ while True:
         message = None
 
 
-        if is_proper_grasp:
-            message = "The robot is correctly in contact with the block."
+        # if is_proper_grasp:
+        #     message = "The robot is correctly in contact with the block."
 
         # if last message had block gripped, but now it doesn't, print message block is dropped
         if last_message and not is_proper_grasp:
@@ -316,13 +320,13 @@ while True:
         if is_proper_grasp and is_above_cubeB:
             message = "The robot is holding block A and is positioned above block B."
 
-        # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
-        if is_cubeA_above_cubeB and are_blocks_in_contact:
-            message = "Cube A is above Cube B and they are in contact."
+        # # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
+        # if is_cubeA_above_cubeB and are_blocks_in_contact:
+        #     message = "Cube A is above Cube B and they are in contact."
 
-        # Print message if conditions for fifth event are met: cubeA is stacked on cubeB for more than 5 seconds and the robot is not in contact with cubeA
-        if stack_timer > stack_threshold and is_robot_not_in_contact_with_cubeA:
-            message = "Cube A is stacked on Cube B for more than 5 seconds and the robot is not in contact with Cube A."
+        # # Print message if conditions for fifth event are met: cubeA is stacked on cubeB for more than 5 seconds and the robot is not in contact with cubeA
+        # if stack_timer > stack_threshold and is_robot_not_in_contact_with_cubeA:
+        #     message = "Cube A is stacked on Cube B for more than 5 seconds and the robot is not in contact with Cube A."
 
         if message and message != last_message:
             print(message)
@@ -333,7 +337,9 @@ while True:
         reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
         # reward = calculate_reward_cube_A_to_cube_B_full()
-        print("Reward gripper to cube: ", reward)
+        # print("Reward gripper to cube: ", reward)
+
+        print("height of cube A: ", block_A[2])
 
 
         # Render the environment to visualize the robot's action
