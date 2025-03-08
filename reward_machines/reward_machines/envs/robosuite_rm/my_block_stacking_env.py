@@ -27,39 +27,25 @@ class MyBlockStackingEnv(GymWrapper):
 
         left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
         right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
-        reward += 0.5 / (left_dist + right_dist + 0.01)  # Adding 0.01 to avoid division by zero
+        reward += (0.5 / (left_dist + right_dist + 0.01))/12  # Adding 0.01 to avoid division by zero
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
         return reward
 
-    def calculate_reward_cube_A_to_cube_B_full(self):
+    def calculate_reward_cube_A_to_cube_B_xy(self):
         reward = 0.0
         cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
         cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
 
-        # Compute central points of the bottom face of cube A and top face of cube B
-        bottom_of_A = np.array([
-            cube_pos_A[0],  # x-coordinate remains the same
-            cube_pos_A[1],  # y-coordinate remains the same
-            cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
-        ])
+        # Compute XY-plane Euclidean distance
+        distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
 
-        top_of_B = np.array([
-            cube_pos_B[0],  # x-coordinate remains the same
-            cube_pos_B[1],  # y-coordinate remains the same
-            cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
-        ])
-
-        # Compute full Euclidean distance
-        distance = abs(np.linalg.norm(bottom_of_A - top_of_B))
-
-        # Penalize based on the full distance (not just z)
-        reward += 2 / (distance + 0.01)
-
+        # Penalize based on the XY distance
+        reward += 2 / (distance_xy + 0.01)
         if self.block_gripped and not self.block_grasped():
             reward = -5.0
-        wandb.log({"distance_between_cubeA_and_cubeB_full": distance})
+        wandb.log({"distance_xy_between_cubeA_and_cubeB": distance_xy})
 
         return reward
 
@@ -225,7 +211,7 @@ class MyBlockStackingEnv(GymWrapper):
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
         self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-        # self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B_full()
+        self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
@@ -310,7 +296,8 @@ class MyBlockStackingEnv(GymWrapper):
         # return is_above_cube_b
         block_A = self.obs_dict["cubeA_pos"]
         block_B = self.obs_dict["cubeB_pos"]
-        block_A_above_B = block_A[2] - self.env.cubeA.size[2] > block_B[2] + self.env.cubeB.size[2] + 0.02
+        # block_A_above_B = block_A[2] - self.env.cubeA.size[2] > block_B[2] + self.env.cubeB.size[2] + 0.02
+        block_A_above_B = block_A[2] - self.env.cubeA.size[2] > 0.91
         return block_A_above_B
 
 
@@ -396,8 +383,9 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
-        # self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B_full()
+        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
+        self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
+
         move_gripper_to_cube = False
         if self.start_state_value == 1:
             move_gripper_to_cube = True

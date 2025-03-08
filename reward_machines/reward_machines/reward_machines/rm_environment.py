@@ -116,6 +116,13 @@ class RewardMachineEnv(gym.Wrapper):
         if self.steps_in_current_u > self.max_steps_in_u_id[self.current_u_id]:
             done = True
 
+
+        if self.current_u_id == 2:
+            cube_A_pos = self.env.obs_dict["cubeA_pos"]
+            if cube_A_pos[2] > 0.94 or cube_A_pos[2] < 0.88:
+                done = True
+
+
         # if done, but not because of a transition to the terminal state
         if done and (self.current_u_id != -1 ):
             wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
