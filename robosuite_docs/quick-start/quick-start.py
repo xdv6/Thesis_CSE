@@ -347,10 +347,9 @@ while True:
 
         # reward debugging: 
 
-        reward = calculate_reward_gripper_to_cube()
+        # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
-        # reward = calculate_reward_cube_A_to_cube_B_full()
-        # reward = calculate_reward_cube_A_to_cube_B_xy()
+        reward = calculate_reward_cube_A_to_cube_B_xy()
         print("Reward gripper to cube: ", reward)
 
 
