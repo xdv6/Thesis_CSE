@@ -38,15 +38,15 @@ nohup bash -c 'while true; do
     sleep 300
 done' >/dev/null 2>&1 &
 
-# Start background process to clean up old wandb logs every 12 hours
+# Start background process to clean up all wandb logs every 5 minutes
 CLEANUP_LOG="$LOG_DIRECTORY/cleanup.log"
-echo "🗑️  Starting periodic cleanup of wandb logs (every 12 hours)..."
+echo "🗑️  Starting periodic full cleanup of wandb logs (every 5 minutes)..."
+
 nohup bash -c 'while true; do
-    echo "🗑️  Cleaning up old wandb files..." >> "'"$CLEANUP_LOG"'"
-    find /root/Thesis_CSE/reward_machines/reward_machines/wandb -type f -mtime +1 -delete
-    find /root/Thesis_CSE/reward_machines/reward_machines/wandb -type d -empty -delete
+    echo "🗑️  Deleting all files and folders in wandb directory..." >> "'"$CLEANUP_LOG"'"
+    rm -rf /root/Thesis_CSE/reward_machines/reward_machines/wandb/*
     echo "✅ Cleanup completed at $(date)" >> "'"$CLEANUP_LOG"'"
-    sleep 300  # Wait 12 hours (43200 seconds) before next cleanup
+    sleep 300  # Wait 5 minutes before the next cleanup
 done' >/dev/null 2>&1 &
 
 # Run specified number of instances in parallel
