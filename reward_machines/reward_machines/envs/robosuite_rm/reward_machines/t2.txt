@@ -1,8 +1,8 @@
 0  # initial state
 [3]  # terminal state
 (0, 0, '!g',RewardControl())  # If cubeA is not grasped, remain in state 0 with 0 reward
-(0, 1, 'g', ConstantRewardFunction(50))   # If cubeA is grasped, move to state 1 with 0 reward
+(0, 1, 'g', ConstantRewardFunction(2000))   # If cubeA is grasped, move to state 1 with 0 reward
 (1, 1, '!h',RewardControl())  # If not above cubeB in height and not dropped, remain in state 1 with 0 reward
-(1, 2, 'h', ConstantRewardFunction(100))  # If above cubeB in height and not dropped, move to state 2 with 0 reward
+(1, 2, 'h', ConstantRewardFunction(4000))  # If above cubeB in height and not dropped, move to state 2 with 0 reward
 (2, 2, '!p',RewardControl())
-(2, 3, 'p', ConstantRewardFunction(1000))
+(2, 3, 'p', ConstantRewardFunction(10000))

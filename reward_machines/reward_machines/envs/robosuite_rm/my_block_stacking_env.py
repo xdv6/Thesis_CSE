@@ -42,7 +42,7 @@ class MyBlockStackingEnv(GymWrapper):
         distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
 
         # Penalize based on the XY distance
-        reward += 2 / (distance_xy + 0.01)
+        reward += 2* (5 / (distance_xy + 0.01))
         if self.block_gripped and not self.block_grasped():
             reward = -5.0
         wandb.log({"distance_xy_between_cubeA_and_cubeB": distance_xy})

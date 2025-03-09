@@ -41,7 +41,6 @@ done' >/dev/null 2>&1 &
 # Start background process to clean up all wandb logs every 5 minutes
 CLEANUP_LOG="$LOG_DIRECTORY/cleanup.log"
 echo "🗑️  Starting periodic full cleanup of wandb logs (every 5 minutes)..."
-
 nohup bash -c 'while true; do
     echo "🗑️  Deleting all files and folders in wandb directory..." >> "'"$CLEANUP_LOG"'"
     rm -rf /root/Thesis_CSE/reward_machines/reward_machines/wandb/*

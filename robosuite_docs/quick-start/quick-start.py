@@ -176,7 +176,7 @@ def calculate_reward_cube_A_to_cube_B_xy():
     distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
 
     # Penalize based on the XY distance
-    reward += 5 / (distance_xy + 0.01)
+    reward += 2* (5 / (distance_xy + 0.01))
 
     return reward
 
