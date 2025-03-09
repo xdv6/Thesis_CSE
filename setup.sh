@@ -35,7 +35,7 @@ nohup bash -c 'while true; do
     date >> "'"$LOG_FILE"'"
     du -ah /root/Thesis_CSE/reward_machines | sort -rh | head -20 >> "'"$LOG_FILE"'"
     echo "----------------" >> "'"$LOG_FILE"'"
-    sleep 10
+    sleep 300
 done' >/dev/null 2>&1 &
 
 # Start background process to clean up old wandb logs every 12 hours
@@ -46,7 +46,7 @@ nohup bash -c 'while true; do
     find /root/Thesis_CSE/reward_machines/reward_machines/wandb -type f -mtime +1 -delete
     find /root/Thesis_CSE/reward_machines/reward_machines/wandb -type d -empty -delete
     echo "✅ Cleanup completed at $(date)" >> "'"$CLEANUP_LOG"'"
-    sleep 43200  # Wait 12 hours (43200 seconds) before next cleanup
+    sleep 300  # Wait 12 hours (43200 seconds) before next cleanup
 done' >/dev/null 2>&1 &
 
 # Run specified number of instances in parallel

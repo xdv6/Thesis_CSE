@@ -135,7 +135,7 @@ def calculate_reward_gripper_to_cube():
     right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
     
     # Use negative distance as reward (closer = higher reward)
-    reward += ( 0.5 / (left_dist + right_dist + 0.01) ) / 12  # Adding 0.01 to avoid division by zero
+    reward +=  0.5 / (left_dist + right_dist + 0.01)   # Adding 0.01 to avoid division by zero
 
     return reward
 
@@ -176,7 +176,7 @@ def calculate_reward_cube_A_to_cube_B_xy():
     distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
 
     # Penalize based on the XY distance
-    reward += 2 / (distance_xy + 0.01)
+    reward += 5 / (distance_xy + 0.01)
 
     return reward
 
@@ -191,7 +191,7 @@ def calculate_reward_cube_A_to_cube_B():
     top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
 
     distance = abs(bottom_of_A - top_of_B)  # Correct distance
-    reward += ( 1 / (distance + 0.01) ) / 8 # Penalize based on absolute distance
+    reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
     return reward
 
 
