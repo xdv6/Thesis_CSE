@@ -28,24 +28,24 @@ fi
 
 mkdir -p "$LOG_DIRECTORY"  # Ensure the log directory exists
 
-# Start background logging of directory growth
-LOG_FILE="$LOG_DIRECTORY/file_growth.log"
-echo "🔍 Logging file growth in $LOG_FILE..."
-nohup bash -c 'while true; do
-    date >> "'"$LOG_FILE"'"
-    du -ah /root/Thesis_CSE/reward_machines | sort -rh | head -20 >> "'"$LOG_FILE"'"
-    echo "----------------" >> "'"$LOG_FILE"'"
-    sleep 300
-done' >/dev/null 2>&1 &
+# # Start background logging of directory growth
+# LOG_FILE="$LOG_DIRECTORY/file_growth.log"
+# echo "🔍 Logging file growth in $LOG_FILE..."
+# nohup bash -c 'while true; do
+#     date >> "'"$LOG_FILE"'"
+#     du -ah /root/Thesis_CSE/reward_machines | sort -rh | head -20 >> "'"$LOG_FILE"'"
+#     echo "----------------" >> "'"$LOG_FILE"'"
+#     sleep 300
+# done' >/dev/null 2>&1 &
 
-# Start background process to clean up all wandb logs every 5 minutes
+# Start background process to clean up all wandb logs every hour
 CLEANUP_LOG="$LOG_DIRECTORY/cleanup.log"
-echo "🗑️  Starting periodic full cleanup of wandb logs (every 5 minutes)..."
+echo "🗑️  Starting periodic full cleanup of wandb logs (every hour)..."
 nohup bash -c 'while true; do
     echo "🗑️  Deleting all files and folders in wandb directory..." >> "'"$CLEANUP_LOG"'"
     rm -rf /root/Thesis_CSE/reward_machines/reward_machines/wandb/*
     echo "✅ Cleanup completed at $(date)" >> "'"$CLEANUP_LOG"'"
-    sleep 300  # Wait 5 minutes before the next cleanup
+    sleep 3600  # Wait 1 hour before the next cleanup
 done' >/dev/null 2>&1 &
 
 # Run specified number of instances in parallel
