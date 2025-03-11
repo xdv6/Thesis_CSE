@@ -1,8 +1,8 @@
 0  # initial state
 [3]  # terminal state
 (0, 0, '!h',RewardControl())
-(0, 1, 'h', ConstantRewardFunction(20))
+(0, 1, 'h', ConstantRewardFunction(2000))
 (1, 1, '!p',RewardControl())
-(1, 2, 'p', ConstantRewardFunction(40))
+(1, 2, 'p', ConstantRewardFunction(4000))
 (2, 2, '!b',RewardControl())
 (2, 3, 'b', ConstantRewardFunction(1000))

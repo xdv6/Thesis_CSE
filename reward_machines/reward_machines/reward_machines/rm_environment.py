@@ -117,11 +117,17 @@ class RewardMachineEnv(gym.Wrapper):
             done = True
 
 
-        # if self.current_u_id == 2:
+        # if self.current_u_id == 1:
         #     cube_A_pos = self.env.obs_dict["cubeA_pos"]
         #     if cube_A_pos[2] > 0.94 or cube_A_pos[2] < 0.88:
         #         done = True
-        #         rm_rew = -1
+        #
+        # if self.current_u_id == 2:
+        #     cube_A_pos = self.env.obs_dict["cubeA_pos"]
+        #     cube_B_pos = self.env.obs_dict["cubeB_pos"]
+        #     margin = 0.04
+        #     if not (cube_B_pos[0] - margin < cube_A_pos[0] < cube_B_pos[0] + margin and cube_B_pos[1] - margin < cube_A_pos[1] < cube_B_pos[1] + margin):
+        #         done = True
 
 
         # if done, but not because of a transition to the terminal state

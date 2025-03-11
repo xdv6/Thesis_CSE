@@ -232,14 +232,12 @@ class MyBlockStackingEnv(GymWrapper):
         else:
             action[-1] = 1
 
-
         next_obs, reward, done, info = self.env.step(action)
 
 
         # if cube is dropped after it was picked up, then the episode is done
-        # if self.block_gripped and not self.block_grasped():
-        #     done = True
-        #     print("dropped")
+        if self.block_gripped and not self.block_grasped():
+            done = True
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
@@ -568,7 +566,7 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
         rm_files = ["./envs/robosuite_rm/reward_machines/t2.txt"]
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
-        super().__init__(env, rm_files) 
+        super().__init__(env, rm_files)
 
 
 
