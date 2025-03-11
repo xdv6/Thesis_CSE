@@ -33,23 +33,6 @@ class MyBlockStackingEnv(GymWrapper):
         wandb.log({"right_dist": right_dist})
         return reward
 
-    def calculate_reward_cube_A_to_cube_B_xy(self):
-        reward = 0.0
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
-        # Compute XY-plane Euclidean distance
-        distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
-
-        # Penalize based on the XY distance
-        reward += 2* (5 / (distance_xy + 0.01))
-        if self.block_gripped and not self.block_grasped():
-            reward = -5.0
-        wandb.log({"distance_xy_between_cubeA_and_cubeB": distance_xy})
-
-        return reward
-
-
     def calculate_reward_cube_A_to_cube_B(self):
 
         reward = 0.0
@@ -65,8 +48,56 @@ class MyBlockStackingEnv(GymWrapper):
         # reward -= distance * 10  # Penalize based on absolute distance
 
         if self.block_gripped and not self.block_grasped():
-            reward = -5.0
+            reward = -5
         wandb.log({"distance_between_cubeA_and_cubeB": distance})
+        return reward
+
+    def calculate_reward_cube_A_to_cube_B_xy(self):
+        reward = 0.0
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
+        # Compute XY-plane Euclidean distance
+        distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
+
+        # Penalize based on the XY distance
+        reward += 2* (5 / (distance_xy + 0.01))
+        if self.block_gripped and not self.block_grasped():
+            reward = -5
+        wandb.log({"distance_xy_between_cubeA_and_cubeB": distance_xy})
+
+        return reward
+
+
+    def calculate_reward_cube_A_to_cube_B_full(self):
+        reward = 0.0
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
+        # Compute central points of the bottom face of cube A and top face of cube B
+        bottom_of_A = np.array([
+            cube_pos_A[0],  # x-coordinate remains the same
+            cube_pos_A[1],  # y-coordinate remains the same
+            cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
+        ])
+
+        top_of_B = np.array([
+            cube_pos_B[0],  # x-coordinate remains the same
+            cube_pos_B[1],  # y-coordinate remains the same
+            cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
+        ])
+
+        # Compute full Euclidean distance
+        distance = abs(np.linalg.norm(bottom_of_A - top_of_B))
+
+
+        # Penalize based on the full distance (not just z)
+        reward += 2 / (distance + 0.01)
+
+        if self.block_gripped and not self.block_grasped():
+            reward = -5
+        wandb.log({"distance_full_between_cubeA_and_cubeB": distance})
+
         return reward
 
 
@@ -203,15 +234,18 @@ class MyBlockStackingEnv(GymWrapper):
 
         next_obs, reward, done, info = self.env.step(action)
 
+
         # if cube is dropped after it was picked up, then the episode is done
         if self.block_gripped and not self.block_grasped():
             done = True
+            print("dropped")
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
         self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
         self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
+        self.obs_dict["reward_cube_A_to_cube_B_full"] = self.calculate_reward_cube_A_to_cube_B_full()
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
@@ -385,6 +419,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
         self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
         self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
+        self.obs_dict["reward_cube_A_to_cube_B_full"] = self.calculate_reward_cube_A_to_cube_B_full()
 
         move_gripper_to_cube = False
         if self.start_state_value == 1:
@@ -402,7 +437,7 @@ class MyBlockStackingEnv(GymWrapper):
                 delta_pos = target_pos - curr_pos
                 action = np.concatenate([5 * delta_pos, [-1]])  # Keep gripper open
                 obs, reward, done, info = self.env.step(action)
-                self.env.render()
+                # self.env.render()
                 self.obs_dict = obs
                 if np.linalg.norm(delta_pos) < 0.01:  # Stop when close to target
                     break
@@ -415,7 +450,7 @@ class MyBlockStackingEnv(GymWrapper):
                 delta_pos = target_pos - curr_pos
                 action = np.concatenate([4 * delta_pos, [-1]])  # Keep gripper open
                 obs, reward, done, info = self.env.step(action)
-                self.env.render()
+                # self.env.render()
                 self.obs_dict = obs
                 if np.linalg.norm(delta_pos) < 0.01:
                     break
@@ -424,7 +459,7 @@ class MyBlockStackingEnv(GymWrapper):
             for _ in range(25):
                 action = np.concatenate([[0, 0, 0], [1]])  # Close gripper
                 obs, reward, done, info = self.env.step(action)
-                self.env.render()
+                # self.env.render()
                 self.obs_dict = obs
                 is_contact = self.env.check_contact(
                     geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
@@ -433,48 +468,48 @@ class MyBlockStackingEnv(GymWrapper):
                 if is_contact:
                     break
 
-            # Lift CubeA
-            target_pos = obs["robot0_eef_pos"] + np.array([0, 0, 0.15])  # Lift cube up
-            for _ in range(100):
-                curr_pos = obs["robot0_eef_pos"]
-                delta_pos = target_pos - curr_pos
-                action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
-                obs, reward, done, info = self.env.step(action)
-                self.env.render()
-                self.obs_dict = obs
-                if np.linalg.norm(delta_pos) < 0.01:
-                    break
-
-            # Move above CubeB
-            target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.15])  # Move above CubeB
-            for _ in range(100):
-                curr_pos = obs["robot0_eef_pos"]
-                delta_pos = target_pos - curr_pos
-                action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
-                obs, reward, done, info = self.env.step(action)
-                self.env.render()
-                self.obs_dict = obs
-                if np.linalg.norm(delta_pos) < 0.01:
-                    break
-
-            # Lower CubeA onto CubeB
-            target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.05])  # Slightly above CubeB
-            for _ in range(100):
-                curr_pos = obs["robot0_eef_pos"]
-                delta_pos = target_pos - curr_pos
-                action = np.concatenate([4 * delta_pos, [1]])  # Keep gripper closed
-                obs, reward, done, info = self.env.step(action)
-                self.env.render()
-                self.obs_dict = obs
-                if np.linalg.norm(delta_pos) < 0.01:
-                    break
-
-            # Release the gripper
-            for _ in range(25):
-                action = np.concatenate([[0, 0, 0], [-1]])  # Open gripper
-                obs, reward, done, info = self.env.step(action)
-                self.env.render()
-                self.obs_dict = obs
+            # # Lift CubeA
+            # target_pos = obs["robot0_eef_pos"] + np.array([0, 0, 0.15])  # Lift cube up
+            # for _ in range(100):
+            #     curr_pos = obs["robot0_eef_pos"]
+            #     delta_pos = target_pos - curr_pos
+            #     action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
+            #     obs, reward, done, info = self.env.step(action)
+            #     self.env.render()
+            #     self.obs_dict = obs
+            #     if np.linalg.norm(delta_pos) < 0.01:
+            #         break
+            #
+            # # Move above CubeB
+            # target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.15])  # Move above CubeB
+            # for _ in range(100):
+            #     curr_pos = obs["robot0_eef_pos"]
+            #     delta_pos = target_pos - curr_pos
+            #     action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
+            #     obs, reward, done, info = self.env.step(action)
+            #     self.env.render()
+            #     self.obs_dict = obs
+            #     if np.linalg.norm(delta_pos) < 0.01:
+            #         break
+            #
+            # # Lower CubeA onto CubeB
+            # target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.05])  # Slightly above CubeB
+            # for _ in range(100):
+            #     curr_pos = obs["robot0_eef_pos"]
+            #     delta_pos = target_pos - curr_pos
+            #     action = np.concatenate([4 * delta_pos, [1]])  # Keep gripper closed
+            #     obs, reward, done, info = self.env.step(action)
+            #     self.env.render()
+            #     self.obs_dict = obs
+            #     if np.linalg.norm(delta_pos) < 0.01:
+            #         break
+            #
+            # # Release the gripper
+            # for _ in range(25):
+            #     action = np.concatenate([[0, 0, 0], [-1]])  # Open gripper
+            #     obs, reward, done, info = self.env.step(action)
+            #     self.env.render()
+            #     self.obs_dict = obs
 
         # Render and save the initial frame to the video
         frame = self.env.sim.render(

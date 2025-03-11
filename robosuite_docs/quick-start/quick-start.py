@@ -141,31 +141,31 @@ def calculate_reward_gripper_to_cube():
 
 
 
-# def calculate_reward_cube_A_to_cube_B_full():
-#     reward = 0.0
-#     cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
-#     cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+def calculate_reward_cube_A_to_cube_B_full():
+    reward = 0.0
+    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
 
-#     # Compute central points of the bottom face of cube A and top face of cube B
-#     bottom_of_A = np.array([
-#         cube_pos_A[0],  # x-coordinate remains the same
-#         cube_pos_A[1],  # y-coordinate remains the same
-#         cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-#     ])
+    # Compute central points of the bottom face of cube A and top face of cube B
+    bottom_of_A = np.array([
+        cube_pos_A[0],  # x-coordinate remains the same
+        cube_pos_A[1],  # y-coordinate remains the same
+        cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
+    ])
 
-#     top_of_B = np.array([
-#         cube_pos_B[0],  # x-coordinate remains the same
-#         cube_pos_B[1],  # y-coordinate remains the same
-#         cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
-#     ])
+    top_of_B = np.array([
+        cube_pos_B[0],  # x-coordinate remains the same
+        cube_pos_B[1],  # y-coordinate remains the same
+        cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+    ])
 
-#     # Compute full Euclidean distance
-#     distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
+    # Compute full Euclidean distance
+    distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
 
-#     # Penalize based on the full distance (not just z)
-#     reward += 2 / (distance + 0.01)
+    # Penalize based on the full distance (not just z)
+    reward += 2 / (distance + 0.01)
 
-#     return reward
+    return reward
 
 def calculate_reward_cube_A_to_cube_B_xy():
     reward = 0.0
@@ -317,8 +317,8 @@ while True:
         message = None
 
 
-        # if is_proper_grasp:
-        #     message = "The robot is correctly in contact with the block."
+        if is_proper_grasp:
+            message = "The robot is correctly in contact with the block."
 
         # if last message had block gripped, but now it doesn't, print message block is dropped
         if last_message and not is_proper_grasp:
@@ -334,8 +334,8 @@ while True:
             message = "The robot is holding block A and is positioned above block B."
 
         # # Print message if conditions for fourth event are met: cubeA is above cubeB and they are in contact
-        # if is_cubeA_above_cubeB and are_blocks_in_contact:
-        #     message = "Cube A is above Cube B and they are in contact."
+        if is_cubeA_above_cubeB and are_blocks_in_contact:
+            message = "Cube A is above Cube B and they are in contact."
 
         # # Print message if conditions for fifth event are met: cubeA is stacked on cubeB for more than 5 seconds and the robot is not in contact with cubeA
         # if stack_timer > stack_threshold and is_robot_not_in_contact_with_cubeA:
@@ -347,12 +347,14 @@ while True:
 
         # reward debugging: 
 
-        reward = calculate_reward_gripper_to_cube()
+        # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
         # reward = calculate_reward_cube_A_to_cube_B_xy()
+        reward = calculate_reward_cube_A_to_cube_B_full()
         print("Reward gripper to cube: ", reward)
 
 
+        # print("cubeA position: ", block_A)
 
         # Render the environment to visualize the robot's action
         env.render()

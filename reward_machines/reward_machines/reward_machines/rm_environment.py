@@ -77,7 +77,7 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_u_id  = self.current_rm.reset()
         self.steps_in_current_u = 0
         self.previous_u_id = self.current_u_id
-        self.max_steps_in_u_id = [50, 70, 100, 100]
+        self.max_steps_in_u_id = [50, 70, 50, 50]
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)
@@ -117,11 +117,11 @@ class RewardMachineEnv(gym.Wrapper):
             done = True
 
 
-        if self.current_u_id == 2:
-            cube_A_pos = self.env.obs_dict["cubeA_pos"]
-            if cube_A_pos[2] > 0.94 or cube_A_pos[2] < 0.88:
-                done = True
-                rm_rew = -1
+        # if self.current_u_id == 2:
+        #     cube_A_pos = self.env.obs_dict["cubeA_pos"]
+        #     if cube_A_pos[2] > 0.94 or cube_A_pos[2] < 0.88:
+        #         done = True
+        #         rm_rew = -1
 
 
         # if done, but not because of a transition to the terminal state
