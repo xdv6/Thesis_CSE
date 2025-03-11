@@ -232,7 +232,6 @@ class MyBlockStackingEnv(GymWrapper):
         else:
             action[-1] = 1
 
-        action[-1] = 1
 
         next_obs, reward, done, info = self.env.step(action)
 
@@ -569,7 +568,7 @@ class MyBlockStackingEnvRM2(RewardMachineEnv):
         rm_files = ["./envs/robosuite_rm/reward_machines/t2.txt"]
 
         # Initialize the RewardMachineEnv with the converted environment and reward machine files
-        super().__init__(env, rm_files)
+        super().__init__(env, rm_files) 
 
 
 
