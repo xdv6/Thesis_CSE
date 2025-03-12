@@ -163,7 +163,7 @@ def calculate_reward_cube_A_to_cube_B_full():
     distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
 
     # Penalize based on the full distance (not just z)
-    reward += 10* (2 / (distance + 0.01))
+    reward += 20* (2 / (distance + 0.01))
 
     return reward
 
