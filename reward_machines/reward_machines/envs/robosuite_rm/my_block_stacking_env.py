@@ -92,7 +92,7 @@ class MyBlockStackingEnv(GymWrapper):
 
 
         # Penalize based on the full distance (not just z)
-        reward += 20 * (2 / (distance + 0.01))
+        reward += 30 * (2 / (distance + 0.01))
 
         if self.block_gripped and not self.block_grasped():
             reward = -5
