@@ -32,8 +32,8 @@ placement_initializer.append_sampler(
     # Create a placement initializer with a y_range and dynamically updated x_range
     sampler = UniformRandomSampler(
         name="ObjectSamplerCubeA",
-        x_range=[0.0, 0.0],
-        y_range=[0.0, 0.0],
+        x_range=[0.01, 0.01],
+        y_range=[0.01, 0.01],
         rotation=0.0,
         ensure_object_boundary_in_range=False,
         ensure_valid_placement=True,
@@ -46,8 +46,8 @@ placement_initializer.append_sampler(
     # Create a placement initializer with a y_range and dynamically updated x_range
     sampler = UniformRandomSampler(
         name="ObjectSamplerCubeB",
-        x_range=[0.1, 0.1],
-        y_range=[0.1, 0.1],
+        x_range=[0.2, 0.2],
+        y_range=[0.2, 0.2],
         rotation=0.0,
         ensure_object_boundary_in_range=False,
         ensure_valid_placement=True,
@@ -163,7 +163,7 @@ def calculate_reward_cube_A_to_cube_B_full():
     distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
 
     # Penalize based on the full distance (not just z)
-    reward += 2 / (distance + 0.01)
+    reward += 10* (2 / (distance + 0.01))
 
     return reward
 
@@ -287,10 +287,10 @@ while True:
         block_A_above_B = block_A[2] - env.cubeA.size[2] > 0.91
 
         # if height of cubeA is above 0.94 or below 0.88 then reset the environment
-        if last_message == "The robot is holding the block and block A is above block B." and (block_A[2] > 0.94 or block_A[2] < 0.88):
-            print("Episode finished, resetting environment.")
-            last_message = ""
-            break
+        # if last_message == "The robot is holding the block and block A is above block B." and (block_A[2] > 0.94 or block_A[2] < 0.88):
+        #     print("Episode finished, resetting environment.")
+        #     last_message = ""
+        #     break
 
         # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
         is_above_cubeB = (
@@ -347,10 +347,10 @@ while True:
 
         # reward debugging: 
 
-        reward = calculate_reward_gripper_to_cube()
+        # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
         # reward = calculate_reward_cube_A_to_cube_B_xy()
-        # reward = calculate_reward_cube_A_to_cube_B_full()
+        reward = calculate_reward_cube_A_to_cube_B_full()
         print("Reward gripper to cube: ", reward)
 
 
