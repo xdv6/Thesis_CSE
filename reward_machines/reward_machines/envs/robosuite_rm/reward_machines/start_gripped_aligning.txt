@@ -1,4 +1,4 @@
-0  # initial state
+0  # RM starting from cube gripped, and aligning
 [2]  # terminal state
 (0, 0, '!h',RewardControl())
 (0, 1, 'h', ConstantRewardFunction(2000))

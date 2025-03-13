@@ -1,0 +1,8 @@
+0  # RM for starting from cube gripped
+[3]  # terminal state
+(0, 0, '!h',RewardControl())
+(0, 1, 'h',RewardControl())
+(1, 1, '!p',RewardControl())
+(1, 2, 'p', RewardControl())
+(2, 2, '!b',RewardControl())
+(2, 3, 'b', ConstantRewardFunction(10000))
