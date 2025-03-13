@@ -83,7 +83,6 @@ def learn(env,
     sess = get_session()
     set_global_seeds(seed)
 
-    gamma = 0.98
     controller  = ControllerDQN(env, **controller_kargs)
     if use_ddpg:
         options = OptionDDPG(env, gamma, total_timesteps, **option_kargs)

@@ -467,17 +467,17 @@ class MyBlockStackingEnv(GymWrapper):
                 if is_contact:
                     break
 
-            # # Lift CubeA
-            # target_pos = obs["robot0_eef_pos"] + np.array([0, 0, 0.15])  # Lift cube up
-            # for _ in range(100):
-            #     curr_pos = obs["robot0_eef_pos"]
-            #     delta_pos = target_pos - curr_pos
-            #     action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
-            #     obs, reward, done, info = self.env.step(action)
-            #     self.env.render()
-            #     self.obs_dict = obs
-            #     if np.linalg.norm(delta_pos) < 0.01:
-            #         break
+            # Lift CubeA
+            target_pos = obs["robot0_eef_pos"] + np.array([0, 0, 0.15])  # Lift cube up
+            for _ in range(100):
+                curr_pos = obs["robot0_eef_pos"]
+                delta_pos = target_pos - curr_pos
+                action = np.concatenate([5 * delta_pos, [1]])  # Keep gripper closed
+                obs, reward, done, info = self.env.step(action)
+                # self.env.render()
+                self.obs_dict = obs
+                if np.linalg.norm(delta_pos) < 0.01:
+                    break
             #
             # # Move above CubeB
             # target_pos = obs["cubeB_pos"] + np.array([0, 0, 0.15])  # Move above CubeB

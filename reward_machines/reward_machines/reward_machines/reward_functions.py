@@ -44,13 +44,13 @@ class RewardControl(RewardFunction):
         # if s_info['current_u_id'] == 0:
         #     wandb.log({"gripper_to_cube_reward": s_info['reward_gripper_to_cube']})
         #     return s_info['reward_gripper_to_cube']
+        # if s_info['current_u_id'] == 0:
+        #     wandb.log({"reward_cube_A_to_cube_B": s_info['reward_cube_A_to_cube_B']})
+        #     return s_info['reward_cube_A_to_cube_B']
         if s_info['current_u_id'] == 0:
-            wandb.log({"reward_cube_A_to_cube_B": s_info['reward_cube_A_to_cube_B']})
-            return s_info['reward_cube_A_to_cube_B']
-        elif s_info['current_u_id'] == 1:
             wandb.log({"reward_cube_A_to_cube_B_xy": s_info['reward_cube_A_to_cube_B_xy']})
             return s_info["reward_cube_A_to_cube_B_xy"]
-        elif s_info['current_u_id'] == 2:
+        elif s_info['current_u_id'] == 1:
             wandb.log({"reward_cube_A_to_cube_B_full": s_info['reward_cube_A_to_cube_B_full']})
             return s_info['reward_cube_A_to_cube_B_full']
         else:
