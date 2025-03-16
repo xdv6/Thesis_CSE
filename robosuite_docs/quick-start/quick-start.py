@@ -74,9 +74,24 @@ placement_initializer.append_sampler(
     )
 )
 
+placement_initializer.append_sampler(
+    # Create a placement initializer with a y_range and dynamically updated x_range
+    sampler = UniformRandomSampler(
+        name="ObjectSamplerCubeD",
+        x_range=[-0.07, -0.07],
+        y_range=[-0.07, -0.07],
+        rotation=0.0,
+        ensure_object_boundary_in_range=False,
+        ensure_valid_placement=True,
+        reference_pos=(0, 0, 0.8),
+        z_offset=0.01,
+    )
+)
+
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeA", mujoco_objects=env.cubeA)
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeB", mujoco_objects=env.cubeB)
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
+placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeD", mujoco_objects=env.cubeD)
 
 # Update the environment to use the new placement initializer
 env.placement_initializer = placement_initializer
