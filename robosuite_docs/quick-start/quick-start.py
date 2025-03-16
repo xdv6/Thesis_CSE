@@ -9,6 +9,9 @@ from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialC
 import random
 import math
 
+
+# stack env in file: miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+
 # Load controller configuration
 controller_config = load_controller_config(default_controller="OSC_POSE")
 
@@ -56,8 +59,24 @@ placement_initializer.append_sampler(
     )
 )
 
+
+placement_initializer.append_sampler(
+    # Create a placement initializer with a y_range and dynamically updated x_range
+    sampler = UniformRandomSampler(
+        name="ObjectSamplerCubeC",
+        x_range=[-0.2, -0.2],
+        y_range=[-0.2, -0.2],
+        rotation=0.0,
+        ensure_object_boundary_in_range=False,
+        ensure_valid_placement=True,
+        reference_pos=(0, 0, 0.8),
+        z_offset=0.01,
+    )
+)
+
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeA", mujoco_objects=env.cubeA)
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeB", mujoco_objects=env.cubeB)
+placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
 
 # Update the environment to use the new placement initializer
 env.placement_initializer = placement_initializer
@@ -349,9 +368,9 @@ while True:
 
         # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
-        # reward = calculate_reward_cube_A_to_cube_B_xy()
-        reward = calculate_reward_cube_A_to_cube_B_full()
-        print("Reward gripper to cube: ", reward)
+        reward = calculate_reward_cube_A_to_cube_B_xy()
+        # reward = calculate_reward_cube_A_to_cube_B_full()
+        # print("Reward gripper to cube: ", reward)
 
 
         # print("cubeA position: ", block_A)
