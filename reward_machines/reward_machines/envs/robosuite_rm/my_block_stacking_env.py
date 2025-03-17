@@ -117,9 +117,11 @@ class MyBlockStackingEnv(GymWrapper):
         # checking start state
         self.start_state_value = int(os.getenv("START_STATE", "0"))
 
-        self.block_gripped = False
+        # set this to start on True if starting from state where cube is gripped
+        self.block_gripped = True
 
         self.state_save_index = 0
+        self.num_load_points = 17
 
 
         # Create environment instance with the given configuration
@@ -431,26 +433,26 @@ class MyBlockStackingEnv(GymWrapper):
 
     def reset(self):
 
+        folder = "load_points"
         # test saving simulation to file
         # state = self.env.sim.get_state()
-        folder = "load_points"
         # with open(f'{folder}/state_{self.state_save_index}.pkl', 'wb') as f:
         #     pickle.dump(state, f)
         # print(f"Simulation state saved to file: {folder}/state_{self.state_save_index}.pkl")
         # self.state_save_index += 1
 
 
-
-
-        self.block_gripped = False
+        self.block_gripped = True
         # Reset the environment
         obs = self.env.reset()
 
         # test loading simulation from file
-        with open(f'{folder}/state_1.pkl', 'rb') as f:
+        current_load_state = self.state_save_index % self.num_load_points
+        with open(f'{folder}/state_{current_load_state}.pkl', 'rb') as f:
             state = pickle.load(f)
         self.env.sim.set_state(state)
         self.env.sim.forward()
+        self.state_save_index += 1
 
         table_geom_id = self.env.sim.model.geom_name2id("table_collision")  # Correct table collision name
 
