@@ -49,7 +49,7 @@ class MyBlockStackingEnv(GymWrapper):
         # reward -= distance * 10  # Penalize based on absolute distance
 
         if self.block_gripped and not self.block_grasped():
-            reward = -5
+            reward = -30
         wandb.log({"distance_between_cubeA_and_cubeB": distance})
         return reward
 
@@ -64,7 +64,7 @@ class MyBlockStackingEnv(GymWrapper):
         # Penalize based on the XY distance
         reward += 2 * (5 / (distance_xy + 0.01))
         if self.block_gripped and not self.block_grasped():
-            reward = -5
+            reward = -30
         wandb.log({"distance_xy_between_cubeA_and_cubeB": distance_xy})
 
         return reward
@@ -93,12 +93,42 @@ class MyBlockStackingEnv(GymWrapper):
 
 
         # Penalize based on the full distance (not just z)
-        reward += 30 * (2 / (distance + 0.01))
+        reward +=  5 / (distance + 0.01)
 
         if self.block_gripped and not self.block_grasped():
-            reward = -5
+            reward = -30
         wandb.log({"distance_full_between_cubeA_and_cubeB": distance})
 
+        return reward
+
+    def calculate_reward_cube_A_to_tresh_above_cube_B(self):
+        reward = 0.0
+        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
+        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
+
+        # Compute central points of the bottom face of cube A and top face of cube B
+        A = np.array([
+            cube_pos_A[0],  # x-coordinate remains the same
+            cube_pos_A[1],  # y-coordinate remains the same
+            cube_pos_A[2]
+        ])
+
+        above_B_treshold = np.array([
+            cube_pos_B[0],  # x-coordinate remains the same
+            cube_pos_B[1],  # y-coordinate remains the same
+            0.942
+        ])
+
+        # Compute full Euclidean distance
+        distance = abs(np.linalg.norm(A - above_B_treshold))
+
+        # Penalize based on the full distance (not just z)
+        reward += 2 / (distance + 0.01)
+
+        if self.block_gripped and not self.block_grasped():
+            reward = -30
+
+        wandb.log({"distance_above_tresh_between_cubeA_and_cubeB": distance})
         return reward
 
 
@@ -280,6 +310,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
         self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
         self.obs_dict["reward_cube_A_to_cube_B_full"] = self.calculate_reward_cube_A_to_cube_B_full()
+        self.obs_dict["reward_cube_A_to_tresh_above_cube_B"] = self.calculate_reward_cube_A_to_tresh_above_cube_B()
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
@@ -372,17 +403,18 @@ class MyBlockStackingEnv(GymWrapper):
     def above_block_b_in_xy_and_grasped(self):
         # Check if the end-effector is above cubeB in the x and y plane while still grasping cubeA
         obs = self.obs_dict
-        eef_position = obs["robot0_eef_pos"][:2]  # x, y coordinates of end-effector position
-        cube_b_position = obs["cubeB_pos"][:2]  # x, y coordinates of cubeB
+
+        cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
+        cube_b_pos = obs["cubeB_pos"]  # Position of cubeB
 
         # Define an allowable margin to be considered "above" in the x, y plane
-        margin = 0.025  # 5 cm margin
-        is_above_cube_b_xy = (
-            cube_b_position[0] - margin <= eef_position[0] <= cube_b_position[0] + margin and
-            cube_b_position[1] - margin <= eef_position[1] <= cube_b_position[1] + margin
+        is_above_cubeB = (
+            cube_b_pos[0] - 0.025 <= cube_a_pos[0] <= cube_b_pos[0] + 0.025 and
+            cube_b_pos[1] - 0.025 <= cube_a_pos[1] <= cube_b_pos[1] + 0.025 and
+            0.93 <= cube_a_pos[2] <= 0.95  # Ensuring the height is within the range
         )
 
-        return is_above_cube_b_xy
+        return is_above_cubeB
 
     def cube_a_above_cube_b_and_in_contact(self):
         # Check if cubeA is directly above cubeB and if they are in contact
@@ -454,6 +486,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.env.sim.forward()
         self.state_save_index += 1
 
+
         table_geom_id = self.env.sim.model.geom_name2id("table_collision")  # Correct table collision name
 
         # 🚀 ABSOLUTE MAXIMUM stiffness for contact resolution 🚀
@@ -471,6 +504,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
         self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
         self.obs_dict["reward_cube_A_to_cube_B_full"] = self.calculate_reward_cube_A_to_cube_B_full()
+        self.obs_dict["reward_cube_A_to_tresh_above_cube_B"] = self.calculate_reward_cube_A_to_tresh_above_cube_B()
 
         move_gripper_to_cube = False
         if self.start_state_value == 1:

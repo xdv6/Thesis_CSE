@@ -144,20 +144,6 @@ def map_values(value, min_value, max_value, linear=True, steepness=1):
 
 
 
-# def calculate_reward_gripper_to_cube():
-#     reward = 0.0
-#     cube_width = env.cubeA.size[0] * 2
-#     cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
-#     cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
-
-#     left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
-#     right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
-
-#     left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
-#     right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
-#     reward -= (left_dist + right_dist) * 10
-#     return reward
-
 def calculate_reward_gripper_to_cube():
     reward = 0.0
     cube_width = env.cubeA.size[0] * 2
@@ -198,9 +184,37 @@ def calculate_reward_cube_A_to_cube_B_full():
     distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
 
     # Penalize based on the full distance (not just z)
-    reward += 30* (2 / (distance + 0.01))
+    reward += 5 / (distance + 0.01)
 
     return reward
+
+
+def calculate_reward_cube_A_to_tresh_above_cube_B():
+    reward = 0.0
+    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+    # Compute central points of the bottom face of cube A and top face of cube B
+    A = np.array([
+        cube_pos_A[0],  # x-coordinate remains the same
+        cube_pos_A[1],  # y-coordinate remains the same
+        cube_pos_A[2] 
+    ])
+
+    above_B_treshold = np.array([
+        cube_pos_B[0],  # x-coordinate remains the same
+        cube_pos_B[1],  # y-coordinate remains the same
+        0.942
+    ])
+
+    # Compute full Euclidean distance
+    distance = abs(np.linalg.norm(A - above_B_treshold) )
+
+    # Penalize based on the full distance (not just z)
+    reward += 2 / (distance + 0.01)
+
+    return reward
+
 
 def calculate_reward_cube_A_to_cube_B_xy():
     reward = 0.0
@@ -251,12 +265,12 @@ while True:
     env.sim.model.geom_friction[table_geom_id] = [100.0, 10.0, 1.0]  #
 
 
-    # test loading simulation from file
-    with open('state.pkl', 'rb') as f:
-        state = pickle.load(f)
-    env.sim.set_state(state)
-    env.sim.forward()
-    print("Simulation state loaded from file.")
+    # # test loading simulation from file
+    # with open('state.pkl', 'rb') as f:
+    #     state = pickle.load(f)
+    # env.sim.set_state(state)
+    # env.sim.forward()
+    # print("Simulation state loaded from file.")
     
 
     while True:
@@ -342,8 +356,9 @@ while True:
 
         # Condition for third event: Check if the robot is still above cubeB, still in contact with cubeA, and x, y coordinates are above cubeB
         is_above_cubeB = (
-            block_B[0] - 0.025 <= eef_position[0] <= block_B[0] + 0.025 and
-            block_B[1] - 0.025 <= eef_position[1] <= block_B[1] + 0.025
+            block_B[0] - 0.025 <= block_A[0] <= block_B[0] + 0.025 and
+            block_B[1] - 0.025 <= block_A[1] <= block_B[1] + 0.025 and
+            0.93 <= block_A[2] <= 0.95  # Ensuring the height is within the range
         )
 
         # Condition for fourth event: Check if cubeA is positioned above cubeB and they are in contact
@@ -397,9 +412,10 @@ while True:
 
         # reward = calculate_reward_gripper_to_cube()
         # reward = calculate_reward_cube_A_to_cube_B()
-        reward = calculate_reward_cube_A_to_cube_B_xy()
-        # reward = calculate_reward_cube_A_to_cube_B_full()
-        # print("Reward gripper to cube: ", reward)
+        # reward = calculate_reward_cube_A_to_cube_B_xy()
+        # reward = calculate_reward_cube_A_to_tresh_above_cube_B()
+        reward = calculate_reward_cube_A_to_cube_B_full()
+        print("Reward gripper to cube: ", reward)
 
 
         # print("cubeA position: ", block_A)

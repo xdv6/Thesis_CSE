@@ -115,6 +115,7 @@ class RewardMachineEnv(gym.Wrapper):
 
         if self.steps_in_current_u > self.max_steps_in_u_id[self.current_u_id]:
             done = True
+            rm_rew = -20
 
 
         # if self.current_u_id == 1:
