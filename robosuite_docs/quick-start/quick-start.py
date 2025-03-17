@@ -8,6 +8,7 @@ import time
 from robosuite.utils.placement_samplers import UniformRandomSampler, SequentialCompositeSampler
 import random
 import math
+import pickle
 
 
 # stack env in file: miniconda3/envs/RM_robosuite/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
@@ -60,38 +61,38 @@ placement_initializer.append_sampler(
 )
 
 
-placement_initializer.append_sampler(
-    # Create a placement initializer with a y_range and dynamically updated x_range
-    sampler = UniformRandomSampler(
-        name="ObjectSamplerCubeC",
-        x_range=[-0.2, -0.2],
-        y_range=[-0.2, -0.2],
-        rotation=0.0,
-        ensure_object_boundary_in_range=False,
-        ensure_valid_placement=True,
-        reference_pos=(0, 0, 0.8),
-        z_offset=0.01,
-    )
-)
+# placement_initializer.append_sampler(
+#     # Create a placement initializer with a y_range and dynamically updated x_range
+#     sampler = UniformRandomSampler(
+#         name="ObjectSamplerCubeC",
+#         x_range=[-0.2, -0.2],
+#         y_range=[-0.2, -0.2],
+#         rotation=0.0,
+#         ensure_object_boundary_in_range=False,
+#         ensure_valid_placement=True,
+#         reference_pos=(0, 0, 0.8),
+#         z_offset=0.01,
+#     )
+# )
 
-placement_initializer.append_sampler(
-    # Create a placement initializer with a y_range and dynamically updated x_range
-    sampler = UniformRandomSampler(
-        name="ObjectSamplerCubeD",
-        x_range=[-0.07, -0.07],
-        y_range=[-0.07, -0.07],
-        rotation=0.0,
-        ensure_object_boundary_in_range=False,
-        ensure_valid_placement=True,
-        reference_pos=(0, 0, 0.8),
-        z_offset=0.01,
-    )
-)
+# placement_initializer.append_sampler(
+#     # Create a placement initializer with a y_range and dynamically updated x_range
+#     sampler = UniformRandomSampler(
+#         name="ObjectSamplerCubeD",
+#         x_range=[-0.07, -0.07],
+#         y_range=[-0.07, -0.07],
+#         rotation=0.0,
+#         ensure_object_boundary_in_range=False,
+#         ensure_valid_placement=True,
+#         reference_pos=(0, 0, 0.8),
+#         z_offset=0.01,
+#     )
+# )
 
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeA", mujoco_objects=env.cubeA)
 placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeB", mujoco_objects=env.cubeB)
-placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
-placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeD", mujoco_objects=env.cubeD)
+# placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
+# placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeD", mujoco_objects=env.cubeD)
 
 # Update the environment to use the new placement initializer
 env.placement_initializer = placement_initializer
@@ -248,8 +249,15 @@ while True:
 
     # 🚀 ABSOLUTE MAXIMUM friction to prevent sliding or sinking 🚀
     env.sim.model.geom_friction[table_geom_id] = [100.0, 10.0, 1.0]  #
-    
 
+
+    # test loading simulation from file
+    with open('state.pkl', 'rb') as f:
+        state = pickle.load(f)
+    env.sim.set_state(state)
+    env.sim.forward()
+    print("Simulation state loaded from file.")
+    
 
     while True:
         # Get the newest action from the keyboard device
@@ -262,6 +270,12 @@ while True:
 
         # If action is None, it indicates a reset (e.g., pressing "q" on the keyboard)
         if action is None:
+            # test saving simulation to file
+            # state = env.sim.get_state()
+            # with open('state.pkl', 'wb') as f:
+            #     pickle.dump(state, f)
+            # print("Simulation state saved to file.")
+
             break
 
         # Step the environment with the provided action

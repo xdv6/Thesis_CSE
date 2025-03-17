@@ -11,6 +11,7 @@ from robosuite import load_controller_config
 import imageio
 import os
 import wandb
+import pickle
 
 
 # Custom environment wrapper for block stacking using GymWrapper
@@ -118,6 +119,8 @@ class MyBlockStackingEnv(GymWrapper):
 
         self.block_gripped = False
 
+        self.state_save_index = 0
+
 
         # Create environment instance with the given configuration
         env = suite.make(
@@ -163,23 +166,39 @@ class MyBlockStackingEnv(GymWrapper):
             )
         )
 
-        placement_initializer.append_sampler(
-            # Create a placement initializer with a y_range and dynamically updated x_range
-            sampler=UniformRandomSampler(
-                name="ObjectSamplerCubeC",
-                x_range=[0.3, 0.3],
-                y_range=[0.3, 0.3],
-                rotation=0.0,
-                ensure_object_boundary_in_range=False,
-                ensure_valid_placement=True,
-                reference_pos=(0, 0, 0.8),
-                z_offset=0.01,
-            )
-        )
+        # placement_initializer.append_sampler(
+        #     # Create a placement initializer with a y_range and dynamically updated x_range
+        #     sampler=UniformRandomSampler(
+        #         name="ObjectSamplerCubeC",
+        #         x_range=[-0.2, -0.2],
+        #         y_range=[-0.2, -0.2],
+        #         rotation=0.0,
+        #         ensure_object_boundary_in_range=False,
+        #         ensure_valid_placement=True,
+        #         reference_pos=(0, 0, 0.8),
+        #         z_offset=0.01,
+        #     )
+        # )
+        #
+        # placement_initializer.append_sampler(
+        #     # Create a placement initializer with a y_range and dynamically updated x_range
+        #     sampler=UniformRandomSampler(
+        #         name="ObjectSamplerCubeD",
+        #         x_range=[-0.07, -0.07],
+        #         y_range=[-0.07, -0.07],
+        #         rotation=0.0,
+        #         ensure_object_boundary_in_range=False,
+        #         ensure_valid_placement=True,
+        #         reference_pos=(0, 0, 0.8),
+        #         z_offset=0.01,
+        #     )
+        # )
 
         placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeA", mujoco_objects=env.cubeA)
         placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeB", mujoco_objects=env.cubeB)
-        placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
+
+        # placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
+        # placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeD", mujoco_objects=env.cubeD)
 
         # Update the environment to use the new placement initializer
         env.placement_initializer = placement_initializer
@@ -241,14 +260,13 @@ class MyBlockStackingEnv(GymWrapper):
 
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
-        # clip gripper action
+        # clip gripper action, 1 is gripper closed, -1 is gripper open
         if action[-1] <= 0:
             action[-1] = -1
         else:
             action[-1] = 1
 
         next_obs, reward, done, info = self.env.step(action)
-
 
         # if cube is dropped after it was picked up, then the episode is done
         if self.block_gripped and not self.block_grasped():
@@ -413,9 +431,26 @@ class MyBlockStackingEnv(GymWrapper):
 
     def reset(self):
 
+        # test saving simulation to file
+        # state = self.env.sim.get_state()
+        folder = "load_points"
+        # with open(f'{folder}/state_{self.state_save_index}.pkl', 'wb') as f:
+        #     pickle.dump(state, f)
+        # print(f"Simulation state saved to file: {folder}/state_{self.state_save_index}.pkl")
+        # self.state_save_index += 1
+
+
+
+
         self.block_gripped = False
         # Reset the environment
         obs = self.env.reset()
+
+        # test loading simulation from file
+        with open(f'{folder}/state_1.pkl', 'rb') as f:
+            state = pickle.load(f)
+        self.env.sim.set_state(state)
+        self.env.sim.forward()
 
         table_geom_id = self.env.sim.model.geom_name2id("table_collision")  # Correct table collision name
 
