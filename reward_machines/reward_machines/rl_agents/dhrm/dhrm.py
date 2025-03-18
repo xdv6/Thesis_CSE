@@ -340,10 +340,12 @@ def evaluate(env,
             obs = new_obs
             episode_rewards[-1] += rew
 
-            # if rew > 500:
+            # if rew > 2500:
             #     print(rew)
             #     print("SUCCESS: self.env.current_u_id == -1")
             #     break
+
+            # print("rew: ", rew)
 
             if done:
                 obs = env.reset()

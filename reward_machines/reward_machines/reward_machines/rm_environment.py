@@ -77,13 +77,18 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_u_id  = self.current_rm.reset()
         self.steps_in_current_u = 0
         self.previous_u_id = self.current_u_id
-        self.max_steps_in_u_id = [20, 20, 20, 40]
+        self.max_steps_in_u_id = [15, 15, 15, 15]
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)
 
     def step(self, action):
         # executing the action in the environment
+
+        # if self.current_u_id == 1:
+        #     print("dropping the cube for test")
+        #     action[-1] = -1
+
         next_obs, original_reward, env_done, info = self.env.step(action)
 
         # getting the output of the detectors and saving information for generating counterfactual experiences
@@ -104,6 +109,9 @@ class RewardMachineEnv(gym.Wrapper):
         # update the RM state
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, updated_obs_dict)
 
+        # print("self.current_u_id", self.current_u_id)
+        # print("self.steps_in_current_u", self.steps_in_current_u)
+        # print("\n")
 
         # returning the result of this action
         done = rm_done or env_done
@@ -116,6 +124,8 @@ class RewardMachineEnv(gym.Wrapper):
         if self.steps_in_current_u > self.max_steps_in_u_id[self.current_u_id]:
             done = True
             rm_rew = -20
+
+
 
 
         # if self.current_u_id == 1:

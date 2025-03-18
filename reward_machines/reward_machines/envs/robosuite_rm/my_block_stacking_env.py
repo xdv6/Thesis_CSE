@@ -151,7 +151,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.block_gripped = True
 
         self.state_save_index = 0
-        self.num_load_points = 17
+        self.num_load_points = 8
 
 
         # Create environment instance with the given configuration
@@ -465,22 +465,22 @@ class MyBlockStackingEnv(GymWrapper):
 
     def reset(self):
 
-        folder = "load_points"
-        # test saving simulation to file
+        # folder_saving = "load_points_stacking"
+        # # test saving simulation to file
         # state = self.env.sim.get_state()
-        # with open(f'{folder}/state_{self.state_save_index}.pkl', 'wb') as f:
+        # with open(f'{folder_saving}/state_{self.state_save_index}.pkl', 'wb') as f:
         #     pickle.dump(state, f)
-        # print(f"Simulation state saved to file: {folder}/state_{self.state_save_index}.pkl")
-        # self.state_save_index += 1
+        # print(f"Simulation state saved to file: {folder_saving}/state_{self.state_save_index}.pkl")
 
 
         self.block_gripped = True
         # Reset the environment
         obs = self.env.reset()
 
+        folder_loading = "load_points_stacking"
         # test loading simulation from file
         current_load_state = self.state_save_index % self.num_load_points
-        with open(f'{folder}/state_{current_load_state}.pkl', 'rb') as f:
+        with open(f'{folder_loading}/state_{current_load_state}.pkl', 'rb') as f:
             state = pickle.load(f)
         self.env.sim.set_state(state)
         self.env.sim.forward()

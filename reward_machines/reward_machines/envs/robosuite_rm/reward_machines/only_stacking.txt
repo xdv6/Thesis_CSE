@@ -1,0 +1,4 @@
+0  # RM for last transition
+[1]  # terminal state
+(0, 0, '!b',RewardControl())
+(0, 1, 'b', ConstantRewardFunction(10000))
