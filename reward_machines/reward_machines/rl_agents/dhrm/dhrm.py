@@ -293,7 +293,6 @@ def evaluate(env,
     options.reset()
     reset = True
 
-    print("test")
 
     with tempfile.TemporaryDirectory() as td:
         td = checkpoint_path or td
@@ -318,12 +317,13 @@ def evaluate(env,
             # Selecting an option if needed
             if option_id is None:
                 valid_options = env.get_valid_options()
-                print(valid_options)
                 option_s    = obs
                 option_id   = controller.get_action(option_s, valid_options)
                 option_rews = []
 
             # Take action and update exploration to the newest value
+            print("option_id: ", option_id)
+            print(env.get_option_observation(option_id))
             action = options.get_action(env.get_option_observation(option_id), t, reset)
             reset = False
 
@@ -339,6 +339,9 @@ def evaluate(env,
 
             obs = new_obs
             episode_rewards[-1] += rew
+
+            if env.did_option_terminate(option_id):
+                option_id = None
 
             # if rew > 2500:
             #     print(rew)

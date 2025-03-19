@@ -148,10 +148,10 @@ class MyBlockStackingEnv(GymWrapper):
         self.start_state_value = int(os.getenv("START_STATE", "0"))
 
         # set this to start on True if starting from state where cube is gripped
-        self.block_gripped = True
+        self.block_gripped = False
 
         self.state_save_index = 0
-        self.num_load_points = 8
+        self.num_load_points = 17
 
 
         # Create environment instance with the given configuration
@@ -416,7 +416,7 @@ class MyBlockStackingEnv(GymWrapper):
 
         return is_above_cubeB
 
-    def cube_a_above_cube_b_and_in_contact(self):
+    def     cube_a_above_cube_b_and_in_contact(self):
         # Check if cubeA is directly above cubeB and if they are in contact
         obs = self.obs_dict
         cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
@@ -457,7 +457,7 @@ class MyBlockStackingEnv(GymWrapper):
         self.start_time = time.time()
 
         # Condition for long contact
-        return self.stack_timer > self.stack_threshold and is_robot_not_in_contact
+        return self.stack_timer > self.stack_threshold and is_robot_not_in_contact        # test loading simulation from file
 
     def block_dropped(self):
         # Check if the robot has dropped the block (i.e., no longer in contact with cubeA)
@@ -473,18 +473,17 @@ class MyBlockStackingEnv(GymWrapper):
         # print(f"Simulation state saved to file: {folder_saving}/state_{self.state_save_index}.pkl")
 
 
-        self.block_gripped = True
+        self.block_gripped = False
         # Reset the environment
         obs = self.env.reset()
 
-        folder_loading = "load_points_stacking"
-        # test loading simulation from file
-        current_load_state = self.state_save_index % self.num_load_points
-        with open(f'{folder_loading}/state_{current_load_state}.pkl', 'rb') as f:
-            state = pickle.load(f)
-        self.env.sim.set_state(state)
-        self.env.sim.forward()
-        self.state_save_index += 1
+        # folder_loading = "load_points_alligning"
+        # current_load_state = self.state_save_index % self.num_load_points
+        # with open(f'{folder_loading}/state_{current_load_state}.pkl', 'rb') as f:
+        #     state = pickle.load(f)
+        # self.env.sim.set_state(state)
+        # self.env.sim.forward()
+        # self.state_save_index += 1
 
 
         table_geom_id = self.env.sim.model.geom_name2id("table_collision")  # Correct table collision name
