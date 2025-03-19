@@ -298,15 +298,10 @@ def evaluate(env,
         td = checkpoint_path or td
 
         model_file = os.path.join(td, "model")
-        model_saved = False
 
-        if tf.train.latest_checkpoint(td) is not None:
+        if load_path is not None:
             load_variables(model_file)
-            logger.log('Loaded model from {}'.format(model_file))
-            model_saved = True
-        elif load_path is not None:
-            load_variables(model_file)
-            tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
+            # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
             logger.log('Loaded model from {}'.format(load_path))
 
         for t in range(total_timesteps):
@@ -322,8 +317,157 @@ def evaluate(env,
                 option_rews = []
 
             # Take action and update exploration to the newest value
-            print("option_id: ", option_id)
-            print(env.get_option_observation(option_id))
+            # print("option_id: ", option_id)
+            # print(env.get_option_observation(option_id))
+            action = options.get_action(env.get_option_observation(option_id), t, reset)
+            reset = False
+
+            action = action.squeeze()
+            new_obs, rew, done, info = env.step(action)
+
+            # Saving the real reward that the option is getting
+            if use_rs:
+                option_rews.append(info["rs-reward"])
+            else:
+                wandb.log({"reward": rew})
+                option_rews.append(rew)
+
+            obs = new_obs
+            episode_rewards[-1] += rew
+
+            if env.did_option_terminate(option_id):
+                option_id = None
+
+            # if rew > 2500:
+            #     print(rew)
+            #     print("SUCCESS: self.env.current_u_id == -1")
+            #     break
+
+            # print("rew: ", rew)
+
+            if done:
+                obs = env.reset()
+                options.reset()
+                episode_rewards.append(0.0)
+                reset = True
+
+    return controller.act, options.act
+
+
+
+
+
+def evaluate_multiple_models(env,
+          use_ddpg=False,
+          gamma=0.9,
+          use_rs=False,
+          controller_kargs={},
+          option_kargs={},
+          seed=None,
+          total_timesteps=1000,
+          print_freq=100,
+          callback=None,
+          checkpoint_path="./checkpoints",
+          checkpoint_freq=10000,
+          load_path="./checkpoints",
+          **others):
+    """Train a deepq model.
+
+    Parameters
+    -------
+    env: gym.Env
+        environment to train on
+    use_ddpg: bool
+        whether to use DDPG or DQN to learn the option's policies
+    gamma: float
+        discount factor
+    use_rs: bool
+        use reward shaping
+    controller_kargs
+        arguments for learning the controller policy.
+    option_kargs
+        arguments for learning the option policies.
+    seed: int or None
+        prng seed. The runs with the same seed "should" give the same results. If None, no seeding is used.
+    total_timesteps: int
+        number of env steps to optimizer for
+    print_freq: int
+        how often to print out training progress
+        set to None to disable printing
+    checkpoint_freq: int
+        how often to save the model. This is so that the best version is restored
+        at the end of the training. If you do not wish to restore the best version at
+        the end of the training set this variable to None.
+    load_path: str
+        path to load the model from. (default: None)
+
+    Returns
+    -------
+    act: ActWrapper (meta-controller)
+        Wrapper over act function. Adds ability to save it and load it.
+        See header of baselines/deepq/categorical.py for details on the act function.
+    act: ActWrapper (option policies)
+        Wrapper over act function. Adds ability to save it and load it.
+        See header of baselines/deepq/categorical.py for details on the act function.
+    """
+    # Create all the functions necessary to train the model
+
+    sess = get_session()
+    set_global_seeds(seed)
+
+    controller  = ControllerDQN(env, **controller_kargs)
+    options = OptionDDPG(env, gamma, total_timesteps, **option_kargs)
+
+
+    # Override get_action to ensure deterministic execution (no noise)
+    options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
+
+    option_s    = None # State where the option initiated
+    option_id   = None # Id of the current option being executed
+    option_rews = []   # Rewards obtained by the current option
+
+    episode_rewards = [0.0]
+    saved_mean_reward = None
+    obs = env.reset()
+    options.reset()
+    reset = True
+
+
+    with tempfile.TemporaryDirectory() as td:
+        td = checkpoint_path or td
+
+        solution_alligning = os.path.join(td, "solution_lifting")
+        model_changed = False
+
+        if load_path is not None:
+            load_variables(solution_alligning)
+            logger.log('Loaded model from {}'.format(load_path))
+
+        for t in range(total_timesteps):
+            if callback is not None:
+                if callback(locals(), globals()):
+                    break
+
+            # Selecting an option if needed
+            if option_id is None:
+                valid_options = env.get_valid_options()
+                option_s    = obs
+                option_id   = controller.get_action(option_s, valid_options)
+                option_rews = []
+
+            if not model_changed and option_id > 1:
+                # load new model
+                solution_alligning = os.path.join(td, "solution_alligning")
+                load_variables(solution_alligning)
+                model_changed = True
+
+            if option_id > 1:
+                # translate option_id to 0-index
+                option_id -= 2
+
+            # Take action and update exploration to the newest value
+            # print("option_id: ", option_id)
+            # print(env.get_option_observation(option_id))
             action = options.get_action(env.get_option_observation(option_id), t, reset)
             reset = False
 

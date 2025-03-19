@@ -15,7 +15,7 @@ from baselines.common.tf_util import get_session
 from baselines import logger
 from importlib import import_module
 import wandb
-from rl_agents.dhrm.dhrm import evaluate
+from rl_agents.dhrm.dhrm import evaluate, evaluate_multiple_models
 
 import datetime
 import os
@@ -256,7 +256,8 @@ def main(args):
 
     if args.play:
         logger.log("Running trained model")
-        evaluate(env=env, seed=args.seed, total_timesteps=int(args.num_timesteps), **alg_kwargs)
+        # evaluate(env=env, seed=args.seed, total_timesteps=int(args.num_timesteps), **alg_kwargs)
+        evaluate_multiple_models(env=env, seed=args.seed, total_timesteps=int(args.num_timesteps), **alg_kwargs)
 
 
     env.close()
