@@ -97,6 +97,7 @@ def train(args, extra_args):
     alg_kwargs['use_crm']  = args.use_crm
     alg_kwargs['gamma']    = args.gamma
 
+    # import ipdb; ipdb.set_trace()
     print('Training {} on {}:{} with arguments \n{}'.format(args.alg, env_type, env_id, alg_kwargs))
 
     if args.play:

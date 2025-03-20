@@ -5,6 +5,7 @@ import tensorflow as tf
 import zipfile
 import cloudpickle
 import numpy as np
+import gym
 
 import baselines.common.tf_util as U
 from baselines.common.tf_util import load_variables, save_variables
@@ -73,14 +74,21 @@ class ControllerDQN:
         # capture the shape outside the closure so that the env object is not serialized
         # by cloudpickle when serializing make_obs_ph
 
-        observation_space = env.controller_observation_space
+        original_space = env.controller_observation_space
+        observation_space = gym.spaces.Box(low=original_space.low[:22], high=original_space.high[:22], dtype=original_space.dtype)
+        print("xdv adapted observation_space: ", observation_space)
+
+        # controller_action_space = env.controller_action_space
+        controller_action_space_n = 2
+        print("xdv adapted controller_action_space: ", env.controller_action_space)
+
         def make_obs_ph(name):
             return ObservationInput(observation_space, name=name)
 
         act, train, update_target, debug = build_train(
             make_obs_ph=make_obs_ph,
             q_func=q_func,
-            num_actions=env.controller_action_space.n,
+            num_actions=controller_action_space_n,
             optimizer=tf.train.AdamOptimizer(learning_rate=lr),
             grad_norm_clipping=10,
             scope="controller"
@@ -89,7 +97,7 @@ class ControllerDQN:
         act_params = {
             'make_obs_ph': make_obs_ph,
             'q_func': q_func,
-            'num_actions': env.controller_action_space.n,
+            'num_actions': controller_action_space_n,
         }
 
         act = ActWrapper(act, act_params)
@@ -111,7 +119,7 @@ class ControllerDQN:
         self.batch_size    = batch_size
         self.learning_starts = learning_starts
         self.target_network_update_freq = target_network_update_freq
-        self.num_actions   = env.controller_action_space.n
+        self.num_actions   = controller_action_space_n
         self.t = 0
 
     def get_action(self, obs, valid_actions):

@@ -1,5 +1,6 @@
 import os
 import tempfile
+import gym
 
 import tensorflow as tf
 import zipfile
@@ -251,7 +252,9 @@ class OptionDDPG:
         buffer_size = num_options*buffer_size
         batch_size  = num_options*batch_size
 
-        observation_space = env.option_observation_space
+        original_space = env.controller_observation_space
+        observation_space = gym.spaces.Box(low=original_space.low[:22], high=original_space.high[:22], dtype=original_space.dtype)
+        print("xdv adapted observation_space: ", observation_space)
         action_space = env.option_action_space
 
         nb_actions = action_space.shape[-1]

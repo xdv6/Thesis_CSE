@@ -436,11 +436,11 @@ def evaluate_multiple_models(env,
     with tempfile.TemporaryDirectory() as td:
         td = checkpoint_path or td
 
-        solution_alligning = os.path.join(td, "solution_lifting")
+        solution_lifting = os.path.join(td, "solution_lifting")
         model_changed = False
 
         if load_path is not None:
-            load_variables(solution_alligning)
+            load_variables(solution_lifting)
             logger.log('Loaded model from {}'.format(load_path))
 
         for t in range(total_timesteps):
@@ -452,23 +452,33 @@ def evaluate_multiple_models(env,
             if option_id is None:
                 valid_options = env.get_valid_options()
                 option_s    = obs
-                option_id   = controller.get_action(option_s, valid_options)
+                sub_rm_valid_option_s = option_s[:22]
+
+                if not model_changed and valid_options[0] > 1:
+                    # load new model
+                    solution_alligning = os.path.join(td, "solution_alligning")
+                    load_variables(solution_alligning)
+                    print("model changed")
+                    model_changed = True
+
+                if valid_options[0] > 1:
+                    valid_options[0] -= 2
+                    # here we have to adapt the one-hot-encoding for the second model
+
+                print("valid_options: ", valid_options)
+                option_id   = controller.get_action(sub_rm_valid_option_s, valid_options)
                 option_rews = []
 
-            if not model_changed and option_id > 1:
-                # load new model
-                solution_alligning = os.path.join(td, "solution_alligning")
-                load_variables(solution_alligning)
-                model_changed = True
+
+
+            features = env.get_option_observation(option_id)
+            sub_rm_features = features[:22]
 
             if option_id > 1:
-                # translate option_id to 0-index
                 option_id -= 2
+                # here we have to adapt the one-hot-encoding for the second model
 
-            # Take action and update exploration to the newest value
-            # print("option_id: ", option_id)
-            # print(env.get_option_observation(option_id))
-            action = options.get_action(env.get_option_observation(option_id), t, reset)
+            action = options.get_action(sub_rm_features, t, reset)
             reset = False
 
             action = action.squeeze()
@@ -499,6 +509,9 @@ def evaluate_multiple_models(env,
                 options.reset()
                 episode_rewards.append(0.0)
                 reset = True
+                load_variables(solution_lifting)
+                print("model changed back")
+                break
 
     return controller.act, options.act
 
