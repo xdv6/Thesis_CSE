@@ -1,6 +1,5 @@
 import os
 import tempfile
-import gym
 
 import tensorflow as tf
 import zipfile
@@ -25,7 +24,6 @@ from baselines.ddpg.ddpg_learner import DDPG
 from baselines.ddpg.models import Actor, Critic
 from baselines.ddpg.memory import Memory
 from baselines.ddpg.noise import AdaptiveParamNoiseSpec, NormalActionNoise, OrnsteinUhlenbeckActionNoise
-import wandb
 
 
 class OptionDQN:
@@ -123,7 +121,7 @@ class OptionDQN:
             optimizer=tf.train.AdamOptimizer(learning_rate=lr),
             gamma=gamma,
             grad_norm_clipping=10,
-            param_noise=param_noise, 
+            param_noise=param_noise,
             scope="options"
         )
 
@@ -252,9 +250,7 @@ class OptionDDPG:
         buffer_size = num_options*buffer_size
         batch_size  = num_options*batch_size
 
-        original_space = env.controller_observation_space
-        observation_space = gym.spaces.Box(low=original_space.low[:22], high=original_space.high[:22], dtype=original_space.dtype)
-        print("xdv adapted observation_space: ", observation_space)
+        observation_space = env.option_observation_space
         action_space = env.option_action_space
 
         nb_actions = action_space.shape[-1]
@@ -297,7 +293,7 @@ class OptionDDPG:
         sess = U.get_session()
         # Prepare everything.
         agent.initialize(sess)
-        # sess.graph.finalize()
+        sess.graph.finalize()
 
         agent.reset()
 
@@ -340,8 +336,7 @@ class OptionDDPG:
                 if self.memory.nb_entries >= self.batch_size and t_train % self.param_noise_adaption_interval == 0:
                     self.agent.adapt_param_noise()
 
-                critic_loss, actor_loss = self.agent.train()
-                wandb.log({"actor_loss": actor_loss, "critic_loss": critic_loss})
+                self.agent.train()
                 self.agent.update_target_net()
 
     def update_target_network(self, t):

@@ -17,120 +17,29 @@ import pickle
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
 
-    def calculate_reward_gripper_to_cube(self):
+    def calculate_reward_gripper_to_cube(self, cube_name="cubeA_main"):
         reward = 0.0
         cube_width = self.env.cubeA.size[0] * 2
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_name)]
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
 
-        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] - cube_width / 2, cube_pos_A[2]]))
-        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_A[0], cube_pos_A[1] + cube_width / 2, cube_pos_A[2]]))
+        left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos[0], cube_pos[1] - cube_width / 2, cube_pos[2]]))
+        right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos[0], cube_pos[1] + cube_width / 2, cube_pos[2]]))
         reward += 0.5 / (left_dist + right_dist + 0.01) # Adding 0.01 to avoid division by zero
 
         wandb.log({"left_dist": left_dist})
         wandb.log({"right_dist": right_dist})
         return reward
 
-    def calculate_reward_cube_A_to_cube_B(self):
-
+    def calculate_reward_cube_to_threshold_height(self, cube_name="cubeA_main"):
         reward = 0.0
-
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
-        bottom_of_A = cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
-        top_of_B = cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
-
-        distance = abs(bottom_of_A - top_of_B)  # Correct distance
-        reward += 1 / (distance + 0.01) # Penalize based on absolute distance
-        # reward -= distance * 10  # Penalize based on absolute distance
-
-        if self.block_gripped and not self.block_grasped():
-            reward = -30
-        wandb.log({"distance_between_cubeA_and_cubeB": distance})
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_name)]
+        bottom_of_cube = cube_pos[2] - self.env.cubeA.size[2]
+        threshold_height = 0.91
+        distance = bottom_of_cube - threshold_height
+        reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
         return reward
-
-    def calculate_reward_cube_A_to_cube_B_xy(self):
-        reward = 0.0
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
-        # Compute XY-plane Euclidean distance
-        distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
-
-        # Penalize based on the XY distance
-        reward += 2 * (5 / (distance_xy + 0.01))
-        if self.block_gripped and not self.block_grasped():
-            reward = -30 
-        wandb.log({"distance_xy_between_cubeA_and_cubeB": distance_xy})
-
-        return reward
-
-
-    def calculate_reward_cube_A_to_cube_B_full(self):
-        reward = 0.0
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
-        # Compute central points of the bottom face of cube A and top face of cube B
-        bottom_of_A = np.array([
-            cube_pos_A[0],  # x-coordinate remains the same
-            cube_pos_A[1],  # y-coordinate remains the same
-            cube_pos_A[2] - self.env.cubeA.size[2]  # Bottom surface of cubeA
-        ])
-
-        top_of_B = np.array([
-            cube_pos_B[0],  # x-coordinate remains the same
-            cube_pos_B[1],  # y-coordinate remains the same
-            cube_pos_B[2] + self.env.cubeB.size[2]  # Top surface of cubeB
-        ])
-
-        # Compute full Euclidean distance
-        distance = abs(np.linalg.norm(bottom_of_A - top_of_B))
-
-
-        # Penalize based on the full distance (not just z)
-        reward +=  5 / (distance + 0.01)
-
-        if self.block_gripped and not self.block_grasped():
-            reward = -30
-        wandb.log({"distance_full_between_cubeA_and_cubeB": distance})
-
-        return reward
-
-    def calculate_reward_cube_A_to_tresh_above_cube_B(self):
-        reward = 0.0
-        cube_pos_A = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-        cube_pos_B = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeB_main")]
-
-        # Compute central points of the bottom face of cube A and top face of cube B
-        A = np.array([
-            cube_pos_A[0],  # x-coordinate remains the same
-            cube_pos_A[1],  # y-coordinate remains the same
-            cube_pos_A[2]
-        ])
-
-        above_B_treshold = np.array([
-            cube_pos_B[0],  # x-coordinate remains the same
-            cube_pos_B[1],  # y-coordinate remains the same
-            0.942
-        ])
-
-        # Compute full Euclidean distance
-        distance = abs(np.linalg.norm(A - above_B_treshold))
-
-        # Penalize based on the full distance (not just z)
-        reward += 2 / (distance + 0.01)
-
-        if self.block_gripped and not self.block_grasped():
-            reward = -30
-
-        wandb.log({"distance_above_tresh_between_cubeA_and_cubeB": distance})
-        return reward
-
 
 
     def __init__(self, video_path=os.path.join(os.environ.get("WORKDIR_PATH", "./videos"), os.environ.get("WANDB_RUN_NAME", "default_run") + ".mp4"), render_height=512, render_width=512):
@@ -198,39 +107,39 @@ class MyBlockStackingEnv(GymWrapper):
             )
         )
 
-        # placement_initializer.append_sampler(
-        #     # Create a placement initializer with a y_range and dynamically updated x_range
-        #     sampler=UniformRandomSampler(
-        #         name="ObjectSamplerCubeC",
-        #         x_range=[-0.2, -0.2],
-        #         y_range=[-0.2, -0.2],
-        #         rotation=0.0,
-        #         ensure_object_boundary_in_range=False,
-        #         ensure_valid_placement=True,
-        #         reference_pos=(0, 0, 0.8),
-        #         z_offset=0.01,
-        #     )
-        # )
-        #
-        # placement_initializer.append_sampler(
-        #     # Create a placement initializer with a y_range and dynamically updated x_range
-        #     sampler=UniformRandomSampler(
-        #         name="ObjectSamplerCubeD",
-        #         x_range=[-0.07, -0.07],
-        #         y_range=[-0.07, -0.07],
-        #         rotation=0.0,
-        #         ensure_object_boundary_in_range=False,
-        #         ensure_valid_placement=True,
-        #         reference_pos=(0, 0, 0.8),
-        #         z_offset=0.01,
-        #     )
-        # )
+        placement_initializer.append_sampler(
+            # Create a placement initializer with a y_range and dynamically updated x_range
+            sampler=UniformRandomSampler(
+                name="ObjectSamplerCubeC",
+                x_range=[-0.2, -0.2],
+                y_range=[-0.2, -0.2],
+                rotation=0.0,
+                ensure_object_boundary_in_range=False,
+                ensure_valid_placement=True,
+                reference_pos=(0, 0, 0.8),
+                z_offset=0.01,
+            )
+        )
+
+        placement_initializer.append_sampler(
+            # Create a placement initializer with a y_range and dynamically updated x_range
+            sampler=UniformRandomSampler(
+                name="ObjectSamplerCubeD",
+                x_range=[-0.07, -0.07],
+                y_range=[-0.07, -0.07],
+                rotation=0.0,
+                ensure_object_boundary_in_range=False,
+                ensure_valid_placement=True,
+                reference_pos=(0, 0, 0.8),
+                z_offset=0.01,
+            )
+        )
 
         placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeA", mujoco_objects=env.cubeA)
         placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeB", mujoco_objects=env.cubeB)
 
-        # placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
-        # placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeD", mujoco_objects=env.cubeD)
+        placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeC", mujoco_objects=env.cubeC)
+        placement_initializer.add_objects_to_sampler(sampler_name="ObjectSamplerCubeD", mujoco_objects=env.cubeD)
 
         # Update the environment to use the new placement initializer
         env.placement_initializer = placement_initializer
@@ -270,7 +179,8 @@ class MyBlockStackingEnv(GymWrapper):
             # "cubeB_pos",  # Position of cubeB
             "gripper_to_cubeA",  # Relative position vector from gripper to cubeA
             "gripper_to_cubeB",  # Relative position vector from gripper to cubeB
-            "cubeA_to_cubeB",  # Relative position vector between cubeA and cubeB
+            "gripper_to_cubeC",  # Relative position vector from gripper to cubeC
+            "gripper_to_cubeD",  # Relative position vector from gripper to cubeD
             # "robot0_gripper_qvel"
         ]
         for key in keys_to_keep:
@@ -305,12 +215,17 @@ class MyBlockStackingEnv(GymWrapper):
             done = True
 
         self.obs_dict = next_obs
-        # add the reward_for_gripper_to_cube to the obs_dict
-        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
-        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-        self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
-        self.obs_dict["reward_cube_A_to_cube_B_full"] = self.calculate_reward_cube_A_to_cube_B_full()
-        self.obs_dict["reward_cube_A_to_tresh_above_cube_B"] = self.calculate_reward_cube_A_to_tresh_above_cube_B()
+        # add the reward_for_gripper_to_cube to the obs_dict to pass it to the reward machine
+        # also adapt the checks if the cube is changed
+        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeA_main")
+        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeB_main")
+        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeC_main")
+        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeD_main")
+
+        self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeA_main")
+        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeB_main")
+        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeC_main")
+        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeD_main")
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
@@ -336,22 +251,9 @@ class MyBlockStackingEnv(GymWrapper):
             events += 'g'  # 'g' event for block grasped, robot in contact with cubeA
         if self.above_block_b_and_grasped():
             events += 'h'  # 'h' event for above cubeB in height
-        if self.above_block_b_in_xy_and_grasped():
-            events += 'p'  # 'p' event for above cubeB in x, y coordinates
-        if self.cube_a_above_cube_b_and_in_contact():
-            events += 'b'  # 'b' event for cubeA above cubeB and in contact
-        if self.cube_a_above_cube_b_long_contact():
-            events += 'l'  # 'l' event for cubeA above cubeB, in contact for more than 5 seconds, and robot not in contact with cubeA
-        if self.block_dropped():
-            events += 'd'  # 'd' event for when the robot drops the block (not in contact with cubeA anymore)
         return events
 
     def block_grasped(self):
-        # Check if the block cubeA is grasped by the gripper
-        # is_contact_with_cubeA = self.env.check_contact(
-        #     geoms_1=["gripper0_finger1_pad_collision", "gripper0_finger2_pad_collision"],
-        #     geoms_2=["cubeA_g0"]
-        # )
 
         # Define gripper collision geoms
         left_gripper_geom = ["gripper0_finger1_pad_collision"]  # Left gripper pad
@@ -359,26 +261,21 @@ class MyBlockStackingEnv(GymWrapper):
 
         # Define cube collision geom
         cube_geom = ["cubeA_g0"]
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
 
-        # 1️⃣ Step 1: Check for contact
+
         left_contact = self.env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = self.env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
 
-        # 2️⃣ Step 2: Get gripper pad positions
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
-        # 3️⃣ Step 3: Get cube center position
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
 
-        # 4️⃣ Step 4: Get cube width (assuming size is [0.02, 0.02, 0.02])
         cube_width = self.env.cubeA.size[0] * 2
 
-        # 5️⃣ Step 5: Ensure contact is on the correct faces
         left_touching_left_face = left_contact and (abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
         right_touching_right_face = right_contact and (abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
 
-        # 6️⃣ Step 6: Final check → Both contacts must be on the correct sides
         is_proper_grasp = left_touching_left_face and right_touching_right_face
 
         if is_proper_grasp:
@@ -416,7 +313,7 @@ class MyBlockStackingEnv(GymWrapper):
 
         return is_above_cubeB
 
-    def     cube_a_above_cube_b_and_in_contact(self):
+    def cube_a_above_cube_b_and_in_contact(self):
         # Check if cubeA is directly above cubeB and if they are in contact
         obs = self.obs_dict
         cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
@@ -499,11 +396,16 @@ class MyBlockStackingEnv(GymWrapper):
         self.start_time = time.time()  # Reset start time on reset
         self.obs_dict = obs
         # add the reward_for_gripper_to_cube to the obs_dict
-        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
-        self.obs_dict["reward_cube_A_to_cube_B"] = self.calculate_reward_cube_A_to_cube_B()
-        self.obs_dict["reward_cube_A_to_cube_B_xy"] = self.calculate_reward_cube_A_to_cube_B_xy()
-        self.obs_dict["reward_cube_A_to_cube_B_full"] = self.calculate_reward_cube_A_to_cube_B_full()
-        self.obs_dict["reward_cube_A_to_tresh_above_cube_B"] = self.calculate_reward_cube_A_to_tresh_above_cube_B()
+        # also adapt the checks if the cube is changed
+        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeA_main")
+        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeB_main")
+        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeC_main")
+        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeD_main")
+
+        self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeA_main")
+        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeB_main")
+        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeC_main")
+        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeD_main")
 
         move_gripper_to_cube = False
         if self.start_state_value == 1:
