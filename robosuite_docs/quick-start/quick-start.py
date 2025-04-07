@@ -144,7 +144,7 @@ def map_values(value, min_value, max_value, linear=True, steepness=1):
 
 
 
-def calculate_reward_gripper_to_cube():
+def calculate_reward_gripper_to_cubeA():
     reward = 0.0
     cube_width = env.cubeA.size[0] * 2
     cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
@@ -161,87 +161,93 @@ def calculate_reward_gripper_to_cube():
     return reward
 
 
-
-def calculate_reward_cube_A_to_cube_B_full():
+def calculate_reward_gripper_to_cubeB():
     reward = 0.0
-    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
+    cube_width = env.cubeB.size[0] * 2
     cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
 
-    # Compute central points of the bottom face of cube A and top face of cube B
-    bottom_of_A = np.array([
-        cube_pos_A[0],  # x-coordinate remains the same
-        cube_pos_A[1],  # y-coordinate remains the same
-        cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-    ])
+    left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+    right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
 
-    top_of_B = np.array([
-        cube_pos_B[0],  # x-coordinate remains the same
-        cube_pos_B[1],  # y-coordinate remains the same
-        cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
-    ])
-
-    # Compute full Euclidean distance
-    distance = abs(np.linalg.norm(bottom_of_A - top_of_B) )
-
-    # Penalize based on the full distance (not just z)
-    reward += 5 / (distance + 0.01)
+    left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_B[0], cube_pos_B[1] - cube_width / 2, cube_pos_B[2]]))
+    right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_B[0], cube_pos_B[1] + cube_width / 2, cube_pos_B[2]]))
+    
+    # Use negative distance as reward (closer = higher reward)
+    reward +=  0.5 / (left_dist + right_dist + 0.01)   # Adding 0.01 to avoid division by zero
 
     return reward
 
-
-def calculate_reward_cube_A_to_tresh_above_cube_B():
+def calculate_reward_gripper_to_cubeC():
     reward = 0.0
-    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
-    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+    cube_width = env.cubeC.size[0] * 2
+    cube_pos_C = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeC_main")]
+    left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+    right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
+    left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_C[0], cube_pos_C[1] - cube_width / 2, cube_pos_C[2]]))
+    right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_C[0], cube_pos_C[1] + cube_width / 2, cube_pos_C[2]]))
+    # Use negative distance as reward (closer = higher reward)
+    reward +=  0.5 / (left_dist + right_dist + 0.01)   # Adding 0.01 to avoid division by zero
+    return reward
 
-    # Compute central points of the bottom face of cube A and top face of cube B
-    A = np.array([
-        cube_pos_A[0],  # x-coordinate remains the same
-        cube_pos_A[1],  # y-coordinate remains the same
-        cube_pos_A[2] 
-    ])
-
-    above_B_treshold = np.array([
-        cube_pos_B[0],  # x-coordinate remains the same
-        cube_pos_B[1],  # y-coordinate remains the same
-        0.942
-    ])
-
-    # Compute full Euclidean distance
-    distance = abs(np.linalg.norm(A - above_B_treshold) )
-
-    # Penalize based on the full distance (not just z)
-    reward += 2 / (distance + 0.01)
-
+def calculate_reward_gripper_to_cubeD():
+    reward = 0.0
+    cube_width = env.cubeD.size[0] * 2
+    cube_pos_D = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeD_main")]
+    left_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
+    right_finger_pos = env.sim.data.body_xpos[env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
+    left_dist = np.linalg.norm(left_finger_pos - np.array([cube_pos_D[0], cube_pos_D[1] - cube_width / 2, cube_pos_D[2]]))
+    right_dist = np.linalg.norm(right_finger_pos - np.array([cube_pos_D[0], cube_pos_D[1] + cube_width / 2, cube_pos_D[2]]))
+    # Use negative distance as reward (closer = higher reward)
+    reward +=  0.5 / (left_dist + right_dist + 0.01)   # Adding 0.01 to avoid division by zero
     return reward
 
 
-def calculate_reward_cube_A_to_cube_B_xy():
+def calculate_reward_cube_A_to_treshold_height():
     reward = 0.0
     cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
-    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
-
-    # Compute XY-plane Euclidean distance
-    distance_xy = np.linalg.norm(cube_pos_A[:2] - cube_pos_B[:2])
-
-    # Penalize based on the XY distance
-    reward += 2* (5 / (distance_xy + 0.01))
-
-    return reward
-
-
-
-def calculate_reward_cube_A_to_cube_B():
-    reward = 0.0
-    cube_pos_A = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeA_main")]
-    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
 
     bottom_of_A = cube_pos_A[2] - env.cubeA.size[2]  # Bottom surface of cubeA
-    top_of_B = cube_pos_B[2] + env.cubeB.size[2]  # Top surface of cubeB
+    treshold_height = 0.91
 
-    distance = abs(bottom_of_A - top_of_B)  # Correct distance
+    distance = abs(bottom_of_A - treshold_height)  
     reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
     return reward
+
+
+def calculate_reward_cube_B_to_treshold_height():
+    reward = 0.0
+    cube_pos_B = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeB_main")]
+
+    bottom_of_B = cube_pos_B[2] - env.cubeB.size[2]  # Bottom surface of cubeB
+    treshold_height = 0.91
+
+    distance = abs(bottom_of_B - treshold_height)  
+    reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+    return reward
+
+def calculate_reward_cube_C_to_treshold_height():
+    reward = 0.0
+    cube_pos_C = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeC_main")]
+
+    bottom_of_C = cube_pos_C[2] - env.cubeC.size[2]  # Bottom surface of cubeC
+    treshold_height = 0.91
+
+    distance = abs(bottom_of_C - treshold_height)  
+    reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+    return reward
+
+def calculate_reward_cube_D_to_treshold_height():
+    reward = 0.0
+    cube_pos_D = env.sim.data.body_xpos[env.sim.model.body_name2id("cubeD_main")]
+
+    bottom_of_D = cube_pos_D[2] - env.cubeD.size[2]  # Bottom surface of cubeD
+    treshold_height = 0.91
+
+    distance = abs(bottom_of_D - treshold_height)  
+    reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+    return reward
+
+
 
 
 contact_check = False
@@ -310,7 +316,7 @@ while True:
         block_B = obs["cubeB_pos"]  # Get cubeB position
 
 
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
 
         # Define gripper collision geoms
@@ -413,12 +419,17 @@ while True:
 
         # reward debugging: 
 
-        # reward = calculate_reward_gripper_to_cube()
-        # reward = calculate_reward_cube_A_to_cube_B()
-        # reward = calculate_reward_cube_A_to_cube_B_xy()
-        # reward = calculate_reward_cube_A_to_tresh_above_cube_B()
-        reward = calculate_reward_cube_A_to_cube_B_full()
-        print("Reward gripper to cube: ", reward)
+        # reward = calculate_reward_gripper_to_cubeA()
+        # reward = calculate_reward_gripper_to_cubeB()
+        # reward = calculate_reward_gripper_to_cubeC()
+        # reward = calculate_reward_gripper_to_cubeD()
+        # reward = calculate_reward_cube_A_to_treshold_height()
+        # reward = calculate_reward_cube_B_to_treshold_height()
+        # reward = calculate_reward_cube_C_to_treshold_height()
+        reward = calculate_reward_cube_D_to_treshold_height()
+    
+
+        print("Reward: ", reward)
 
 
         # print("cubeA position: ", block_A)
