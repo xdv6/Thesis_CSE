@@ -234,6 +234,8 @@ def main(args):
     args, unknown_args = arg_parser.parse_known_args(args)
     extra_args = parse_cmdline_kwargs(unknown_args)
 
+    os.environ["SELECTED_CUBE"] = args.selected_cube
+
     os.environ["START_STATE"] = str(args.start_state)
 
     if args.enable_visualization:

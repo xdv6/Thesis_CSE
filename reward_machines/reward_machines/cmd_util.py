@@ -131,6 +131,7 @@ def common_arg_parser():
     parser.add_argument('--play', default=False, action='store_true')
     parser.add_argument('--enable_visualization', default=False, action='store_true')
     parser.add_argument('--start_state', help='state to start in, -1 for random start state', type=int, default=0)
+    parser.add_argument('--selected_cube', help='Cube to grip', default="cubeA", type=str)
     # RM-related arguments
     parser.add_argument("--use_rs", help="Use reward shaping", action="store_true", default=False)
     parser.add_argument("--use_crm", help="Use counterfactual experience", action="store_true", default=False)

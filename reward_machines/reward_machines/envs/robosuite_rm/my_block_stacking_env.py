@@ -17,10 +17,12 @@ import pickle
 # Custom environment wrapper for block stacking using GymWrapper
 class MyBlockStackingEnv(GymWrapper):
 
-    def calculate_reward_gripper_to_cube(self, cube_name="cubeA_main"):
+    def calculate_reward_gripper_to_cube(self):
         reward = 0.0
-        cube_width = self.env.cubeA.size[0] * 2
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_name)]
+        geom_id = self.env.sim.model.geom_name2id(self.selected_cube_geom_name)
+        cube_size = self.env.sim.model.geom_size[geom_id]
+        cube_width = cube_size[0] * 2
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(self.selected_cube_body_name)]
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint1_tip")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_finger_joint2_tip")]
 
@@ -32,12 +34,18 @@ class MyBlockStackingEnv(GymWrapper):
         wandb.log({"right_dist": right_dist})
         return reward
 
-    def calculate_reward_cube_to_threshold_height(self, cube_name="cubeA_main"):
+    def calculate_reward_cube_to_threshold_height(self):
         reward = 0.0
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_name)]
-        bottom_of_cube = cube_pos[2] - self.env.cubeA.size[2]
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(self.selected_cube_body_name)]
+
+        # Find the geom ID corresponding to the cube
+        geom_id = self.env.sim.model.geom_name2id(self.selected_cube_geom_name)
+        cube_size = self.env.sim.model.geom_size[geom_id]
+
+        bottom_of_cube = cube_pos[2] - cube_size[2]  # size[2] is the z half-size
         threshold_height = 0.91
         distance = bottom_of_cube - threshold_height
+        wandb.log({"treshold_height_distance": distance})
         reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
         return reward
 
@@ -55,6 +63,11 @@ class MyBlockStackingEnv(GymWrapper):
 
         # checking start state
         self.start_state_value = int(os.getenv("START_STATE", "0"))
+
+        # set the selected cube to grip
+        self.selected_cube = os.getenv("SELECTED_CUBE", "cubeA")
+        self.selected_cube_body_name = self.selected_cube + "_main"
+        self.selected_cube_geom_name = self.selected_cube + "_g0"
 
         # set this to start on True if starting from state where cube is gripped
         self.block_gripped = False
@@ -164,10 +177,6 @@ class MyBlockStackingEnv(GymWrapper):
         low = -high
         self.observation_space = gym.spaces.Box(low, high, dtype=np.float32)
 
-        # Timer to track how long cubeA is above cubeB and in contact
-        self.stack_timer = 0.0
-        self.stack_threshold = 5.0  # Threshold time in seconds to consider cubeA as "stacked" on cubeB
-        self.start_time = time.time()
 
     def flatten_observation(self, obs):
         # Flatten the observation dictionary into a single array while removing unneeded values
@@ -217,15 +226,8 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict to pass it to the reward machine
         # also adapt the checks if the cube is changed
-        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeA_main")
-        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeB_main")
-        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeC_main")
-        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeD_main")
-
-        self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeA_main")
-        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeB_main")
-        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeC_main")
-        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeD_main")
+        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
+        self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height()
 
         # Render and save the frame to the video
         frame = self.env.sim.render(
@@ -248,8 +250,8 @@ class MyBlockStackingEnv(GymWrapper):
         # Define events for the reward machine based on block states (grasped, stacked, above blockB)
         events = ''
         if self.block_grasped():
-            events += 'g'  # 'g' event for block grasped, robot in contact with cubeA
-        if self.above_block_b_and_grasped():
+            events += 'g'  # 'g' event for block grasped
+        if self.above_treshold():
             events += 'h'  # 'h' event for above cubeB in height
         return events
 
@@ -260,9 +262,8 @@ class MyBlockStackingEnv(GymWrapper):
         right_gripper_geom = ["gripper0_finger2_pad_collision"]  # Right gripper pad
 
         # Define cube collision geom
-        cube_geom = ["cubeA_g0"]
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("cubeA_main")]
-
+        cube_geom = self.selected_cube_geom_name
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(self.selected_cube_body_name)]
 
         left_contact = self.env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = self.env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
@@ -270,8 +271,9 @@ class MyBlockStackingEnv(GymWrapper):
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
-
-        cube_width = self.env.cubeA.size[0] * 2
+        geom_id = self.env.sim.model.geom_name2id(self.selected_cube_geom_name)
+        cube_size = self.env.sim.model.geom_size[geom_id]
+        cube_width = cube_size[0] * 2
 
         left_touching_left_face = left_contact and (abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
         right_touching_right_face = right_contact and (abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
@@ -283,82 +285,14 @@ class MyBlockStackingEnv(GymWrapper):
 
         return is_proper_grasp
 
-    def above_block_b_and_grasped(self):
-        # Check if the end-effector is above the height of cubeB while still grasping cubeA
-        # obs = self.obs_dict
-        # eef_height = obs["robot0_eef_pos"][2]  # z-coordinate of end-effector position
-        # cube_b_height = obs["cubeB_pos"][2]  # z-coordinate of cubeB
-        # is_above_cube_b = eef_height > cube_b_height
-        # return is_above_cube_b
-        block_A = self.obs_dict["cubeA_pos"]
-        block_B = self.obs_dict["cubeB_pos"]
-        # block_A_above_B = block_A[2] - self.env.cubeA.size[2] > block_B[2] + self.env.cubeB.size[2] + 0.02
-        block_A_above_B = block_A[2] - self.env.cubeA.size[2] > 0.91
-        return block_A_above_B
+    def above_treshold(self):
+        # Check if the end-effector is above the height
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(self.selected_cube_body_name)]
+        geom_id = self.env.sim.model.geom_name2id(self.selected_cube_geom_name)
+        cube_size = self.env.sim.model.geom_size[geom_id]
+        cube_above_treshold = cube_pos[2] - cube_size[2] > 0.91
+        return cube_above_treshold
 
-
-    def above_block_b_in_xy_and_grasped(self):
-        # Check if the end-effector is above cubeB in the x and y plane while still grasping cubeA
-        obs = self.obs_dict
-
-        cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
-        cube_b_pos = obs["cubeB_pos"]  # Position of cubeB
-
-        # Define an allowable margin to be considered "above" in the x, y plane
-        is_above_cubeB = (
-            cube_b_pos[0] - 0.025 <= cube_a_pos[0] <= cube_b_pos[0] + 0.025 and
-            cube_b_pos[1] - 0.025 <= cube_a_pos[1] <= cube_b_pos[1] + 0.025 and
-            0.93 <= cube_a_pos[2] <= 0.95  # Ensuring the height is within the range
-        )
-
-        return is_above_cubeB
-
-    def cube_a_above_cube_b_and_in_contact(self):
-        # Check if cubeA is directly above cubeB and if they are in contact
-        obs = self.obs_dict
-        cube_a_pos = obs["cubeA_pos"]  # Position of cubeA
-        cube_b_pos = obs["cubeB_pos"]  # Position of cubeB
-
-        # Check z position - cubeA should be above cubeB
-        is_above_cube_b_in_height = cube_a_pos[2] > cube_b_pos[2]
-
-        # Check x, y alignment
-        margin = 0.025  # Allowable margin for x, y alignment
-        is_aligned_in_xy = (
-            cube_b_pos[0] - margin <= cube_a_pos[0] <= cube_b_pos[0] + margin and
-            cube_b_pos[1] - margin <= cube_a_pos[1] <= cube_b_pos[1] + margin
-        )
-
-        # Check contact between cubeA and cubeB
-        is_contact_between_blocks = self.env.check_contact(
-            geoms_1=["cubeA_g0"], geoms_2=["cubeB_g0"]
-        )
-
-        # Condition for cubeA being above cubeB and in contact
-        return is_above_cube_b_in_height and is_aligned_in_xy and is_contact_between_blocks
-
-    def cube_a_above_cube_b_long_contact(self):
-        # Check if cubeA is above cubeB, in contact for more than the threshold time, and the robot is not in contact
-        obs = self.obs_dict
-        cube_a_pos = obs["cubeA_pos"]
-        cube_b_pos = obs["cubeB_pos"]
-        is_robot_not_in_contact = not self.block_grasped()
-
-        # Check the conditions: cubeA above cubeB and in contact
-        if self.cube_a_above_cube_b_and_in_contact():
-            # Update the timer if the conditions hold
-            self.stack_timer += time.time() - self.start_time
-        else:
-            # Reset the timer if conditions are not met
-            self.stack_timer = 0.0
-        self.start_time = time.time()
-
-        # Condition for long contact
-        return self.stack_timer > self.stack_threshold and is_robot_not_in_contact        # test loading simulation from file
-
-    def block_dropped(self):
-        # Check if the robot has dropped the block (i.e., no longer in contact with cubeA)
-        return not self.block_grasped()
 
     def reset(self):
 
@@ -397,15 +331,8 @@ class MyBlockStackingEnv(GymWrapper):
         self.obs_dict = obs
         # add the reward_for_gripper_to_cube to the obs_dict
         # also adapt the checks if the cube is changed
-        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeA_main")
-        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeB_main")
-        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeC_main")
-        # self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube(cube_name="cubeD_main")
-
-        self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeA_main")
-        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeB_main")
-        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeC_main")
-        # self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height(cube_name="cubeD_main")
+        self.obs_dict["reward_gripper_to_cube"] = self.calculate_reward_gripper_to_cube()
+        self.obs_dict["reward_cube_lifted"] = self.calculate_reward_cube_to_threshold_height()
 
         move_gripper_to_cube = False
         if self.start_state_value == 1:

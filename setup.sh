@@ -1,13 +1,28 @@
 #!/bin/bash
 
-# Change the installation of the cubes initialization
-indentation=$(sed -n '356s/^\([[:space:]]*\).*/\1/p' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py)
-escaped_indentation=$(echo "$indentation" | sed 's/[&/\]/\\&/g')
+cd /root/Thesis_CSE
+git fetch origin
+git checkout new-env || {
+    echo "❌ Failed to checkout 'new-env' branch. Make sure it exists."
+    exit 1
+}
+echo "✅ Checked out to branch 'new-env'"
 
-sed -i '356,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
-sed -i "356i\\${escaped_indentation}pass" /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
 
-echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added on line 356 with correct indentation."
+# # Change the installation of the cubes initialization
+# indentation=$(sed -n '356s/^\([[:space:]]*\).*/\1/p' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py)
+# escaped_indentation=$(echo "$indentation" | sed 's/[&/\]/\\&/g')
+
+# sed -i '356,357s/^/#/' /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+# sed -i "356i\\${escaped_indentation}pass" /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+
+# echo "✅ Lines 356-357 in stack.py have been commented out and 'pass' has been added on line 356 with correct indentation."
+
+
+# Replace stack.py with custom my_stack.py
+cp /root/Thesis_CSE/my_stack.py /root/miniconda3/envs/myenv/lib/python3.7/site-packages/robosuite/environments/manipulation/stack.py
+
+echo "✅ Replaced stack.py with custom my_stack.py"
 
 # Ensure the WANDB_API_KEY is set at runtime
 if [[ -z "$WANDB_API_KEY" ]]; then
