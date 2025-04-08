@@ -35,23 +35,9 @@ placement_initializer = SequentialCompositeSampler(name="ObjectSampler")
 placement_initializer.append_sampler(
     # Create a placement initializer with a y_range and dynamically updated x_range
     sampler = UniformRandomSampler(
-        name="ObjectSamplerCubeA",
-        x_range=[0.01, 0.01],
-        y_range=[0.01, 0.01],
-        rotation=0.0,
-        ensure_object_boundary_in_range=False,
-        ensure_valid_placement=True,
-        reference_pos=(0, 0, 0.8),
-        z_offset=0.01,
-    )
-)
-
-placement_initializer.append_sampler(
-    # Create a placement initializer with a y_range and dynamically updated x_range
-    sampler = UniformRandomSampler(
         name="ObjectSamplerCubeB",
-        x_range=[0.2, 0.2],
-        y_range=[0.2, 0.2],
+        x_range=[-0.05, -0.05],
+        y_range=[0.05, 0.05],
         rotation=0.0,
         ensure_object_boundary_in_range=False,
         ensure_valid_placement=True,
@@ -59,14 +45,13 @@ placement_initializer.append_sampler(
         z_offset=0.01,
     )
 )
-
 
 placement_initializer.append_sampler(
     # Create a placement initializer with a y_range and dynamically updated x_range
     sampler = UniformRandomSampler(
-        name="ObjectSamplerCubeC",
-        x_range=[-0.2, -0.2],
-        y_range=[-0.2, -0.2],
+        name="ObjectSamplerCubeA",
+        x_range=[0.05, 0.05],
+        y_range=[0.05, 0.05],
         rotation=0.0,
         ensure_object_boundary_in_range=False,
         ensure_valid_placement=True,
@@ -74,13 +59,28 @@ placement_initializer.append_sampler(
         z_offset=0.01,
     )
 )
+
 
 placement_initializer.append_sampler(
     # Create a placement initializer with a y_range and dynamically updated x_range
     sampler = UniformRandomSampler(
         name="ObjectSamplerCubeD",
-        x_range=[-0.07, -0.07],
-        y_range=[-0.07, -0.07],
+        x_range=[-0.05, -0.05],
+        y_range=[-0.05, -0.05],
+        rotation=0.0,
+        ensure_object_boundary_in_range=False,
+        ensure_valid_placement=True,
+        reference_pos=(0, 0, 0.8),
+        z_offset=0.01,
+    )
+)
+
+placement_initializer.append_sampler(
+    # Create a placement initializer with a y_range and dynamically updated x_range
+    sampler = UniformRandomSampler(
+        name="ObjectSamplerCubeC",
+        x_range=[0.05, 0.05],
+        y_range=[-0.05, -0.05],
         rotation=0.0,
         ensure_object_boundary_in_range=False,
         ensure_valid_placement=True,
