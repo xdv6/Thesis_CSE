@@ -186,6 +186,7 @@ def learn(env,
                 options.reset()
                 episode_rewards.append(0.0)
                 reset = True
+                wandb.log({"episode_reward": episode_rewards[-1]})
 
             # General stats
             mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
