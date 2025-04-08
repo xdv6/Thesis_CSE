@@ -44,9 +44,13 @@ class MyBlockStackingEnv(GymWrapper):
 
         bottom_of_cube = cube_pos[2] - cube_size[2]  # size[2] is the z half-size
         threshold_height = 0.91
-        distance = bottom_of_cube - threshold_height
+        distance = abs(bottom_of_cube - threshold_height)
         wandb.log({"treshold_height_distance": distance})
         reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
+
+        if self.block_gripped and not self.block_grasped:
+            reward = -20
+
         return reward
 
 

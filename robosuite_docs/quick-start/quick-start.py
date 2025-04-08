@@ -221,7 +221,7 @@ def calculate_reward_cube_B_to_treshold_height():
     bottom_of_B = cube_pos_B[2] - env.cubeB.size[2]  # Bottom surface of cubeB
     treshold_height = 0.91
 
-    distance = abs(bottom_of_B - treshold_height)  
+    distance = abs(bottom_of_B - treshold_height)
     reward += 1 / (distance + 0.01)  # Penalize based on absolute distance
     return reward
 
@@ -424,9 +424,9 @@ while True:
         # reward = calculate_reward_gripper_to_cubeC()
         # reward = calculate_reward_gripper_to_cubeD()
         # reward = calculate_reward_cube_A_to_treshold_height()
-        # reward = calculate_reward_cube_B_to_treshold_height()
+        reward = calculate_reward_cube_B_to_treshold_height()
         # reward = calculate_reward_cube_C_to_treshold_height()
-        reward = calculate_reward_cube_D_to_treshold_height()
+        # reward = calculate_reward_cube_D_to_treshold_height()
     
 
         print("Reward: ", reward)
