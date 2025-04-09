@@ -208,7 +208,7 @@ def learn(env,
                     if print_freq is not None:
                         logger.log("Saving model due to mean reward increase: {} -> {}".format(
                                    saved_mean_reward, mean_100ep_reward))
-                    save_variables(model_file)
+                        save_variables(model_file)
                     model_saved = True
                     saved_mean_reward = mean_100ep_reward
         if model_saved:
