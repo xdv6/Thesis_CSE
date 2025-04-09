@@ -31,7 +31,6 @@ def save_optionddpg_variables(save_path, sess=None):
     controller_prefixes = ("controller/", "controller_1/")
     variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
                  if not v.name.startswith(controller_prefixes)]
-    import ipdb; ipdb.set_trace()
     ps = sess.run(variables)
     joblib.dump({v.name: p for v, p in zip(variables, ps)}, save_path)
 
