@@ -25,6 +25,29 @@ from rl_agents.dhrm.controller import ControllerDQN
 import wandb
 
 
+def save_optionddpg_variables(save_path, sess=None):
+    import joblib
+    sess = sess or get_session()
+    controller_prefixes = ("controller/", "controller_1/")
+    variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+                 if not v.name.startswith(controller_prefixes)]
+    import ipdb; ipdb.set_trace()
+    ps = sess.run(variables)
+    joblib.dump({v.name: p for v, p in zip(variables, ps)}, save_path)
+
+
+def load_optionddpg_variables(load_path, sess=None):
+    import joblib
+    sess = sess or get_session()
+    loaded = joblib.load(load_path)
+    controller_prefixes = ("controller/", "controller_1/")
+    variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+                 if not v.name.startswith(controller_prefixes)]
+    assigns = [v.assign(loaded[v.name]) for v in variables if v.name in loaded]
+    sess.run(assigns)
+
+
+
 def learn(env,
           use_ddpg=False,
           gamma=0.90,
@@ -197,6 +220,7 @@ def learn(env,
                 logger.record_tabular("mean 100 episode reward", mean_100ep_reward)
                 logger.dump_tabular()
                 save_variables(model_file)
+                save_optionddpg_variables(model_file+"_optionDDPG")
 
             if (checkpoint_freq is not None and
                     num_episodes > 100 and t % checkpoint_freq == 0):
@@ -209,6 +233,7 @@ def learn(env,
                         logger.log("Saving model due to mean reward increase: {} -> {}".format(
                                    saved_mean_reward, mean_100ep_reward))
                         save_variables(model_file)
+                        save_optionddpg_variables(model_file+"_optionDDPG")
                     model_saved = True
                     saved_mean_reward = mean_100ep_reward
         if model_saved:
