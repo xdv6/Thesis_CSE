@@ -424,7 +424,7 @@ while True:
         # reward = calculate_reward_gripper_to_cubeC()
         # reward = calculate_reward_gripper_to_cubeD()
         # reward = calculate_reward_cube_A_to_treshold_height()
-        reward = calculate_reward_cube_B_to_treshold_height()
+        # reward = calculate_reward_cube_B_to_treshold_height()
         # reward = calculate_reward_cube_C_to_treshold_height()
         # reward = calculate_reward_cube_D_to_treshold_height()
     

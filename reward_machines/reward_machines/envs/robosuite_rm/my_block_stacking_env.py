@@ -251,23 +251,52 @@ class MyBlockStackingEnv(GymWrapper):
         return flattened_observation, reward, done, info
 
     def get_events(self):
-        # Define events for the reward machine based on block states (grasped, stacked, above blockB)
+        # Define events for the reward machine based on block states (grasped, stacked, etc)
         events = ''
         if self.block_grasped():
-            events += 'g'  # 'g' event for block grasped
+            events += 'g'  # 'g' event for block grasped, for individual block training
         if self.above_treshold():
-            events += 'h'  # 'h' event for above cubeB in height
+            events += 'h'  # 'h' event for block above treshold, for individual block training
+
+        # for block sequence training
+        if self.block_grasped('cubeA'):
+            events += 'gA'
+        if self.block_grasped('cubeB'):
+            events += 'gB'
+        if self.block_grasped('cubeC'):
+            events += 'gC'
+        if self.block_grasped('cubeD'):
+            events += 'gD'
+
+        if self.above_treshold('cubeA'):
+            events += 'hA'
+        if self.above_treshold('cubeB'):
+            events += 'hB'
+        if self.above_treshold('cubeC'):
+            events += 'hC'
+        if self.above_treshold('cubeD'):
+            events += 'hD'
+
         return events
 
-    def block_grasped(self):
+    def block_grasped(self, cube_name=None):
 
         # Define gripper collision geoms
         left_gripper_geom = ["gripper0_finger1_pad_collision"]  # Left gripper pad
         right_gripper_geom = ["gripper0_finger2_pad_collision"]  # Right gripper pad
 
         # Define cube collision geom
-        cube_geom = self.selected_cube_geom_name
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(self.selected_cube_body_name)]
+        if cube_name is None:
+            cube_geom = self.selected_cube_geom_name
+            cube_body = self.selected_cube_body_name
+        else:
+            cube_geom = cube_name + "_g0"
+            cube_body = cube_name + "_main"
+
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_body)]
+        geom_id = self.env.sim.model.geom_name2id(cube_geom)
+        cube_size = self.env.sim.model.geom_size[geom_id]
+        cube_width = cube_size[0] * 2
 
         left_contact = self.env.check_contact(geoms_1=left_gripper_geom, geoms_2=cube_geom)
         right_contact = self.env.check_contact(geoms_1=right_gripper_geom, geoms_2=cube_geom)
@@ -275,9 +304,6 @@ class MyBlockStackingEnv(GymWrapper):
         left_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_leftfinger")]
         right_finger_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id("gripper0_rightfinger")]
 
-        geom_id = self.env.sim.model.geom_name2id(self.selected_cube_geom_name)
-        cube_size = self.env.sim.model.geom_size[geom_id]
-        cube_width = cube_size[0] * 2
 
         left_touching_left_face = left_contact and (abs(left_finger_pos[1] - (cube_pos[1] - cube_width / 2)) < 0.005)
         right_touching_right_face = right_contact and (abs(right_finger_pos[1] - (cube_pos[1] + cube_width / 2)) < 0.005)
@@ -289,10 +315,19 @@ class MyBlockStackingEnv(GymWrapper):
 
         return is_proper_grasp
 
-    def above_treshold(self):
+
+
+    def above_treshold(self, cube_name=None):
         # Check if the end-effector is above the height
-        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(self.selected_cube_body_name)]
-        geom_id = self.env.sim.model.geom_name2id(self.selected_cube_geom_name)
+        if cube_name is None:
+            cube_geom = self.selected_cube_geom_name
+            cube_body = self.selected_cube_body_name
+        else:
+            cube_geom = cube_name + "_g0"
+            cube_body = cube_name + "_main"
+
+        cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_body)]
+        geom_id = self.env.sim.model.geom_name2id(cube_geom)
         cube_size = self.env.sim.model.geom_size[geom_id]
         cube_above_treshold = cube_pos[2] - cube_size[2] > 0.91
         return cube_above_treshold
