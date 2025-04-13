@@ -1,0 +1,22 @@
+0  # RM cube lifting
+[2]  # terminal state
+# cube A lifted
+(0, 0, '!gA',ConstantRewardFunction())
+(0, 1, 'gA', ConstantRewardFunction())
+(1, 1, '!hA',ConstantRewardFunction())
+(1, 2, 'hA', ConstantRewardFunction())
+# cube B lifted
+(2, 2, '!gB',ConstantRewardFunction())
+(2, 3, 'gB', ConstantRewardFunction())
+(3, 3, '!hB',ConstantRewardFunction())
+(3, 4, 'hB', ConstantRewardFunction())
+# cube C lifted
+(4, 4, '!gC',ConstantRewardFunction())
+(4, 5, 'gC', ConstantRewardFunction())
+(5, 5, '!hC',ConstantRewardFunction())
+(5, 6, 'hC', ConstantRewardFunction())
+# cube D lifted
+(6, 6, '!gD',ConstantRewardFunction())
+(6, 7, 'gD', ConstantRewardFunction())
+(7, 7, '!hD',ConstantRewardFunction())
+(7, 8, 'hD', ConstantRewardFunction())

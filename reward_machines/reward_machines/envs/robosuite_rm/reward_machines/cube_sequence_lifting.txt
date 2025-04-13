@@ -1,0 +1,32 @@
+0  # initial state
+6 10 16 20 26 30  # terminal states
+(0, 1, 'gA', ConstantRewardFunction())
+(1, 2, 'hA', ConstantRewardFunction())
+(2, 3, 'gB', ConstantRewardFunction())
+(3, 4, 'hB', ConstantRewardFunction())
+(4, 5, 'gC', ConstantRewardFunction())
+(5, 6, 'hC', ConstantRewardFunction(10000)) # A -> B -> C
+(2, 7, 'gC', ConstantRewardFunction())
+(7, 8, 'hC', ConstantRewardFunction())
+(8, 9, 'gB', ConstantRewardFunction())
+(9, 10, 'hB', ConstantRewardFunction(9600)) # A -> C -> B
+(0, 11, 'gB', ConstantRewardFunction())
+(11, 12, 'hB', ConstantRewardFunction())
+(12, 13, 'gA', ConstantRewardFunction())
+(13, 14, 'hA', ConstantRewardFunction())
+(14, 15, 'gC', ConstantRewardFunction())
+(15, 16, 'hC', ConstantRewardFunction(9200)) # B -> A -> C
+(12, 17, 'gC', ConstantRewardFunction())
+(17, 18, 'hC', ConstantRewardFunction())
+(18, 19, 'gA', ConstantRewardFunction())
+(19, 20, 'hA', ConstantRewardFunction(8800)) # B -> C -> A
+(0, 21, 'gC', ConstantRewardFunction())
+(21, 22, 'hC', ConstantRewardFunction())
+(22, 23, 'gA', ConstantRewardFunction())
+(23, 24, 'hA', ConstantRewardFunction())
+(24, 25, 'gB', ConstantRewardFunction())
+(25, 26, 'hB', ConstantRewardFunction(8400)) # C -> A -> B
+(22, 27, 'gB', ConstantRewardFunction())
+(27, 28, 'hB', ConstantRewardFunction())
+(28, 29, 'gA', ConstantRewardFunction())
+(29, 30, 'hA', ConstantRewardFunction(8000)) # C -> B -> A
