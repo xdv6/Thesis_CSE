@@ -1,6 +1,32 @@
-0  # RM cube lifting
-[2]  # terminal state
-(0, 0, '!g',RewardControl())
-(0, 1, 'g', ConstantRewardFunction(2000))
-(1, 1, '!h',RewardControl())
-(1, 2, 'h', ConstantRewardFunction(10000))
+0  # initial state
+[6, 10, 16, 20, 26, 30]  # terminal states
+(0, 1, 'gA', RewardControl())
+(1, 2, 'hA', RewardControl())
+(2, 3, 'gB', RewardControl())
+(3, 4, 'hB', RewardControl())
+(4, 5, 'gC', RewardControl())
+(5, 6, 'hC', ConstantRewardFunction(10000)) # A -> B -> C
+(2, 7, 'gC', RewardControl())
+(7, 8, 'hC', RewardControl())
+(8, 9, 'gB', RewardControl())
+(9, 10, 'hB', ConstantRewardFunction(9600)) # A -> C -> B
+(0, 11, 'gB', RewardControl())
+(11, 12, 'hB', RewardControl())
+(12, 13, 'gA', RewardControl())
+(13, 14, 'hA', RewardControl())
+(14, 15, 'gC', RewardControl())
+(15, 16, 'hC', ConstantRewardFunction(9200)) # B -> A -> C
+(12, 17, 'gC', RewardControl())
+(17, 18, 'hC', RewardControl())
+(18, 19, 'gA', RewardControl())
+(19, 20, 'hA', ConstantRewardFunction(8800)) # B -> C -> A
+(0, 21, 'gC', RewardControl())
+(21, 22, 'hC', RewardControl())
+(22, 23, 'gA', RewardControl())
+(23, 24, 'hA', RewardControl())
+(24, 25, 'gB', RewardControl())
+(25, 26, 'hB', ConstantRewardFunction(8400)) # C -> A -> B
+(22, 27, 'gB', RewardControl())
+(27, 28, 'hB', RewardControl())
+(28, 29, 'gA', RewardControl())
+(29, 30, 'hA', ConstantRewardFunction(8000)) # C -> B -> A

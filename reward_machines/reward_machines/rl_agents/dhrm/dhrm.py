@@ -23,6 +23,7 @@ from baselines.deepq.models import build_q_func
 from rl_agents.dhrm.options import OptionDQN, OptionDDPG
 from rl_agents.dhrm.controller import ControllerDQN
 import wandb
+import re
 
 
 def save_optionddpg_variables(save_path, sess=None):
@@ -45,6 +46,48 @@ def load_optionddpg_variables(load_path, sess=None):
     assigns = [v.assign(loaded[v.name]) for v in variables if v.name in loaded]
     sess.run(assigns)
 
+
+def map_options_to_cube_actions(options, filename):
+    """
+    Maps reward machine options to cube actions.
+
+    Args:
+        options (list of tuples): List of (rm_id, u1, u2) option transitions.
+        filename (str): Path to a reward machine .txt file.
+
+    Returns:
+        list of tuples: Each tuple is (CubeLetter, Phase), where Phase is 0 for 'g', 1 for 'h'.
+    """
+    transitions = {}
+
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+    # Parse terminal states from line 2
+    terminal_states_line = lines[1]
+    terminal_states = eval(terminal_states_line.strip().split('#')[0].strip())  # -> list of ints
+
+    # Parse transition lines starting from line 3
+    for line in lines[2:]:
+        match = re.search(r"\((\d+),\s*(\d+),\s*'([gh])([ABC])'", line)
+        if match:
+            u1, u2 = int(match[1]), int(match[2])
+            phase, letter = match[3], match[4]
+            transitions[(u1, u2)] = (letter, 0 if phase == 'g' else 1)
+
+    # Replace -1 with appropriate terminal state (based on sequence in which they appear)
+    terminal_counter = 0
+    mapped_options = []
+
+    for (_, u1, u2) in options:
+        if u2 == -1:
+            if terminal_counter >= len(terminal_states):
+                raise ValueError(f"Not enough terminal states to replace -1 at index {terminal_counter}")
+            u2 = terminal_states[terminal_counter]
+            terminal_counter += 1
+        mapped_options.append(transitions.get((u1, u2), None))
+
+    return mapped_options
 
 
 def learn(env,
@@ -147,7 +190,8 @@ def learn(env,
             # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
             logger.log('Loaded model from {}'.format(load_path))
 
-
+        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_sequence_lifting.txt")
+        
         num_steps_in_episode = 0
         for t in range(total_timesteps):
             wandb.log({"timestep": t})

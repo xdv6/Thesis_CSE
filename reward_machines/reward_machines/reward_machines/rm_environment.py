@@ -318,6 +318,7 @@ class HierarchicalRMWrapper(gym.Wrapper):
         return self.num_options
 
     def get_valid_options(self):
+        import ipdb; ipdb.set_trace()
         return self.valid_options[(self.env.current_rm_id,self.env.current_u_id)]
 
     def get_option_observation(self, option_id, env_obs=None):
