@@ -25,6 +25,31 @@ from rl_agents.dhrm.controller import ControllerDQN
 import wandb
 import re
 
+# def load_optionddpg_variables_dump_test(load_path, sess=None):
+#     import joblib
+#     import tensorflow.compat.v1 as tf
+#     tf.disable_v2_behavior()
+#     sess = sess or get_session()
+#
+#     def dump_controller_vars(filename):
+#         with open(filename, "w") as f:
+#             for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
+#                 if v.name.startswith("controller") or v.name.startswith("controller_1"):
+#                     f.write(f"{v.name}:\n{sess.run(v)}\n\n")
+#
+#     # Dump before loading
+#     dump_controller_vars("controller_vars_before.txt")
+#
+#     # Load saved variables
+#     loaded = joblib.load(load_path)
+#     controller_prefixes = ("controller/", "controller_1/")
+#     variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+#                  if not v.name.startswith(controller_prefixes)]
+#     assigns = [v.assign(loaded[v.name]) for v in variables if v.name in loaded]
+#     sess.run(assigns)
+#
+#     # Dump after loading
+#     dump_controller_vars("controller_vars_after.txt")
 
 def save_optionddpg_variables(save_path, sess=None):
     import joblib
@@ -41,6 +66,7 @@ def load_optionddpg_variables(load_path, sess=None):
     sess = sess or get_session()
     loaded = joblib.load(load_path)
     controller_prefixes = ("controller/", "controller_1/")
+    import ipdb; ipdb.set_trace()
     variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
                  if not v.name.startswith(controller_prefixes)]
     assigns = [v.assign(loaded[v.name]) for v in variables if v.name in loaded]
@@ -191,7 +217,7 @@ def learn(env,
             logger.log('Loaded model from {}'.format(load_path))
 
         mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_sequence_lifting.txt")
-        
+
         num_steps_in_episode = 0
         for t in range(total_timesteps):
             wandb.log({"timestep": t})
@@ -368,10 +394,13 @@ def evaluate(env,
 
         model_file = os.path.join(td, "model")
 
-        if load_path is not None:
-            load_variables(model_file)
-            # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
-            logger.log('Loaded model from {}'.format(load_path))
+        # if load_path is not None:
+        #     load_variables(model_file)
+        #     # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
+        #     logger.log('Loaded model from {}'.format(load_path))
+
+        # save_optionddpg_variables(model_file +"cube_lifting_A_optionDDPG")
+
 
         for t in range(total_timesteps):
             if callback is not None:
