@@ -25,31 +25,25 @@ from rl_agents.dhrm.controller import ControllerDQN
 import wandb
 import re
 
-# def load_optionddpg_variables_dump_test(load_path, sess=None):
-#     import joblib
-#     import tensorflow.compat.v1 as tf
-#     tf.disable_v2_behavior()
-#     sess = sess or get_session()
-#
-#     def dump_controller_vars(filename):
-#         with open(filename, "w") as f:
-#             for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES):
-#                 if v.name.startswith("controller") or v.name.startswith("controller_1"):
-#                     f.write(f"{v.name}:\n{sess.run(v)}\n\n")
-#
-#     # Dump before loading
-#     dump_controller_vars("controller_vars_before.txt")
-#
-#     # Load saved variables
-#     loaded = joblib.load(load_path)
-#     controller_prefixes = ("controller/", "controller_1/")
-#     variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
-#                  if not v.name.startswith(controller_prefixes)]
-#     assigns = [v.assign(loaded[v.name]) for v in variables if v.name in loaded]
-#     sess.run(assigns)
-#
-#     # Dump after loading
-#     dump_controller_vars("controller_vars_after.txt")
+def save_controller_variables(save_path, sess=None):
+    import joblib
+    sess = sess or get_session()
+    controller_prefixes = ("controller/", "controller_1/")
+    variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+                 if v.name.startswith(controller_prefixes)]
+    ps = sess.run(variables)
+    joblib.dump({v.name: p for v, p in zip(variables, ps)}, save_path)
+
+
+def load_controller_variables(load_path, sess=None):
+    import joblib
+    sess = sess or get_session()
+    loaded = joblib.load(load_path)
+    controller_prefixes = ("controller/", "controller_1/")
+    variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+                 if v.name.startswith(controller_prefixes)]
+    assigns = [v.assign(loaded[v.name]) for v in variables if v.name in loaded]
+    sess.run(assigns)
 
 def save_optionddpg_variables(save_path, sess=None):
     import joblib
@@ -230,6 +224,7 @@ def learn(env,
             # Selecting an option if needed
             if option_id is None:
                 valid_options = env.get_valid_options()
+                print("valid_options: ", valid_options)
                 option_s    = obs
                 option_id   = controller.get_action(option_s, valid_options)
                 option_rews = []
@@ -266,10 +261,6 @@ def learn(env,
 
                 option_rews.append(rew)
 
-            # Store transition for the option policies
-            for _s,_a,_r,_sn,_done in env.get_experience():
-                options.add_experience(_s,_a,_r,_sn,_done)
-
             # Update the meta-controller if needed
             # Note that this condition always hold if done is True
             if env.did_option_terminate(option_id):
@@ -304,6 +295,7 @@ def learn(env,
                 logger.dump_tabular()
                 save_variables(model_file)
                 save_optionddpg_variables(model_file+"_optionDDPG")
+                save_controller_variables(model_file+"_controller")
 
             if (checkpoint_freq is not None and
                     num_episodes > 100 and t % checkpoint_freq == 0):
@@ -317,6 +309,7 @@ def learn(env,
                                    saved_mean_reward, mean_100ep_reward))
                         save_variables(model_file)
                         save_optionddpg_variables(model_file+"_optionDDPG")
+                        save_controller_variables(model_file+"_controller")
                     model_saved = True
                     saved_mean_reward = mean_100ep_reward
         if model_saved:
