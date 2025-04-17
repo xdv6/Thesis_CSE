@@ -225,6 +225,7 @@ class MyBlockStackingEnv(GymWrapper):
 
         # if cube is dropped after it was picked up, then the episode is done
         if self.block_gripped and not self.block_grasped():
+            print("Cube dropped")
             done = True
 
         self.obs_dict = next_obs

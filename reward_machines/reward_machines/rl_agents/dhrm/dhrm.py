@@ -229,11 +229,10 @@ def learn(env,
                 option_id   = controller.get_action(option_s, valid_options)
                 option_rews = []
 
-
-            # load the optionddpg model of the cube based on the option_id
-            selected_option = mapped_options[option_id]
-            cube_selected, gripper_action = selected_option
-            load_optionddpg_variables("./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
+                # load the optionddpg model of the cube based on the option_id
+                selected_option = mapped_options[option_id]
+                cube_selected, gripper_action = selected_option
+                load_optionddpg_variables("./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
 
             original_obs = env.get_option_observation(option_id)
             cube_filtered_obs = original_obs[:25]
@@ -252,7 +251,6 @@ def learn(env,
             action = action.squeeze()
             new_obs, rew, done, info = env.step(action)
             num_steps_in_episode += 1
-
             # Saving the real reward that the option is getting
             if use_rs:
                 option_rews.append(info["rs-reward"])

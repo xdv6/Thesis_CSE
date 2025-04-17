@@ -15,9 +15,6 @@ import gym
 from gym import spaces
 import numpy as np
 from reward_machines.reward_machine import RewardMachine
-from collections import OrderedDict
-
-import wandb
 
 
 class RewardMachineEnv(gym.Wrapper):
@@ -75,20 +72,12 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_rm_id = (self.current_rm_id+1)%self.num_rms
         self.current_rm    = self.reward_machines[self.current_rm_id]
         self.current_u_id  = self.current_rm.reset()
-        self.steps_in_current_u = 0
-        self.previous_u_id = self.current_u_id
-        self.max_steps_in_u_id = [20, 15, 15, 15]
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)
 
     def step(self, action):
         # executing the action in the environment
-
-        # if self.current_u_id == 1:
-        #     print("dropping the cube for test")
-        #     action[-1] = -1
-
         next_obs, original_reward, env_done, info = self.env.step(action)
 
         # getting the output of the detectors and saving information for generating counterfactual experiences
@@ -96,64 +85,19 @@ class RewardMachineEnv(gym.Wrapper):
         self.crm_params = self.obs, action, next_obs, env_done, true_props, info
         self.obs = next_obs
 
-        # distance_block_gripper = self.env.obs_dict["gripper_to_cubeA"]
-
-
-        # Make a copy of the ordered dictionary
-        updated_obs_dict = OrderedDict(self.env.obs_dict)
-
-        # Add the new key-value pair
-        updated_obs_dict["current_u_id"] = self.current_u_id
-
-        self.steps_in_current_u += 1
         # update the RM state
-        self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, updated_obs_dict)
-
-        # print("self.current_u_id", self.current_u_id)
-        # print("self.steps_in_current_u", self.steps_in_current_u)
-        # print("\n")
+        self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, info)
 
         # returning the result of this action
         done = rm_done or env_done
-
-        if self.previous_u_id != self.current_u_id:
-            # log the amount of steps taken in the specific RM state
-            wandb.log({f"steps_in_u_id_{self.previous_u_id}": self.steps_in_current_u})
-            self.steps_in_current_u = 0
-
-        if self.steps_in_current_u > self.max_steps_in_u_id[self.current_u_id]:
-            done = True
-            rm_rew = -20
-
-
-
-
-        # if self.current_u_id == 1:
-        #     cube_A_pos = self.env.obs_dict["cubeA_pos"]
-        #     if cube_A_pos[2] > 0.94 or cube_A_pos[2] < 0.88:
-        #         done = True
-        #
-        # if self.current_u_id == 2:
-        #     cube_A_pos = self.env.obs_dict["cubeA_pos"]
-        #     cube_B_pos = self.env.obs_dict["cubeB_pos"]
-        #     margin = 0.04
-        #     if not (cube_B_pos[0] - margin < cube_A_pos[0] < cube_B_pos[0] + margin and cube_B_pos[1] - margin < cube_A_pos[1] < cube_B_pos[1] + margin):
-        #         done = True
-
-
-        # if done, but not because of a transition to the terminal state
-        if done and (self.current_u_id != -1 ):
-            wandb.log({f"steps_in_u_id_{self.current_u_id}": self.steps_in_current_u})
-
         rm_obs = self.get_observation(next_obs, self.current_rm_id, self.current_u_id, done)
 
-        self.previous_u_id = self.current_u_id
         return rm_obs, rm_rew, done, info
 
     def get_observation(self, next_obs, rm_id, u_id, done):
         rm_feat = self.rm_done_feat if done else self.rm_state_features[(rm_id,u_id)]
         rm_obs = {'features': next_obs,'rm-state': rm_feat}
-        return gym.spaces.flatten(self.observation_dict, rm_obs)           
+        return gym.spaces.flatten(self.observation_dict, rm_obs)
 
 
 class RewardMachineWrapper(gym.Wrapper):
@@ -182,7 +126,7 @@ class RewardMachineWrapper(gym.Wrapper):
         return self.env.num_rm_states
 
     def reset(self):
-        self.valid_states = None # We use this set to compute RM states that are reachable by the last experience (None means that all of them are reachable!) 
+        self.valid_states = None # We use this set to compute RM states that are reachable by the last experience (None means that all of them are reachable!)
         return self.env.reset()
 
     def step(self, action):
@@ -193,10 +137,6 @@ class RewardMachineWrapper(gym.Wrapper):
 
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
-        wandb.log({"current_u_id": self.env.current_u_id})
-        if self.current_u_id == -1:
-            print("SUCCESS: self.env.current_u_id == -1")  # This message will be checked by the script
-
 
         # adding crm if needed
         if self.add_crm:
@@ -240,7 +180,7 @@ class HierarchicalRMWrapper(gym.Wrapper):
     """
     HRL wrapper
     --------------------
-    It extracts options (i.e., macro-actions) for each edge on the RMs. 
+    It extracts options (i.e., macro-actions) for each edge on the RMs.
     Each option policy is rewarded when the current experience would have cause a transition through that edge.
 
     Methods
@@ -325,10 +265,10 @@ class HierarchicalRMWrapper(gym.Wrapper):
             env_obs = self.env.obs # using the current environment observation
         opt_feat = self.option_features[self.options[option_id]]
         opt_obs = {'features': env_obs,'option': opt_feat}
-        return gym.spaces.flatten(self.option_observation_dict, opt_obs)    
+        return gym.spaces.flatten(self.option_observation_dict, opt_obs)
 
     def reset(self):
-        self.valid_states = None # We use this set to compute RM states that are reachable by the last experience (None means that all of them are reachable!) 
+        self.valid_states = None # We use this set to compute RM states that are reachable by the last experience (None means that all of them are reachable!)
         return self.env.reset()
 
     def step(self, action):
@@ -338,7 +278,6 @@ class HierarchicalRMWrapper(gym.Wrapper):
 
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
-        wandb.log({"current_u_id": self.env.current_u_id})
 
         # adding crm if needed
         if self.add_rs:
@@ -361,22 +300,15 @@ class HierarchicalRMWrapper(gym.Wrapper):
         rm = self.env.reward_machines[rm_id]
 
         opt_obs = self.get_option_observation(option_id, obs)
-
-        # Make a copy of the ordered dictionary
-        updated_obs_dict = OrderedDict(self.env.obs_dict)
-
-        # Add the new key-value pair
-        updated_obs_dict["current_u_id"] = self.current_u_id
-
-        un, rm_rew, _ = rm.step(u1, true_props, updated_obs_dict, self.add_rs, env_done)
+        un, rm_rew, _ = rm.step(u1, true_props, info, self.add_rs, env_done)
         done = env_done or u1 != un
         opt_next_obs = self.get_option_observation(option_id, next_obs)
 
         # Computing the reward for the option
         opt_rew = rm_rew
-        if u1 != u2 == un: 
+        if u1 != u2 == un:
             opt_rew += self.r_max  # Extra positive reward because the agent accomplished this option
-        elif done: 
+        elif done:
             opt_rew += self.r_min  # Extra negative reward because the agent failed to accomplish this option
 
         return opt_obs,action,opt_rew,opt_next_obs,done
@@ -393,12 +325,7 @@ class HierarchicalRMWrapper(gym.Wrapper):
             # Computing reachable states (for the next state)
             rm_id, u1, u2 = self.options[option_id]
             rm = self.env.reward_machines[rm_id]
-            # Make a copy of the ordered dictionary
-            updated_obs_dict = OrderedDict(self.env.obs_dict)
-
-            # Add the new key-value pair
-            updated_obs_dict["current_u_id"] = self.current_u_id
-            un, _, _ = rm.step(u1, true_props, updated_obs_dict)
+            un, _, _ = rm.step(u1, true_props, info)
             reachable_states.add((rm_id,un))
             # Adding experience (if needed)
             if self.valid_states is None or (rm_id,u1) in self.valid_states:
