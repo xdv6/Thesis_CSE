@@ -1,0 +1,107 @@
+0  # initial state
+[6, 10, 16, 20, 26, 30]  # terminal states
+
+# From state 0: expect gA, gB, gC
+(0, 0, '!gA&!gB&!gC', RewardControl())
+(0, 1, 'gA', RewardControl())
+(0, 11, 'gB', RewardControl())
+(0, 21, 'gC', RewardControl())
+
+# From state 1: expect hA
+(1, 1, '!hA', RewardControl())
+(1, 2, 'hA', RewardControl())
+
+# From state 2: expect gB, gC
+(2, 2, '!gB&!gC', RewardControl())
+(2, 3, 'gB', RewardControl())
+(2, 7, 'gC', RewardControl())
+
+# From state 3: expect hB
+(3, 3, '!hB', RewardControl())
+(3, 4, 'hB', RewardControl())
+
+# From state 4: expect gC
+(4, 4, '!gC', RewardControl())
+(4, 5, 'gC', RewardControl())
+
+# From state 5: expect hC
+(5, 5, '!hC', RewardControl())
+(5, 6, 'hC', ConstantRewardFunction(10000))  # A -> B -> C
+
+# From state 7: expect hC
+(7, 7, '!hC', RewardControl())
+(7, 8, 'hC', RewardControl())
+
+# From state 8: expect gB
+(8, 8, '!gB', RewardControl())
+(8, 9, 'gB', RewardControl())
+
+# From state 9: expect hB
+(9, 9, '!hB', RewardControl())
+(9, 10, 'hB', ConstantRewardFunction(9600))  # A -> C -> B
+
+# From state 11: expect hB
+(11, 11, '!hB', RewardControl())
+(11, 12, 'hB', RewardControl())
+
+# From state 12: expect gA, gC
+(12, 12, '!gA&!gC', RewardControl())
+(12, 13, 'gA', RewardControl())
+(12, 17, 'gC', RewardControl())
+
+# From state 13: expect hA
+(13, 13, '!hA', RewardControl())
+(13, 14, 'hA', RewardControl())
+
+# From state 14: expect gC
+(14, 14, '!gC', RewardControl())
+(14, 15, 'gC', RewardControl())
+
+# From state 15: expect hC
+(15, 15, '!hC', RewardControl())
+(15, 16, 'hC', ConstantRewardFunction(9200))  # B -> A -> C
+
+# From state 17: expect hC
+(17, 17, '!hC', RewardControl())
+(17, 18, 'hC', RewardControl())
+
+# From state 18: expect gA
+(18, 18, '!gA', RewardControl())
+(18, 19, 'gA', RewardControl())
+
+# From state 19: expect hA
+(19, 19, '!hA', RewardControl())
+(19, 20, 'hA', ConstantRewardFunction(8800))  # B -> C -> A
+
+# From state 21: expect hC
+(21, 21, '!hC', RewardControl())
+(21, 22, 'hC', RewardControl())
+
+# From state 22: expect gA, gB
+(22, 22, '!gA&!gB', RewardControl())
+(22, 23, 'gA', RewardControl())
+(22, 27, 'gB', RewardControl())
+
+# From state 23: expect hA
+(23, 23, '!hA', RewardControl())
+(23, 24, 'hA', RewardControl())
+
+# From state 24: expect gB
+(24, 24, '!gB', RewardControl())
+(24, 25, 'gB', RewardControl())
+
+# From state 25: expect hB
+(25, 25, '!hB', RewardControl())
+(25, 26, 'hB', ConstantRewardFunction(8400))  # C -> A -> B
+
+# From state 27: expect hB
+(27, 27, '!hB', RewardControl())
+(27, 28, 'hB', RewardControl())
+
+# From state 28: expect gA
+(28, 28, '!gA', RewardControl())
+(28, 29, 'gA', RewardControl())
+
+# From state 29: expect hA
+(29, 29, '!hA', RewardControl())
+(29, 30, 'hA', ConstantRewardFunction(8000))  # C -> B -> A
