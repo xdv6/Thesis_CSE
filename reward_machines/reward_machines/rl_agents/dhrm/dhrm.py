@@ -233,6 +233,7 @@ def learn(env,
                 selected_option = mapped_options[option_id]
                 cube_selected, gripper_action = selected_option
                 load_optionddpg_variables("./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
+                print("loaded model: ", "./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
 
             original_obs = env.get_option_observation(option_id)
             cube_filtered_obs = original_obs[:25]
@@ -434,6 +435,7 @@ def learn_cube(env,
                 option_s    = obs
                 option_id   = controller.get_action(option_s, valid_options)
                 option_rews = []
+
 
             # Take action and update exploration to the newest value
             action = options.get_action(env.get_option_observation(option_id), t, reset)

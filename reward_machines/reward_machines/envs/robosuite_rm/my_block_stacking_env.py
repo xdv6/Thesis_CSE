@@ -224,9 +224,9 @@ class MyBlockStackingEnv(GymWrapper):
         next_obs, reward, done, info = self.env.step(action)
 
         # if cube is dropped after it was picked up, then the episode is done
-        if self.block_gripped and not self.block_grasped():
-            print("Cube dropped")
-            done = True
+        # if self.block_gripped and not self.block_grasped():
+        #     print("Cube dropped")
+        #     done = True
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict to pass it to the reward machine
@@ -330,7 +330,12 @@ class MyBlockStackingEnv(GymWrapper):
         cube_pos = self.env.sim.data.body_xpos[self.env.sim.model.body_name2id(cube_body)]
         geom_id = self.env.sim.model.geom_name2id(cube_geom)
         cube_size = self.env.sim.model.geom_size[geom_id]
-        cube_above_treshold = cube_pos[2] - cube_size[2] > 0.91
+        cube_above_treshold = cube_pos[2] - cube_size[2] > 0.001
+
+        # reset the environment after every lift
+        # if cube_above_treshold:
+        #     self.reset()
+
         return cube_above_treshold
 
 
