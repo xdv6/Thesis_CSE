@@ -53,6 +53,52 @@ class MyBlockStackingEnv(GymWrapper):
 
         return reward
 
+    def generate_option_reward_mapping(self):
+        """
+        Given a list of options and a cost dict for edges (from_node, to_node) → cost,
+        return a mapping: option_id → reward (negative cost).
+        Terminal states (-1) are ignored.
+        """
+
+        cost_dict = {
+            (0, 1): 1.5,
+            (0, 6): 2.0,
+            (0, 11): 1.0,
+            (1, 2): 1.0,
+            (1, 4): 1.2,
+            (6, 7): 1.3,
+            (6, 9): 1.2,
+            (11, 12): 1.5,
+            (11, 14): 1.0,
+
+            # Transitions into terminal nodes
+            (2, -1): 1.0,  # 2 → 3
+            (4, -1): 1.0,  # 4 → 5
+            (7, -1): 1.0,  # 7 → 8
+            (9, -1): 1.0,  # 9 → 10
+            (12, -1): 1.2,  # 12 → 13
+            (14, -1): 1.0  # 14 → 15
+        }
+
+        reward_mapping = {}
+        for option_id, (_, from_node, to_node) in enumerate(self.options_list):
+            cost = cost_dict.get((from_node, to_node))
+            if cost is None:
+                raise ValueError(f"No cost found for edge ({from_node}, {to_node})")
+            reward_mapping[option_id] = -cost  # negative reward = penalty = cost
+        return reward_mapping
+
+
+    def set_option(self, option_id):
+        self.option_id = option_id
+
+    def set_options_list(self, options_list):
+        self.options_list = options_list
+        self.option_to_reward_mapping = self.generate_option_reward_mapping()
+
+    def set_options_to_cube_mapping(self, options_to_cube_mapping):
+        self.options_to_cube_mapping = options_to_cube_mapping
+
 
     def __init__(self, video_path=os.path.join(os.environ.get("WORKDIR_PATH", "./videos"), os.environ.get("WANDB_RUN_NAME", "default_run") + ".mp4"), render_height=512, render_width=512):
         # Initialize the robosuite environment and wrap it with GymWrapper
@@ -222,11 +268,15 @@ class MyBlockStackingEnv(GymWrapper):
             action[-1] = 1
 
         next_obs, reward, done, info = self.env.step(action)
+        reward = 0
 
-        # if cube is dropped after it was picked up, then the episode is done
-        # if self.block_gripped and not self.block_grasped():
-        #     print("Cube dropped")
-        #     done = True
+        # if the gripper is grasping a cube, give the reward based on the mapping
+
+        selected_cube = self.options_to_cube_mapping[self.option_id][0]
+        cube_name = "cube" + selected_cube
+        if self.block_grasped(cube_name):
+            cost = self.option_to_reward_mapping[self.option_id]
+            reward = cost
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict to pass it to the reward machine
@@ -262,12 +312,16 @@ class MyBlockStackingEnv(GymWrapper):
         # for block sequence training
         if self.block_grasped('cubeA'):
             events += 'gA'
+            print("Block A gripped")
         if self.block_grasped('cubeB'):
             events += 'gB'
+            print("Block B gripped")
         if self.block_grasped('cubeC'):
             events += 'gC'
+            print("Block C gripped")
         if self.block_grasped('cubeD'):
             events += 'gD'
+
 
         if self.above_treshold('cubeA'):
             events += 'hA'
@@ -313,7 +367,6 @@ class MyBlockStackingEnv(GymWrapper):
 
         if is_proper_grasp:
             self.block_gripped = True
-
 
         return is_proper_grasp
 

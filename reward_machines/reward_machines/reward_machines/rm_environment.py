@@ -79,7 +79,6 @@ class RewardMachineEnv(gym.Wrapper):
 
     def step(self, action):
         # executing the action in the environment
-        import ipdb; ipdb.set_trace()
         next_obs, original_reward, env_done, info = self.env.step(action)
 
         # getting the output of the detectors and saving information for generating counterfactual experiences
@@ -99,7 +98,7 @@ class RewardMachineEnv(gym.Wrapper):
         self.previous_u_id = self.current_u_id
         rm_obs = self.get_observation(next_obs, self.current_rm_id, self.current_u_id, done)
 
-        return rm_obs, rm_rew, done, info
+        return rm_obs, original_reward, done, info
 
     def get_observation(self, next_obs, rm_id, u_id, done):
         rm_feat = self.rm_done_feat if done else self.rm_state_features[(rm_id,u_id)]
@@ -283,11 +282,10 @@ class HierarchicalRMWrapper(gym.Wrapper):
         rm    = self.env.current_rm
         u_id  = self.env.current_u_id
 
-        import ipdb; ipdb.set_trace()
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
 
-        print("current_u_id:", u_id)
+        # print("current_u_id:", u_id)
 
         # adding crm if needed
         if self.add_rs:

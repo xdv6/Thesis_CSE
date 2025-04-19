@@ -212,6 +212,10 @@ def learn(env,
 
         mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_grasping_sequence.txt")
 
+        env.env.env.set_options_list(env.options)
+        env.env.env.set_options_to_cube_mapping(mapped_options)
+
+
         # Override get_action to ensure deterministic execution (no noise)
         options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
 
@@ -234,8 +238,7 @@ def learn(env,
                     option_id = controller.get_action(option_s, valid_options)
                     print("rerolling option_id: ", option_id)
 
-                # reset the cube stacking env after every option change: env: <Monitor<HierarchicalRMWrapper<TimeLimit<MyBlockStackingEnvRM1<MyBlockStackingEnv instance>>>>
-                # env.env.env.env.reset()
+                env.env.env.set_option(option_id)
 
                 option_rews = []
 
@@ -261,6 +264,7 @@ def learn(env,
 
             action = action.squeeze()
             new_obs, rew, done, info = env.step(action)
+            print("rew: ", rew)
             num_steps_in_episode += 1
             # Saving the real reward that the option is getting
             if use_rs:
