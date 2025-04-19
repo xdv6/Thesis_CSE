@@ -77,6 +77,7 @@ def map_options_to_cube_actions(options, filename):
     Returns:
         list of tuples: Each tuple is (CubeLetter, Phase), where Phase is 0 for 'g', 1 for 'h'.
     """
+
     transitions = {}
 
     with open(filename, 'r') as f:
@@ -209,7 +210,7 @@ def learn(env,
             # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
             logger.log('Loaded model from {}'.format(load_path))
 
-        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_sequence_lifting.txt")
+        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_grasping_sequence.txt")
 
         # Override get_action to ensure deterministic execution (no noise)
         options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
@@ -227,6 +228,15 @@ def learn(env,
                 print("valid_options: ", valid_options)
                 option_s    = obs
                 option_id   = controller.get_action(option_s, valid_options)
+                print("chosen option_id: ", option_id)
+                # reroll if the option_id is not valid
+                while option_id not in valid_options:
+                    option_id = controller.get_action(option_s, valid_options)
+                    print("rerolling option_id: ", option_id)
+
+                # reset the cube stacking env after every option change: env: <Monitor<HierarchicalRMWrapper<TimeLimit<MyBlockStackingEnvRM1<MyBlockStackingEnv instance>>>>
+                # env.env.env.env.reset()
+
                 option_rews = []
 
                 # load the optionddpg model of the cube based on the option_id
@@ -293,7 +303,6 @@ def learn(env,
                 logger.record_tabular("mean 100 episode reward", mean_100ep_reward)
                 logger.dump_tabular()
                 save_variables(model_file)
-                save_optionddpg_variables(model_file+"_optionDDPG")
                 save_controller_variables(model_file+"_controller")
 
             if (checkpoint_freq is not None and
@@ -307,7 +316,6 @@ def learn(env,
                         logger.log("Saving model due to mean reward increase: {} -> {}".format(
                                    saved_mean_reward, mean_100ep_reward))
                         save_variables(model_file)
-                        save_optionddpg_variables(model_file+"_optionDDPG")
                         save_controller_variables(model_file+"_controller")
                     model_saved = True
                     saved_mean_reward = mean_100ep_reward

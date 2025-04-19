@@ -72,12 +72,14 @@ class RewardMachineEnv(gym.Wrapper):
         self.current_rm_id = (self.current_rm_id+1)%self.num_rms
         self.current_rm    = self.reward_machines[self.current_rm_id]
         self.current_u_id  = self.current_rm.reset()
+        self.previous_u_id = self.current_u_id
 
         # Adding the RM state to the observation
         return self.get_observation(self.obs, self.current_rm_id, self.current_u_id, False)
 
     def step(self, action):
         # executing the action in the environment
+        import ipdb; ipdb.set_trace()
         next_obs, original_reward, env_done, info = self.env.step(action)
 
         # getting the output of the detectors and saving information for generating counterfactual experiences
@@ -88,8 +90,13 @@ class RewardMachineEnv(gym.Wrapper):
         # update the RM state
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, info)
 
+        if self.previous_u_id != self.current_u_id:
+            self.env.reset()
+
+
         # returning the result of this action
         done = rm_done or env_done
+        self.previous_u_id = self.current_u_id
         rm_obs = self.get_observation(next_obs, self.current_rm_id, self.current_u_id, done)
 
         return rm_obs, rm_rew, done, info
@@ -276,8 +283,11 @@ class HierarchicalRMWrapper(gym.Wrapper):
         rm    = self.env.current_rm
         u_id  = self.env.current_u_id
 
+        import ipdb; ipdb.set_trace()
         # executing the action in the environment
         rm_obs, rm_rew, done, info = self.env.step(action)
+
+        print("current_u_id:", u_id)
 
         # adding crm if needed
         if self.add_rs:

@@ -314,6 +314,7 @@ class MyBlockStackingEnv(GymWrapper):
         if is_proper_grasp:
             self.block_gripped = True
 
+
         return is_proper_grasp
 
 
