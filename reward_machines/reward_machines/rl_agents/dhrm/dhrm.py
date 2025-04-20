@@ -165,6 +165,8 @@ def learn(env,
     """
     # Create all the functions necessary to train the model
 
+    # set gamma to 1 for the controller
+    gamma = 1
     sess = get_session()
     set_global_seeds(seed)
 
@@ -219,6 +221,10 @@ def learn(env,
         # Override get_action to ensure deterministic execution (no noise)
         options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
 
+        rewards_per_sequence = 0
+        amount_of_visits_per_sequence_dict = {}
+        sequence = ""
+
         num_steps_in_episode = 0
         for t in range(total_timesteps):
             wandb.log({"timestep": t})
@@ -229,6 +235,16 @@ def learn(env,
             # Selecting an option if needed
             if option_id is None:
                 valid_options = env.get_valid_options()
+                if len(valid_options) == 3:
+                    print("rewards_per_sequence: ", rewards_per_sequence)
+                    wandb.log({"rewards_per_sequence": rewards_per_sequence})
+                    rewards_per_sequence = 0
+                    print("sequence_completed: ", sequence)
+                    amount_of_visits_per_sequence_dict[sequence] = amount_of_visits_per_sequence_dict.get(sequence, 0) + 1
+                    wandb.log({sequence: amount_of_visits_per_sequence_dict[sequence]})
+                    print("amount_of_visits_per_sequence_dict: ", amount_of_visits_per_sequence_dict)
+                    sequence = ""
+
                 print("valid_options: ", valid_options)
                 option_s    = obs
                 option_id   = controller.get_action(option_s, valid_options)
@@ -247,6 +263,7 @@ def learn(env,
                 cube_selected, gripper_action = selected_option
                 load_optionddpg_variables("./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
                 print("loaded model: ", "./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
+                sequence += str(cube_selected)
 
             original_obs = env.get_option_observation(option_id)
             cube_filtered_obs = original_obs[:25]
@@ -264,7 +281,6 @@ def learn(env,
 
             action = action.squeeze()
             new_obs, rew, done, info = env.step(action)
-            print("rew: ", rew)
             num_steps_in_episode += 1
             # Saving the real reward that the option is getting
             if use_rs:
@@ -279,6 +295,8 @@ def learn(env,
             if env.did_option_terminate(option_id):
                 option_sn = new_obs
                 option_reward = sum([_r*gamma**_i for _i,_r in enumerate(option_rews)])
+                print("reward_per_option: ", option_reward)
+                rewards_per_sequence += option_reward
                 valid_options = [] if done else env.get_valid_options()
                 controller.add_experience(option_s, option_id, option_reward, option_sn, done, valid_options,gamma**(len(option_rews)))
                 controller.learn()
