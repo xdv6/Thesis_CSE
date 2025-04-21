@@ -88,6 +88,7 @@ class RewardMachineEnv(gym.Wrapper):
 
         # update the RM state
         self.current_u_id, rm_rew, rm_done = self.current_rm.step(self.current_u_id, true_props, info)
+        print("current_u_id:", self.current_u_id)
 
         if self.previous_u_id != self.current_u_id:
             self.env.reset()

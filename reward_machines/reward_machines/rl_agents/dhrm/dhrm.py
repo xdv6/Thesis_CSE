@@ -234,8 +234,10 @@ def learn(env,
             wandb.log({"timestep": t})
             if callback is not None:
                 if callback(locals(), globals()):
+                    print("callback triggered")
                     break
 
+            print("option_id: ", option_id)
             # Selecting an option if needed
             if option_id is None:
                 valid_options = env.get_valid_options()
@@ -249,30 +251,25 @@ def learn(env,
                     print("amount_of_visits_per_sequence_dict: ", amount_of_visits_per_sequence_dict)
                     sequence = ""
 
-                # finding the costs of every possible option
-                for option_id in valid_options:
-                    print("chosen option_id: ", option_id)
-                    env.env.env.set_option(option_id)
+                for test_option_id in valid_options:
+                    print("chosen option_id: ", test_option_id)
+                    env.env.env.set_option(test_option_id)
 
                     option_rews = []
 
-                    # load the optionddpg model of the cube based on the option_id
-                    selected_option = mapped_options[option_id]
+                    selected_option = mapped_options[test_option_id]
                     cube_selected, gripper_action = selected_option
-                    load_optionddpg_variables("./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
-                    print("loaded model: ", "./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
-                    sequence += str(cube_selected)
+                    load_optionddpg_variables(f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+                    print("loaded model: ", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
 
-                    while option_id is not None:
-                        original_obs = env.get_option_observation(option_id)
+
+                    simulated = False
+                    while not simulated:
+                        original_obs = env.get_option_observation(test_option_id)
                         cube_filtered_obs = original_obs[:25]
 
-                        if gripper_action == 0:
-                            cube_filtered_obs[-2] = 1
-                            cube_filtered_obs[-1] = 0
-                        else:
-                            cube_filtered_obs[-2] = 0
-                            cube_filtered_obs[-1] = 1
+                        cube_filtered_obs[-2] = int(gripper_action == 0)
+                        cube_filtered_obs[-1] = int(gripper_action == 1)
 
                         action = options.get_action(cube_filtered_obs, t, reset)
                         reset = False
@@ -280,39 +277,36 @@ def learn(env,
                         action = action.squeeze()
                         new_obs, rew, done, info = env.step(action)
                         num_steps_in_episode += 1
-                        # Saving the real reward that the option is getting
-                        if use_rs:
-                            option_rews.append(info["rs-reward"])
-                        else:
-                            wandb.log({"reward": rew})
 
-                            option_rews.append(rew)
+                        wandb.log({"reward": rew})
+                        option_rews.append(rew)
 
-
-                        if env.did_option_terminate(option_id):
-                            option_reward = sum([_r*gamma**_i for _i,_r in enumerate(option_rews)])
+                        if env.did_option_terminate(test_option_id):
+                            option_reward = sum([_r * gamma ** _i for _i, _r in enumerate(option_rews)])
                             print("reward_per_option: ", option_reward)
-                            option_to_reward_dict[option_id] = (option_reward, env.options[option_id][1], env.options[option_id][2])
+                            option_to_reward_dict[test_option_id] = (
+                                option_reward,
+                                env.options[test_option_id][1],
+                                env.options[test_option_id][2],
+                            )
                             print("option_to_reward_dict: ", option_to_reward_dict)
-                            rewards_per_sequence += option_reward
-                            option_id = None
+                            simulated = True  # exit the loop
+                            env.reset()
 
                         obs = new_obs
-                        episode_rewards[-1] += rew
 
                         if done:
+                            print("done")
                             wandb.log({"num_steps_in_episode": num_steps_in_episode})
                             num_steps_in_episode = 0
                             obs = env.reset()
                             options.reset()
                             episode_rewards.append(0.0)
                             reset = True
-                            wandb.log({"episode_reward": episode_rewards[-1]})
 
-
-            # dummy controller for the time being
-            controller = ControllerDQN(env, **controller_kargs)
-            return controller.act, options.act
+        # dummy controller for the time being
+        controller = ControllerDQN(env, **controller_kargs)
+        return controller.act, options.act
 
 
 def learnDQN(env,
