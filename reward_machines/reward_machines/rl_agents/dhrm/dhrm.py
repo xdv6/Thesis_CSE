@@ -1,3 +1,4 @@
+import copy
 import os
 import tempfile
 from datetime import time
@@ -22,6 +23,8 @@ from baselines.deepq.models import build_q_func
 
 from rl_agents.dhrm.options import OptionDQN, OptionDDPG
 from rl_agents.dhrm.controller import ControllerDQN
+from AStarController import AStarController
+
 import wandb
 import re
 
@@ -228,6 +231,7 @@ def learn(env,
         sequence = ""
 
         option_to_reward_dict = {}
+        astar = AStarController(env.options)
 
         num_steps_in_episode = 0
         for t in range(total_timesteps):
@@ -289,20 +293,107 @@ def learn(env,
                                 env.options[test_option_id][1],
                                 env.options[test_option_id][2],
                             )
+                            astar.update_with_option_result(test_option_id, option_reward, env.options[test_option_id][1], env.options[test_option_id][2])
                             print("option_to_reward_dict: ", option_to_reward_dict)
                             simulated = True  # exit the loop
                             env.reset()
 
                         obs = new_obs
 
-                        if done:
-                            print("done")
-                            wandb.log({"num_steps_in_episode": num_steps_in_episode})
-                            num_steps_in_episode = 0
-                            obs = env.reset()
-                            options.reset()
-                            episode_rewards.append(0.0)
-                            reset = True
+                astar_chosen_path = astar.get_plan()
+                all_options_in_node_to_be_expanded_are_explored = False
+                options_already_explored = set()
+
+                print("now expanding the A* path")
+                while not all_options_in_node_to_be_expanded_are_explored:
+                    # Step 1: Follow the A* path to the node to expand
+                    plan = copy.deepcopy(astar_chosen_path)
+
+                    while plan:
+                        print("plan: ", plan)
+                        env.get_valid_options()
+                        option = plan.pop(0)  # Use current option from A*
+                        env.env.env.set_option(option)
+
+                        option_rews = []
+                        selected_option = mapped_options[option]
+                        cube_selected, gripper_action = selected_option
+                        load_optionddpg_variables(f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+                        print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+
+                        reset = True
+                        info = ""
+                        while not info == "cube_gripped":
+                            print("in here")
+                            original_obs = env.get_option_observation(option)
+                            cube_filtered_obs = original_obs[:25]
+                            cube_filtered_obs[-2] = int(gripper_action == 0)
+                            cube_filtered_obs[-1] = int(gripper_action == 1)
+
+                            action = options.get_action(cube_filtered_obs, t, reset)
+                            reset = False
+
+                            action = action.squeeze()
+                            new_obs, rew, done, info = env.step(action)
+                            num_steps_in_episode += 1
+
+                            wandb.log({"reward": rew})
+                            option_rews.append(rew)
+
+                    # Step 2: At the expansion node, explore one new option
+                    valid_options = env.get_valid_options()
+
+                    next_option = next((opt for opt in valid_options if opt not in options_already_explored), None)
+                    print("next_option to explore cost:", next_option)
+
+                    if next_option is None:
+                        all_options_in_node_to_be_expanded_are_explored = True
+                        continue
+
+                    options_already_explored.add(next_option)
+
+                    # Step 3: Roll out the unexplored option
+                    env.env.env.set_option(next_option)
+
+                    option_rews = []
+                    selected_option = mapped_options[next_option]
+                    cube_selected, gripper_action = selected_option
+                    load_optionddpg_variables(f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+                    print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+
+                    reset = True
+                    info = ""
+                    while not info == "cube_gripped":
+                        original_obs = env.get_option_observation(next_option)
+                        cube_filtered_obs = original_obs[:25]
+                        cube_filtered_obs[-2] = int(gripper_action == 0)
+                        cube_filtered_obs[-1] = int(gripper_action == 1)
+
+                        action = options.get_action(cube_filtered_obs, t, reset)
+                        reset = False
+
+                        action = action.squeeze()
+                        new_obs, rew, done, info = env.step(action)
+                        num_steps_in_episode += 1
+
+                        wandb.log({"reward": rew})
+                        option_rews.append(rew)
+
+                    # Step 4: Update the A* graph with result
+                    option_reward = sum([_r * gamma ** _i for _i, _r in enumerate(option_rews)])
+                    print("reward_per_option:", option_reward)
+                    astar.update_with_option_result(
+                        next_option,
+                        option_reward,
+                        env.options[next_option][1],  # from_node
+                        env.options[next_option][2]  # to_node
+                    )
+
+                    # Step 5: Reset environment for next iteration
+                    env.reset()
+
+                # Step 6: Get the best option from the A* graph
+                astar_chosen_path = astar.get_plan()
 
         # dummy controller for the time being
         controller = ControllerDQN(env, **controller_kargs)

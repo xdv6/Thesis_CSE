@@ -277,6 +277,7 @@ class MyBlockStackingEnv(GymWrapper):
         if self.block_grasped(cube_name):
             cost = self.option_to_reward_mapping[self.option_id]
             reward = cost
+            info = "cube_gripped"
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict to pass it to the reward machine
