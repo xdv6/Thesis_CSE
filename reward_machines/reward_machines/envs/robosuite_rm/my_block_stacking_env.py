@@ -61,7 +61,7 @@ class MyBlockStackingEnv(GymWrapper):
         """
 
         cost_dict = {
-            (0, 1): 1.5,
+            (0, 1): 1.0,
             (0, 6): 2.0,
             (0, 11): 1.0,
             (1, 2): 1.0,
@@ -72,7 +72,7 @@ class MyBlockStackingEnv(GymWrapper):
             (11, 14): 1.0,
 
             # Transitions into terminal nodes
-            (2, -1): 1.0,  # 2 → 3
+            (2, -1): 1.1,  # 2 → 3
             (4, -1): 1.0,  # 4 → 5
             (7, -1): 1.0,  # 7 → 8
             (9, -1): 1.0,  # 9 → 10
@@ -277,7 +277,7 @@ class MyBlockStackingEnv(GymWrapper):
         if self.block_grasped(cube_name):
             cost = self.option_to_reward_mapping[self.option_id]
             reward = cost
-            info = "cube_gripped"
+            info["cube_gripped"] = True
 
         self.obs_dict = next_obs
         # add the reward_for_gripper_to_cube to the obs_dict to pass it to the reward machine

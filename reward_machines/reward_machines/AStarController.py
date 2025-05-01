@@ -15,6 +15,7 @@ class AStarController:
 
     def _chosen_heuristic(self):
         return {
+            -1: 0,
             0: 3,
             1: 2,
             6: 2,
@@ -53,6 +54,8 @@ class AStarController:
         visited = set()
         graph_keys = set(self.graph.keys())  # nodes with known outgoing edges
 
+
+
         while open_set:
             f, g, node, path = heapq.heappop(open_set)
 
@@ -69,5 +72,7 @@ class AStarController:
                 new_g = g + cost
                 new_f = new_g + self.heuristic.get(neighbor, float('inf'))
                 heapq.heappush(open_set, (new_f, new_g, neighbor, path + [option_id]))
+
+
 
         return []  # No path found

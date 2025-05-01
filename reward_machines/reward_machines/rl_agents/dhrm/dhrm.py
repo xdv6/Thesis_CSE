@@ -300,6 +300,11 @@ def learn(env,
             #             obs = new_obs
 
             astar_chosen_path = astar.get_plan()
+
+            if len(astar_chosen_path) == 3:
+                print("optimal path found")
+                print(astar_chosen_path)
+                break
             print("astar_chosen_path: ", astar_chosen_path)
             all_options_in_node_to_be_expanded_are_explored = False
             options_already_explored = set()
@@ -321,8 +326,8 @@ def learn(env,
                     print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
 
                     reset = True
-                    info = ""
-                    while not info == "cube_gripped":
+                    info = {}
+                    while not info.get("cube_gripped", False):
                         original_obs = env.get_option_observation(option)
                         cube_filtered_obs = original_obs[:25]
                         cube_filtered_obs[-2] = int(gripper_action == 0)
@@ -346,6 +351,7 @@ def learn(env,
 
                 if next_option is None:
                     all_options_in_node_to_be_expanded_are_explored = True
+                    env.reset()
                     continue
 
                 options_already_explored.add(next_option)
@@ -360,8 +366,8 @@ def learn(env,
                 print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
 
                 reset = True
-                info = ""
-                while not info == "cube_gripped":
+                info = {}
+                while not info.get("cube_gripped", False):
                     original_obs = env.get_option_observation(next_option)
                     cube_filtered_obs = original_obs[:25]
                     cube_filtered_obs[-2] = int(gripper_action == 0)
@@ -372,6 +378,7 @@ def learn(env,
 
                     action = action.squeeze()
                     new_obs, rew, done, info = env.step(action)
+
                     num_steps_in_episode += 1
 
                     wandb.log({"reward": rew})
