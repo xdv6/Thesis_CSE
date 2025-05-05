@@ -553,20 +553,6 @@ def learn(env,
                     rewards_per_sequence = 0
                     print("sequence_completed: ", sequence)
                     amount_of_visits_per_sequence_dict[sequence] = amount_of_visits_per_sequence_dict.get(sequence, 0) + 1
-
-                    # Check convergence
-                    recent_sequences.append(sequence)
-                    counts = Counter(recent_sequences)
-                    most_common_seq, freq = counts.most_common(1)[0]
-                    print("most_common_seq: ", most_common_seq)
-                    print("freq: ", freq)
-                    print("recent_sequences: ", recent_sequences)
-                    if freq >= 40 and amount_of_visits_per_sequence_dict.get(most_common_seq, 0) >= 10:
-                        print(f"✅ Converged to sequence: {most_common_seq}")
-                        wandb.log({"converged_sequence": most_common_seq})
-                        wandb.log({"cost_of_sequence_end": rewards_per_sequence})
-                        break
-
                     wandb.log({sequence: amount_of_visits_per_sequence_dict[sequence]})
                     print("amount_of_visits_per_sequence_dict: ", amount_of_visits_per_sequence_dict)
                     sequence = ""
