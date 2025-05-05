@@ -60,24 +60,44 @@ class MyBlockStackingEnv(GymWrapper):
         Terminal states (-1) are ignored.
         """
 
+        # cost_dict = {
+        #     (0, 1): 1.0,
+        #     (0, 6): 2.0,
+        #     (0, 11): 1.0,
+        #     (1, 2): 1.0,
+        #     (1, 4): 1.2,
+        #     (6, 7): 1.3,
+        #     (6, 9): 1.2,
+        #     (11, 12): 1.5,
+        #     (11, 14): 1.0,
+        #
+        #     # Transitions into terminal nodes
+        #     (2, -1): 1.1,  # 2 → 3
+        #     (4, -1): 1.0,  # 4 → 5
+        #     (7, -1): 1.0,  # 7 → 8
+        #     (9, -1): 1.0,  # 9 → 10
+        #     (12, -1): 1.2,  # 12 → 13
+        #     (14, -1): 1.0  # 14 → 15
+        # }
+
         cost_dict = {
-            (0, 1): 1.0,
-            (0, 6): 2.0,
-            (0, 11): 1.0,
-            (1, 2): 1.0,
-            (1, 4): 1.2,
-            (6, 7): 1.3,
-            (6, 9): 1.2,
-            (11, 12): 1.5,
-            (11, 14): 1.0,
+            (0, 1): 1.26,
+            (0, 6): 1.88,
+            (0, 11): 1.43,
+            (1, 2): 1.76,
+            (1, 4): 1.91,
+            (6, 7): 1.61,
+            (6, 9): 1.81,
+            (11, 12): 1.56,
+            (11, 14): 1.46,
 
             # Transitions into terminal nodes
-            (2, -1): 1.1,  # 2 → 3
+            (2, -1): 1.42,  # 2 → 3
             (4, -1): 1.0,  # 4 → 5
-            (7, -1): 1.0,  # 7 → 8
-            (9, -1): 1.0,  # 9 → 10
-            (12, -1): 1.2,  # 12 → 13
-            (14, -1): 1.0  # 14 → 15
+            (7, -1): 1.72,  # 7 → 8
+            (9, -1): 1.58,  # 9 → 10
+            (12, -1): 1.79,  # 12 → 13
+            (14, -1): 1.6  # 14 → 15
         }
 
         reward_mapping = {}
@@ -135,7 +155,7 @@ class MyBlockStackingEnv(GymWrapper):
             has_renderer=self.enable_renderer,  # Enable rendering for visualization
             reward_shaping=True,  # Use dense rewards for easier learning
             control_freq=10,  # Set control frequency for smooth simulation
-            horizon=1000,
+            horizon=100,
             use_camera_obs=False,  # Disable camera observations
         )
 
@@ -227,6 +247,8 @@ class MyBlockStackingEnv(GymWrapper):
         low = -high
         self.observation_space = gym.spaces.Box(low, high, dtype=np.float32)
 
+        self.amount_of_env_steps = 0
+
 
     def flatten_observation(self, obs):
         # Flatten the observation dictionary into a single array while removing unneeded values
@@ -262,6 +284,9 @@ class MyBlockStackingEnv(GymWrapper):
     def step(self, action):
         # Step the environment and return the flattened observation, reward, done, and info
         # clip gripper action, 1 is gripper closed, -1 is gripper open
+
+        self.amount_of_env_steps += 1
+        wandb.log({"env_steps_inside_sim": self.amount_of_env_steps})
         if action[-1] <= 0:
             action[-1] = -1
         else:

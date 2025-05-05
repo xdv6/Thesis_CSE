@@ -85,6 +85,7 @@ class ControllerDQN:
             grad_norm_clipping=10,
             scope="controller"
         )
+        self.q_values = debug
 
         act_params = {
             'make_obs_ph': make_obs_ph,
@@ -123,10 +124,14 @@ class ControllerDQN:
         self.replay_buffer.add(obs, action, rew, new_obs, float(done), self._get_mask(valid_actions), gamma)
 
     def learn(self):
-        if self.t > self.learning_starts and self.t % self.train_freq == 0:
+        # if self.t > self.learning_starts and self.t % self.train_freq == 0:
+
+
             # Minimize the error in Bellman's equation on a batch sampled from replay buffer.
             obses_t, actions, rewards, obses_tp1, dones, masks, gammas = self.replay_buffer.sample(self.batch_size)
             self.train(obses_t, actions, rewards, obses_tp1, dones, masks, gammas, np.ones_like(rewards))
+
+
 
     def update_target_network(self):
         if self.t > self.learning_starts and self.t % self.target_network_update_freq == 0:

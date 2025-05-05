@@ -27,6 +27,7 @@ from AStarController import AStarController
 
 import wandb
 import re
+from collections import deque, Counter
 
 def save_controller_variables(save_path, sess=None):
     import joblib
@@ -115,7 +116,7 @@ def map_options_to_cube_actions(options, filename):
 
 
 # AStar learning function
-def learn(env,
+def learn_astar(env,
           use_ddpg=False,
           gamma=0.90,
           use_rs=False,
@@ -189,6 +190,9 @@ def learn(env,
     obs = env.reset()
     options.reset()
     reset = True
+
+    total_options_explored = set()
+
 
     with tempfile.TemporaryDirectory() as td:
         td = checkpoint_path or td
@@ -301,11 +305,16 @@ def learn(env,
 
             astar_chosen_path = astar.get_plan()
 
+
+            print("astar_chosen_path: ", astar_chosen_path)
+
             if len(astar_chosen_path) == 3:
                 print("optimal path found")
-                print(astar_chosen_path)
+                cost_of_path = astar.get_cost_of_path(astar_chosen_path)
+                print("cost of path: ", cost_of_path)
+                wandb.log({"cost_of_path": cost_of_path})
                 break
-            print("astar_chosen_path: ", astar_chosen_path)
+
             all_options_in_node_to_be_expanded_are_explored = False
             options_already_explored = set()
 
@@ -338,6 +347,7 @@ def learn(env,
 
                         action = action.squeeze()
                         new_obs, rew, done, info = env.step(action)
+
                         num_steps_in_episode += 1
 
                         wandb.log({"reward": rew})
@@ -348,6 +358,12 @@ def learn(env,
 
                 next_option = next((opt for opt in valid_options if opt not in options_already_explored), None)
                 print("next_option to explore cost:", next_option)
+
+                if next_option not in total_options_explored:
+                    print("options_already_explored:", total_options_explored)
+                    if next_option is not None:
+                        total_options_explored.add(next_option)
+                    wandb.log({"amount_of_options_explored": len(total_options_explored)})
 
                 if next_option is None:
                     all_options_in_node_to_be_expanded_are_explored = True
@@ -397,12 +413,14 @@ def learn(env,
                 # Step 5: Reset environment for next iteration
                 env.reset()
 
+
+
         # dummy controller for the time being
         controller = ControllerDQN(env, **controller_kargs)
         return controller.act, options.act
 
 
-def learnDQN(env,
+def learn(env,
           use_ddpg=False,
           gamma=0.90,
           use_rs=False,
@@ -476,6 +494,8 @@ def learnDQN(env,
     obs = env.reset()
     options.reset()
     reset = True
+    recent_sequences = deque(maxlen=50)  # Sliding window
+    total_options_explored = set()
 
     with tempfile.TemporaryDirectory() as td:
         td = checkpoint_path or td
@@ -533,6 +553,20 @@ def learnDQN(env,
                     rewards_per_sequence = 0
                     print("sequence_completed: ", sequence)
                     amount_of_visits_per_sequence_dict[sequence] = amount_of_visits_per_sequence_dict.get(sequence, 0) + 1
+
+                    # Check convergence
+                    recent_sequences.append(sequence)
+                    counts = Counter(recent_sequences)
+                    most_common_seq, freq = counts.most_common(1)[0]
+                    print("most_common_seq: ", most_common_seq)
+                    print("freq: ", freq)
+                    print("recent_sequences: ", recent_sequences)
+                    if freq >= 40 and amount_of_visits_per_sequence_dict.get(most_common_seq, 0) >= 10:
+                        print(f"✅ Converged to sequence: {most_common_seq}")
+                        wandb.log({"converged_sequence": most_common_seq})
+                        wandb.log({"cost_of_sequence_end": rewards_per_sequence})
+                        break
+
                     wandb.log({sequence: amount_of_visits_per_sequence_dict[sequence]})
                     print("amount_of_visits_per_sequence_dict: ", amount_of_visits_per_sequence_dict)
                     sequence = ""
@@ -545,6 +579,12 @@ def learnDQN(env,
                 while option_id not in valid_options:
                     option_id = controller.get_action(option_s, valid_options)
                     print("rerolling option_id: ", option_id)
+
+                if option_id not in total_options_explored:
+                    print("options_already_explored:", total_options_explored)
+                    if option_id is not None:
+                        total_options_explored.add(option_id)
+                    wandb.log({"amount_of_options_explored": len(total_options_explored)})
 
                 env.env.env.set_option(option_id)
 

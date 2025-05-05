@@ -43,6 +43,24 @@ class AStarController:
             self.graph[from_node].append((to_node, cost, option_id))
             self.explored_edges.add((from_node, to_node))
 
+
+    def get_cost_of_path(self, path):
+        """
+        Returns the cost of a path.
+        Path is a list of option_ids.
+        """
+        total_cost = 0
+        for option_id in path:
+            from_node, to_node = self.options[option_id][1:3]
+            # Find the matching (to_node, cost, option_id) in the adjacency list
+            for neighbor, cost, opt_id in self.graph[from_node]:
+                if neighbor == to_node and opt_id == option_id:
+                    total_cost += cost
+                    break
+            else:
+                raise ValueError(f"No edge from {from_node} to {to_node} with option_id {option_id}")
+        return total_cost
+
     def get_plan(self):
         """
         Plans from node 0 to any known goal using current graph.
@@ -57,6 +75,7 @@ class AStarController:
 
 
         while open_set:
+
             f, g, node, path = heapq.heappop(open_set)
 
             if node not in graph_keys:  # ✅ Node has no outgoing edges — it's a terminal node
