@@ -16,23 +16,46 @@ class AStarController:
     def _chosen_heuristic(self):
         return {
             -1: 0,
-            0: 3,
-            1: 2,
-            6: 2,
-            11: 2,
-            2: 1,
-            4: 1,
-            7: 1,
-            9: 1,
-            12: 1,
-            14: 1,
-            3: 0,
-            5: 0,
-            8: 0,
-            10: 0,
-            13: 0,
-            15: 0
+
+            # Root
+            0: 4,
+
+            # One step from root
+            1: 3, 17: 3, 33: 3, 49: 3,
+
+            # Two steps from root (intermediate)
+            2: 2, 7: 2, 12: 2, 18: 2, 23: 2, 28: 2,
+            34: 2, 39: 2, 44: 2, 50: 2, 55: 2, 60: 2,
+
+            # Direct predecessors of terminals
+            3: 1, 5: 1, 8: 1, 10: 1, 13: 1, 15: 1,
+            19: 1, 21: 1, 24: 1, 26: 1, 29: 1, 31: 1,
+            35: 1, 37: 1, 40: 1, 42: 1, 45: 1, 47: 1,
+            51: 1, 53: 1, 56: 1, 58: 1, 61: 1, 63: 1
         }
+
+    def convert_options_to_nodes(self, option_indices, options):
+        """
+        Converts a list of option indices to the corresponding sequence of nodes.
+
+        Args:
+            option_indices (list): List of indices into the options list.
+            options (list): List of (rm_id, u1, u2) option tuples.
+
+        Returns:
+            list: List of traversed node IDs.
+        """
+        if not option_indices:
+            return []
+
+        # Start with the source node of the first option
+        path_nodes = [options[option_indices[0]][1]]  # u1 of first option
+
+        for idx in option_indices:
+            _, _, u2 = options[idx]
+            path_nodes.append(u2)
+
+        return path_nodes
 
     def update_with_option_result(self, option_id, reward, from_node, to_node):
         """

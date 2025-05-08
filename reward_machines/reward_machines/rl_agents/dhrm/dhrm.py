@@ -28,6 +28,22 @@ from AStarController import AStarController
 import wandb
 import re
 from collections import deque, Counter
+option_weight_cache = {}
+
+def preload_all_option_weights():
+    import joblib
+    for cube in ["A", "B", "C", "D"]:
+        path = f"./checkpoints/cube_lifting_{cube}_optionDDPG"
+        option_weight_cache[cube] = joblib.load(path)
+
+def assign_optionddpg_variables(cube_letter, sess=None):
+    sess = sess or get_session()
+    weights = option_weight_cache[cube_letter]
+    controller_prefixes = ("controller/", "controller_1/")
+    variables = [v for v in tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES)
+                 if not v.name.startswith(controller_prefixes)]
+    assigns = [v.assign(weights[v.name]) for v in variables if v.name in weights]
+    sess.run(assigns)
 
 def save_controller_variables(save_path, sess=None):
     import joblib
@@ -116,7 +132,7 @@ def map_options_to_cube_actions(options, filename):
 
 
 # AStar learning function
-def learn(env,
+def learn_astar(env,
           use_ddpg=False,
           gamma=0.90,
           use_rs=False,
@@ -313,6 +329,9 @@ def learn(env,
                 cost_of_path = astar.get_cost_of_path(astar_chosen_path)
                 print("cost of path: ", cost_of_path)
                 wandb.log({"cost_of_path": cost_of_path})
+
+                node_path = astar.convert_options_to_nodes(astar_chosen_path, env.options)
+                print("node_path: ", node_path)
                 break
 
             all_options_in_node_to_be_expanded_are_explored = False
@@ -350,7 +369,7 @@ def learn(env,
 
                         num_steps_in_episode += 1
 
-                        wandb.log({"reward": rew})
+                        # wandb.log({"reward": rew})
                         option_rews.append(rew)
 
                 # Step 2: At the expansion node, explore one new option
@@ -377,7 +396,6 @@ def learn(env,
 
                 option_rews = []
                 selected_option = mapped_options[next_option]
-                import ipdb; ipdb.set_trace()
                 cube_selected, gripper_action = selected_option
                 load_optionddpg_variables(f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
                 print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
@@ -421,7 +439,7 @@ def learn(env,
         return controller.act, options.act
 
 
-def learn_DQN(env,
+def learn(env,
           use_ddpg=False,
           gamma=0.90,
           use_rs=False,
@@ -435,237 +453,141 @@ def learn_DQN(env,
           checkpoint_freq=1000,
           load_path=None,
           **others):
-    """Train a deepq model.
 
-    Parameters
-    -------
-    env: gym.Env
-        environment to train on
-    use_ddpg: bool
-        whether to use DDPG or DQN to learn the option's policies
-    gamma: float
-        discount factor
-    use_rs: bool
-        use reward shaping
-    controller_kargs
-        arguments for learning the controller policy.
-    option_kargs
-        arguments for learning the option policies.
-    seed: int or None
-        prng seed. The runs with the same seed "should" give the same results. If None, no seeding is used.
-    total_timesteps: int
-        number of env steps to optimizer for
-    print_freq: int
-        how often to print out training progress
-        set to None to disable printing
-    checkpoint_freq: int
-        how often to save the model. This is so that the best version is restored
-        at the end of the training. If you do not wish to restore the best version at
-        the end of the training set this variable to None.
-    load_path: str
-        path to load the model from. (default: None)
-
-    Returns
-    -------
-    act: ActWrapper (meta-controller)
-        Wrapper over act function. Adds ability to save it and load it.
-        See header of baselines/deepq/categorical.py for details on the act function.
-    act: ActWrapper (option policies)
-        Wrapper over act function. Adds ability to save it and load it.
-        See header of baselines/deepq/categorical.py for details on the act function.
-    """
-    # Create all the functions necessary to train the model
-
-    # set gamma to 1 for the controller
     gamma = 1
     sess = get_session()
     set_global_seeds(seed)
 
-    controller  = ControllerDQN(env, **controller_kargs)
+    controller = ControllerDQN(env, **controller_kargs)
     if use_ddpg:
         options = OptionDDPG(env, gamma, total_timesteps, **option_kargs)
     else:
         options = OptionDQN(env, gamma, total_timesteps, **option_kargs)
-    option_s    = None # State where the option initiated
-    option_id   = None # Id of the current option being executed
-    option_rews = []   # Rewards obtained by the current option
+
+    option_s = None
+    option_id = None
+    option_rews = []
 
     episode_rewards = [0.0]
     saved_mean_reward = None
     obs = env.reset()
     options.reset()
     reset = True
-    recent_sequences = deque(maxlen=50)  # Sliding window
+    recent_sequences = deque(maxlen=50)
     total_options_explored = set()
 
-    with tempfile.TemporaryDirectory() as td:
-        td = checkpoint_path or td
+    # Use checkpoint_path directly (no tempfile)
+    td = checkpoint_path or "./checkpoints"
 
-        # Get the base save location from the environment variable
-        model_save_location = os.environ.get("CHECKPOINT_PATH", "./checkpoints")  # Default to "./checkpoints" if not set
+    # Determine save directory
+    model_save_location = os.environ.get("CHECKPOINT_PATH", "./checkpoints")
+    model_name = os.environ.get("WANDB_RUN_NAME", "default_run")
+    run_save_path = os.path.join(model_save_location, model_name)
+    os.makedirs(run_save_path, exist_ok=True)
 
-        # Get the run name from the environment variable (default to "default_run" if not set)
-        model_name = os.environ.get("WANDB_RUN_NAME", "default_run")
+    model_file = os.path.join(run_save_path, "best_model")
+    model_saved = False
 
-        # Create the full path
-        run_save_path = os.path.join(model_save_location, model_name)
+    if tf.train.latest_checkpoint(td) is not None:
+        load_variables(model_file)
+        logger.log('Loaded model from {}'.format(model_file))
+        model_saved = True
+    elif load_path is not None:
+        logger.log('Loaded model from {}'.format(load_path))
 
-        # Create the directory if it doesn't exist
-        os.makedirs(run_save_path, exist_ok=True)
+    mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/4sequence.txt")
+    env.env.env.set_options_list(env.options)
+    env.env.env.set_options_to_cube_mapping(mapped_options)
 
-        model_file = os.path.join(run_save_path, "best_model")
-        model_saved = False
+    options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
 
-        if tf.train.latest_checkpoint(td) is not None:
-            load_variables(model_file)
-            logger.log('Loaded model from {}'.format(model_file))
-            model_saved = True
-        elif load_path is not None:
-            # load_variables(model_file)
-            # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
-            logger.log('Loaded model from {}'.format(load_path))
+    rewards_per_sequence = 0
+    amount_of_visits_per_sequence_dict = {}
+    sequence = ""
+    num_steps_in_episode = 0
+    preload_all_option_weights()
 
-        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/4sequence.txt")
+    for t in range(total_timesteps):
+        wandb.log({"timestep": t})
+        if callback is not None:
+            if callback(locals(), globals()):
+                break
 
-        env.env.env.set_options_list(env.options)
-        env.env.env.set_options_to_cube_mapping(mapped_options)
+        if option_id is None:
+            valid_options = env.get_valid_options()
+            if len(valid_options) == 4:
+                print("rewards_per_sequence: ", rewards_per_sequence)
+                wandb.log({"rewards_per_sequence": rewards_per_sequence})
+                rewards_per_sequence = 0
+                print("sequence_completed: ", sequence)
+                amount_of_visits_per_sequence_dict[sequence] = amount_of_visits_per_sequence_dict.get(sequence, 0) + 1
+                wandb.log({sequence: amount_of_visits_per_sequence_dict[sequence]})
+                print("amount_of_visits_per_sequence_dict: ", amount_of_visits_per_sequence_dict)
+                sequence = ""
 
+            print("valid_options: ", valid_options)
+            option_s = obs
+            option_id = controller.get_action(option_s, valid_options)
+            print("chosen option_id: ", option_id)
+            while option_id not in valid_options:
+                option_id = controller.get_action(option_s, valid_options)
+                print("rerolling option_id: ", option_id)
 
-        # Override get_action to ensure deterministic execution (no noise)
-        options.get_action = lambda obs, t, reset: options.agent.step(obs.reshape((1,) + obs.shape), apply_noise=False, compute_Q=True)[0] * options.max_action
+            if option_id not in total_options_explored:
+                print("options_already_explored:", total_options_explored)
+                total_options_explored.add(option_id)
+                wandb.log({"amount_of_options_explored": len(total_options_explored)})
 
-        rewards_per_sequence = 0
-        amount_of_visits_per_sequence_dict = {}
-        sequence = ""
+            env.env.env.set_option(option_id)
+            option_rews = []
 
-        num_steps_in_episode = 0
-        for t in range(total_timesteps):
-            wandb.log({"timestep": t})
-            if callback is not None:
-                if callback(locals(), globals()):
-                    break
+            selected_option = mapped_options[option_id]
+            cube_selected, gripper_action = selected_option
+            # load_optionddpg_variables(f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+            assign_optionddpg_variables(cube_selected)
+            print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
+            sequence += str(cube_selected)
 
-            # Selecting an option if needed
-            if option_id is None:
-                valid_options = env.get_valid_options()
-                if len(valid_options) == 3:
-                    print("rewards_per_sequence: ", rewards_per_sequence)
-                    wandb.log({"rewards_per_sequence": rewards_per_sequence})
-                    rewards_per_sequence = 0
-                    print("sequence_completed: ", sequence)
-                    amount_of_visits_per_sequence_dict[sequence] = amount_of_visits_per_sequence_dict.get(sequence, 0) + 1
-                    wandb.log({sequence: amount_of_visits_per_sequence_dict[sequence]})
-                    print("amount_of_visits_per_sequence_dict: ", amount_of_visits_per_sequence_dict)
-                    sequence = ""
+        original_obs = env.get_option_observation(option_id)
+        cube_filtered_obs = original_obs[:25]
+        cube_filtered_obs[-2] = int(gripper_action == 0)
+        cube_filtered_obs[-1] = int(gripper_action == 1)
 
-                print("valid_options: ", valid_options)
-                option_s    = obs
-                option_id   = controller.get_action(option_s, valid_options)
-                print("chosen option_id: ", option_id)
-                # reroll if the option_id is not valid
-                while option_id not in valid_options:
-                    option_id = controller.get_action(option_s, valid_options)
-                    print("rerolling option_id: ", option_id)
+        action = options.get_action(cube_filtered_obs, t, reset)
+        reset = False
+        action = action.squeeze()
+        new_obs, rew, done, info = env.step(action)
+        num_steps_in_episode += 1
 
-                if option_id not in total_options_explored:
-                    print("options_already_explored:", total_options_explored)
-                    if option_id is not None:
-                        total_options_explored.add(option_id)
-                    wandb.log({"amount_of_options_explored": len(total_options_explored)})
+        if not use_rs:
+            option_rews.append(rew)
 
-                env.env.env.set_option(option_id)
+        if env.did_option_terminate(option_id):
+            option_sn = new_obs
+            option_reward = sum([_r * gamma ** _i for _i, _r in enumerate(option_rews)])
+            print("reward_per_option: ", option_reward)
+            rewards_per_sequence += option_reward
+            valid_options = [] if done else env.get_valid_options()
+            controller.add_experience(option_s, option_id, option_reward, option_sn, done, valid_options, gamma ** len(option_rews))
+            controller.learn()
+            controller.update_target_network()
+            controller.increase_step()
+            option_id = None
 
-                option_rews = []
+        obs = new_obs
+        episode_rewards[-1] += rew
 
-                # load the optionddpg model of the cube based on the option_id
-                selected_option = mapped_options[option_id]
-                cube_selected, gripper_action = selected_option
-                load_optionddpg_variables("./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
-                print("loaded model: ", "./checkpoints/cube_lifting_{}_optionDDPG".format(cube_selected))
-                sequence += str(cube_selected)
-
-            original_obs = env.get_option_observation(option_id)
-            cube_filtered_obs = original_obs[:25]
-
-            if gripper_action == 0:
-                cube_filtered_obs[-2] = 1
-                cube_filtered_obs[-1] = 0
-            else:
-                cube_filtered_obs[-2] = 0
-                cube_filtered_obs[-1] = 1
-
-
-            action = options.get_action(cube_filtered_obs, t, reset)
-            reset = False
-
-            action = action.squeeze()
-            new_obs, rew, done, info = env.step(action)
-            num_steps_in_episode += 1
-            # Saving the real reward that the option is getting
-            if use_rs:
-                option_rews.append(info["rs-reward"])
-            else:
-                wandb.log({"reward": rew})
-
-                option_rews.append(rew)
-
-            # Update the meta-controller if needed
-            # Note that this condition always hold if done is True
-            if env.did_option_terminate(option_id):
-                option_sn = new_obs
-                option_reward = sum([_r*gamma**_i for _i,_r in enumerate(option_rews)])
-                print("reward_per_option: ", option_reward)
-                rewards_per_sequence += option_reward
-                valid_options = [] if done else env.get_valid_options()
-                controller.add_experience(option_s, option_id, option_reward, option_sn, done, valid_options,gamma**(len(option_rews)))
-                controller.learn()
-                controller.update_target_network()
-                controller.increase_step()
-                option_id = None
-
-            obs = new_obs
-            episode_rewards[-1] += rew
-
-            if done:
-                wandb.log({"num_steps_in_episode": num_steps_in_episode})
-                num_steps_in_episode = 0
-                obs = env.reset()
-                options.reset()
-                episode_rewards.append(0.0)
-                reset = True
-                wandb.log({"episode_reward": episode_rewards[-1]})
-
-            # General stats
-            mean_100ep_reward = round(np.mean(episode_rewards[-101:-1]), 1)
-            num_episodes = len(episode_rewards)
-            if done and print_freq is not None and len(episode_rewards) % print_freq == 0:
-                logger.record_tabular("steps", t)
-                logger.record_tabular("episodes", num_episodes)
-                logger.record_tabular("mean 100 episode reward", mean_100ep_reward)
-                logger.dump_tabular()
-                save_variables(model_file)
-                save_controller_variables(model_file+"_controller")
-
-            if (checkpoint_freq is not None and
-                    num_episodes > 100 and t % checkpoint_freq == 0):
-
-                # saving checkpoint model
-                model_chekpoint_file = os.path.join(run_save_path, "model_" + str(t))
-                save_variables(model_chekpoint_file)
-                if saved_mean_reward is None or mean_100ep_reward > saved_mean_reward:
-                    if print_freq is not None:
-                        logger.log("Saving model due to mean reward increase: {} -> {}".format(
-                                   saved_mean_reward, mean_100ep_reward))
-                        save_variables(model_file)
-                        save_controller_variables(model_file+"_controller")
-                    model_saved = True
-                    saved_mean_reward = mean_100ep_reward
-        if model_saved:
-            if print_freq is not None:
-                logger.log("Restored model with mean reward: {}".format(saved_mean_reward))
-            #load_variables(model_file)
+        if done:
+            wandb.log({"num_steps_in_episode": num_steps_in_episode})
+            num_steps_in_episode = 0
+            obs = env.reset()
+            options.reset()
+            episode_rewards.append(0.0)
+            reset = True
+            wandb.log({"episode_reward": episode_rewards[-1]})
 
     return controller.act, options.act
+
 
 
 
