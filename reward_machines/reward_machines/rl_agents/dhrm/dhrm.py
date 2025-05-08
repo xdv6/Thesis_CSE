@@ -93,7 +93,7 @@ def map_options_to_cube_actions(options, filename):
 
     # Parse transition lines starting from line 3
     for line in lines[2:]:
-        match = re.search(r"\((\d+),\s*(\d+),\s*'([gh])([ABC])'", line)
+        match = re.search(r"\((\d+),\s*(\d+),\s*'([gh])([ABCD])'", line)
         if match:
             u1, u2 = int(match[1]), int(match[2])
             phase, letter = match[3], match[4]
