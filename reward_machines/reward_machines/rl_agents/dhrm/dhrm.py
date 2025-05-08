@@ -116,7 +116,7 @@ def map_options_to_cube_actions(options, filename):
 
 
 # AStar learning function
-def learn_astar(env,
+def learn(env,
           use_ddpg=False,
           gamma=0.90,
           use_rs=False,
@@ -221,7 +221,7 @@ def learn_astar(env,
             # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
             logger.log('Loaded model from {}'.format(load_path))
 
-        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_grasping_sequence.txt")
+        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/4sequence.txt")
 
         env.env.env.set_options_list(env.options)
         env.env.env.set_options_to_cube_mapping(mapped_options)
@@ -308,7 +308,7 @@ def learn_astar(env,
 
             print("astar_chosen_path: ", astar_chosen_path)
 
-            if len(astar_chosen_path) == 3:
+            if len(astar_chosen_path) == 4:
                 print("optimal path found")
                 cost_of_path = astar.get_cost_of_path(astar_chosen_path)
                 print("cost of path: ", cost_of_path)
@@ -377,6 +377,7 @@ def learn_astar(env,
 
                 option_rews = []
                 selected_option = mapped_options[next_option]
+                import ipdb; ipdb.set_trace()
                 cube_selected, gripper_action = selected_option
                 load_optionddpg_variables(f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
                 print("loaded model:", f"./checkpoints/cube_lifting_{cube_selected}_optionDDPG")
@@ -420,7 +421,7 @@ def learn_astar(env,
         return controller.act, options.act
 
 
-def learn(env,
+def learn_DQN(env,
           use_ddpg=False,
           gamma=0.90,
           use_rs=False,
@@ -524,7 +525,7 @@ def learn(env,
             # tf.get_default_graph().finalize()  # 🔒 Finalize only after loading
             logger.log('Loaded model from {}'.format(load_path))
 
-        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/cube_grasping_sequence.txt")
+        mapped_options = map_options_to_cube_actions(env.options, "./envs/robosuite_rm/reward_machines/4sequence.txt")
 
         env.env.env.set_options_list(env.options)
         env.env.env.set_options_to_cube_mapping(mapped_options)
