@@ -2,18 +2,19 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-base_dir = "results_controller_comparison"
+# Assume we are in: /.../results_controller_comparison/DQN/
+base_dir = os.path.join("results_controller_comparison", "4seq", "DQN")
 num_runs = 10
 
 plt.figure(figsize=(10, 6))
 
 for i in range(1, num_runs + 1):
-    run_dir = os.path.join(base_dir, f"astar{i}")
+    run_dir = os.path.join(base_dir, f"DQN{i}")
     options_path = os.path.join(run_dir, "amount_of_options_explored.csv")
     steps_path = os.path.join(run_dir, "env_steps_inside_sim.csv")
 
     if not os.path.exists(options_path) or not os.path.exists(steps_path):
-        print(f"⚠️ Missing files in astar{i}")
+        print(f"⚠️ Missing files in DQN{i}")
         continue
 
     # Load the CSVs
@@ -37,10 +38,12 @@ for i in range(1, num_runs + 1):
     plt.plot(matched_env_steps, options_df[opt_value_col], label=f"Set {i}", marker='o')
 
 # Final plot formatting
-plt.xlabel("Environment Steps")
-plt.ylabel("Options Explored")
-plt.title("Options Explored vs. Environment Steps (A*)")
-plt.legend()
+plt.xlabel("Environment Steps", fontsize=18)
+plt.ylabel("Options Explored", fontsize=18)
+plt.title("Options Explored vs. Environment Steps (DQN)", fontsize=22)
+plt.legend(fontsize=16)
 plt.grid(True)
+plt.xticks(fontsize=16)
+plt.yticks(fontsize=16)
 plt.tight_layout()
 plt.show()
