@@ -1,75 +1,45 @@
-# Thesis_CSE
+# Cube Stacking & Reward Machines in Robosuite
 
+This repository contains experiments and infrastructure for using Reward Machines with Robosuite environments, with a focus on cube stacking and sequence-based lifting tasks.
 
+---
 
-## Installation
+## 🔀 Branch Overview
 
+- **`main`**:  
+  Contains the original files and setup for the **cube stacking problem**.
 
+- **`new-env`**:  
+  Contains the updated environment and scripts for the **cube sequence lifting task**.
 
-First create conda environment with python 3.7
+---
 
-### TF and baselines
+## 📁 Repository Structure
 
-https://github.com/openai/baselines
+- `reward_machines/`:  
+  Adapted version of [Rodrigo Toro Icarte's Reward Machines repo](https://github.com/RodrigoToroIcarte/reward_machines).  
+  - The RM environment for Robosuite is located at:  
+    `reward_machines/reward_machines/envs/robosuite_rm/`
 
-Clone the repo and cd into it:
+- `dockerfile`:  
+  Docker setup file with all required dependencies for running Reward Machines with Robosuite.
 
-```
-git clone https://github.com/openai/baselines.git
-cd baselines
-```
+- `setup.sh`:  
+  Shell script for use on **UGent's GPU lab (GPULab)** to activate and start the Docker container environment.
 
-​    
+- `robosuite_test_script.py`:  
+  Python script containing test code for **reward structures** and **transition logic** for the Robosuite + RM integration.
 
-  
+---
 
-If you don't have TensorFlow installed already, install your favourite flavor of TensorFlow. In most cases, you may use
+## 🛠️ Getting Started
 
-```
-pip install tensorflow-gpu==1.14 # if you have a CUDA-compatible gpu and proper drivers
-```
+Clone the repository and check out the appropriate branch depending on your task:
 
-​    
+```bash
+# Clone the repo
+git clone <repo-url>
+cd <repo-name>
 
-or
-
-```
-pip install tensorflow==1.14
-```
-
-​    
-
-to install Tensorflow 1.14, which is the latest version of Tensorflow supported by the master branch. Refer to [TensorFlow installation guide](https://www.tensorflow.org/install/) for more details.
-
-Install baselines package
-
-```
-pip install -e .
-```
-
-
-
-
-
-### MUJOCO
-
-https://gist.github.com/saratrajput/60b1310fe9d9df664f9983b38b50d5da
-
-
-
-
-
-### Robosuite
-
-https://robosuite.ai/docs/installation.html
-
-if there is a problem with module not found, use the ```pip install robosuite``` instead of that from the requirements.txt file
-
-
-
-probleem met ELG oplossen : 
-
-https://robosuite.ai/docs/installation.html
-
-
-
+# Checkout cube sequence lifting branch
+git checkout new-env
